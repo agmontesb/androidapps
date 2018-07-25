@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+	<category label="Fragment Test">
+        <container label="TitlesContainer" side="top">
+            <label label="Fragment1"/>
+            <label label="Fragment2"/>
+            <label label="Fragment3"/>
+            <label label="Fragment4"/>
+            <label label="Fragment5"/>
+        </container>
+	</category>
+</settings>

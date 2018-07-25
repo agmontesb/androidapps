@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="category">
+        <attr name="label" format="string" />
+        <attr name="lib" format="string" />
+    </declare-styleable>
+
+    <declare-styleable name="setting">
+        <!-- Atributos generales -->
+        <attr name="android:id" />
+        <attr name="type">
+            <enum name="action" value="0"/>
+            <enum name="audio" value="1"/>
+            <enum name="bool" value="2"/>
+            <enum name="container" value="3"/>
+            <enum name="drpdwnlst" value="4"/>
+            <enum name="enum" value="5"/>
+            <enum name="executable" value="6"/>
+            <enum name="file" value="7"/>
+            <enum name="fileenum" value="8"/>
+            <enum name="folder" value="9"/>
+            <enum name="image" value="10"/>
+            <enum name="ipaddress" value="11"/>
+            <enum name="labelenum" value="12"/>
+            <enum name="lsep" value="13"/>
+            <enum name="number" value="14"/>
+            <enum name="optionlst" value="15"/>
+            <enum name="sep" value="16"/>
+            <enum name="slider" value="17"/>
+            <enum name="text" value="18"/>
+            <enum name="video" value="19"/>
+        </attr>
+        <attr name="label" format="string" />
+        <attr name="default" format="string" />
+        <attr name="enable" format="string" />
+        <!-- Atributos container -->
+        <attr name="side" format="string" />
+        <attr name="scrolled" format="boolean" />
+        <!-- Atributos bool -->
+        <attr name="group" format="string" />
+        <!--Atributos drpdwnlst -->
+        <attr name="lvalues" format="string" />
+        <attr name="values" format="string" />
+
+    </declare-styleable>
+</resources>

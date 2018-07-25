@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+    <category label="Datos Intradia" lib=".Widgets">
+        <container label="ScrolledList" scrolled="true">
+            <ScrolledList id="@+id/intradiatable"
+                          label="Intradia Table:   "
+                          columnsheadings = "Mnemo, Fecha, Hora, Precio, Cantidad, Promedio, Oper."
+                          default="Row1,,,,,,|Row2,,,,,,"
+            />
+        </container>
+    </category>
+</settings>

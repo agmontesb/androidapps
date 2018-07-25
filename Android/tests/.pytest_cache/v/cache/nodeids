@@ -1,0 +1,5 @@
+[
+  "test_intentfilter.py::test_filterActionCategory", 
+  "test_intentfilter.py::test_filterData", 
+  "test_intentfilter.py::test_filterResolution"
+]

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<menu>
+    <item id="@+id/file"
+          numericShortcut="0"
+          numericModifiers="ALT"
+          title="@string/file" >
+        <!-- "file" submenus -->
+        <menu>
+            <item id="@+id/create_new"
+                  alphabeticShorcut="N"
+                  alphabeticModifiers="CTRL"
+                  icon="@drawable/ic_menu_mylocation"
+                  title="@string/create_new"/>
+            <group id="@+id/grp1"
+                    checkeableBehavior="single">
+                <item id="@+id/open"
+                      checkable="true"
+                      numericShorcut="1"
+                      title="@string/open" />
+                <item id="@+id/save"
+                      checkable="true"
+                      numericShorcut="2"
+                      title="@string/save" />
+                <item id="@+id/save_as"
+                      icon="@drawable/ic_menu_send"
+                      title="@string/save_as" />
+            </group>
+            <group id="@+id/grp2">
+                <item id="@+id/cascade"
+                  title="@string/cascade">
+                <menu>
+                    <item id="@+id/cascade1"
+                          title="@string/cascade1" />
+                    <item id="@+id/cascade2"
+                          title="@string/cascade2">
+                        <menu>
+                            <item id="@+id/cascade21"
+                                  title="@string/cascade21" />
+                            <item id="@+id/cascade22"
+                                  title="@string/cascade22" />
+                        </menu>
+                    </item>
+                    <item id="@+id/cascade3"
+                          title="@string/cascade3" />
+                </menu>
+            </item>
+            </group>
+        </menu>
+    </item>
+</menu>

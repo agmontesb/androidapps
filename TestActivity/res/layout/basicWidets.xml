@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+	<category label="Test Theme" lib=".testlib">
+        <container scrolled="true">
+            <container side="top" label ="Checkbutton normal">
+                <bool id="@+id/ttbool1" label="bool1" default="true"/>
+                <bool id="@+id/ttbool2" label="bool2" default="false"/>
+                <text id="@+id/tttexto1" label="Text1" default="Este es TEXTO1"/>
+                <text id="@+id/tttexto2" label="Text2" default="Este es TEXTO2"/>
+            </container>
+            <container id="@+id/tcontainer" side="top" label ="New Widgets" />
+            <container side="top">
+                <bool id="@+id/bgbool1" type="bool" label="bg = red" group="grp1" default="false"/>
+                <bool id="@+id/bgbool2" type="bool" label="bg = green" group="grp1" default="false"/>
+                <bool id="@+id/bgbool3" type="bool" label="bg = blue" group="grp1" default="true"/>
+            </container>
+        </container>
+	</category>
+</settings>

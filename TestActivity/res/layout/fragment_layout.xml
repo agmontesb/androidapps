@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+	<category label="Fragment Test">
+        <container label="TitlesContainer" side="left">
+            <fragment name="TestActivity.TitlesFragment"
+                      id="@+id/f_titles"/>
+            <!--<fragment clase="TestActivity.DetailsFragment"-->
+                      <!--id="@+id/f_details"/>-->
+        </container>
+	</category>
+</settings>

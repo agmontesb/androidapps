@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+    <category label="Datos EOD" lib=".Widgets">
+        <container label="ScrolledList" scrolled="true">
+            <ScrolledList id="@+id/eodtable"
+                          label="EOD Table:   "
+                          columnsheadings = "Mnemo, Cantidad, Volumen, PCierre, Variacion"
+                          default="Row1,,,,|Row2,,,,"
+            />
+        </container>
+    </category>
+</settings>

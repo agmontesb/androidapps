@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+    <category label="Fragment Test">
+        <container label="DetailsContainer" side="top">
+            <text id="@+id/details_fuenteDatos" label="Fuente de Datos" default="1"/>
+            <text id="@+id/details_name" label="Nombre del Addon" default="xbmcIDEdefault"/>
+            <text id="@+id/details_comm" label="Comentario" default="Excelente, muy bien ..."/>
+        </container>
+    </category>
+</settings>

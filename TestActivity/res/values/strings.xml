@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="file">File</string>
+    <string name="create_new">New</string>
+    <string name="open">Open</string>
+    <string name="save">Save</string>
+    <string name="save_as">Save As</string>
+    <string name="cascade">Cascade</string>
+    <string name="cascade1">Cascade1</string>
+    <string name="cascade2">Cascade2</string>
+    <string name="cascade3">Cascade3</string>
+    <string name="cascade21">Cascade21</string>
+    <string name="cascade22">Cascade22</string>
+</resources>
