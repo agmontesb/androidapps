@@ -1,0 +1,9 @@
+[
+  "test_parcel.py::test_primitives", 
+  "test_parcel.py::test_marshallunmarshall", 
+  "test_parcel.py::test_appendFrom", 
+  "test_parcel.py::test_primitivesArray", 
+  "test_parcel.py::test_parcelables", 
+  "test_parcel.py::test_bundles", 
+  "test_parcel.py::test_untypedcontainers"
+]

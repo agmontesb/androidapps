@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<menu>
+    <item id="@+id/system"
+          numericShortcut="0"
+          numericModifiers="ALT"
+          title="@string/menu_system" >
+        <!-- "file" submenus -->
+        <menu>
+            <item id="@+id/sys_install"
+                  alphabeticShorcut="I"
+                  alphabeticModifiers="CTRL"
+                  icon="@drawable/ic_menu_mylocation"
+                  title="@string/sys_install"/>
+            <item id="@+id/sys_uninstall"
+                  alphabeticShorcut="U"
+                  alphabeticModifiers="CTRL"
+                  icon="@drawable/ic_menu_send"
+                  title="@string/sys_uninstall"/>
+        </menu>
+    </item>
+</menu>

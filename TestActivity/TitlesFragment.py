@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from abc import ABCMeta, abstractmethod
-from Android.Fragment import Fragment
+from Android.app.Fragment import Fragment
 from Android import BasicViews
 from TestActivityManager import R
-import inspect
+
 
 class TitlesFragment(Fragment):
 

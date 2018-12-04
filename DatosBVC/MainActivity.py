@@ -4,7 +4,7 @@ import datetime
 
 import Android as android
 from Android import Activity
-from Android.Intent import Intent
+from Android.content.Intent import Intent
 from AppCompat import AppCompatResources as appcompat
 from CapturaDatosBVC import getFormIndicesBVC, getWebData, getFormAccionesBVC, indicesFields, eodFields, intradiaFields, \
     finalEODFields, outDirectory, processarDB, csvFileFor

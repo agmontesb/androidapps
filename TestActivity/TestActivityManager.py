@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-from Android.Resources import Pointers, Resources
+from Android.content.res.Resources import Pointers
 
 
 class ResourcePointers(Pointers):    
@@ -59,22 +59,25 @@ class ResourcePointers(Pointers):
         cascade22 = 0x04100018
         cascade3 = 0x04100019
         create_new = 0x0410001a
-        details_comm = 0x0410001b
-        details_fuenteDatos = 0x0410001c
-        details_name = 0x0410001d
-        f_titles = 0x0410001e
-        file = 0x0410001f
-        grp1 = 0x04100020
-        grp2 = 0x04100021
-        open = 0x04100022
-        save = 0x04100023
-        save_as = 0x04100024
-        scrolledlist = 0x04100025
-        tcontainer = 0x04100026
-        ttbool1 = 0x04100027
-        ttbool2 = 0x04100028
-        tttexto1 = 0x04100029
-        tttexto2 = 0x0410002a
+        details_apellido1 = 0x0410001b
+        details_apellido2 = 0x0410001c
+        details_celular = 0x0410001d
+        details_edad = 0x0410001e
+        details_nombre = 0x0410001f
+        f_details = 0x04100020
+        f_titles = 0x04100021
+        file = 0x04100022
+        grp1 = 0x04100023
+        grp2 = 0x04100024
+        open = 0x04100025
+        save = 0x04100026
+        save_as = 0x04100027
+        scrolledlist = 0x04100028
+        tcontainer = 0x04100029
+        ttbool1 = 0x0410002a
+        ttbool2 = 0x0410002b
+        tttexto1 = 0x0410002c
+        tttexto2 = 0x0410002d
 
     class layout(object):
         BasicViewsShowcase = 0x04040000

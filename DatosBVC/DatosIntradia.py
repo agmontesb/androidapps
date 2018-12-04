@@ -5,7 +5,7 @@ from Android import Activity
 from AppCompat import AppCompatResources as appcompat
 from DatosBVCManager import R
 import Tkinter as tk
-from Android.Intent import Intent
+from Android.content.Intent import Intent
 
 
 class DatosIntradia(Activity):

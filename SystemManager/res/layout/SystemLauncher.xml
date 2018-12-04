@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+	<category label="Apps" lib=".Widgets">
+        <container label="Installed Apps" scrolled="true">
+            <ScrolledList id="@+id/installed_applications"
+                          label="Installed Applications:   "
+                          columnsheadings = "Nombre"
+                          default="Aplication1|Aplication2"
+            />
+        </container>
+	</category>
+</settings>

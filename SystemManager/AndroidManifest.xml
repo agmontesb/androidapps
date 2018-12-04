@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.AdroidApps.SystemManager"
+          android:versionCode="1"
+          android:versionNumber="0.0.1">
+    <provider
+            android:name="SytemTablesProvider"
+            android:authorities="com.androidapps.systemmanager"
+            android:exported="true" />
+    <application android:name="@string/appname"
+                 android:icon="@drawable/ic_launcher"
+                 android:theme="@style/apptheme">
+        <activity android:class=".SystemLauncher" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

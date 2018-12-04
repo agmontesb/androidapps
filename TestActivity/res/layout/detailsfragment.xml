@@ -2,9 +2,11 @@
 <settings>
     <category label="Fragment Test">
         <container label="DetailsContainer" side="top">
-            <text id="@+id/details_fuenteDatos" label="Fuente de Datos" default="1"/>
-            <text id="@+id/details_name" label="Nombre del Addon" default="xbmcIDEdefault"/>
-            <text id="@+id/details_comm" label="Comentario" default="Excelente, muy bien ..."/>
+            <text id="@+id/details_nombre" label="Nombre del Usuario" default="nombre"/>
+            <text id="@+id/details_apellido1" label="Primer Apellido" default="primer apellido"/>
+            <text id="@+id/details_apellido2" label="Segundo Apellido" default="segundo apellido"/>
+            <text id="@+id/details_edad" label="Edad" default="edad"/>
+            <text id="@+id/details_celular" label="Numero de Contacto" default="celular"/>
         </container>
     </category>
 </settings>

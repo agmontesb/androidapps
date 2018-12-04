@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appname">System Manager</string>
+    <string name="menu_system">System</string>
+    <string name="sys_install">Install</string>
+    <string name="sys_uninstall">Uninstall</string>
+</resources>

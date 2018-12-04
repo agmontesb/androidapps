@@ -4,8 +4,8 @@
         <container label="TitlesContainer" side="left">
             <fragment name="TestActivity.TitlesFragment"
                       id="@+id/f_titles"/>
-            <!--<fragment clase="TestActivity.DetailsFragment"-->
-                      <!--id="@+id/f_details"/>-->
+            <fragment name="TestActivity.DetailsFragment"
+                      id="@+id/f_details"/>
         </container>
 	</category>
 </settings>

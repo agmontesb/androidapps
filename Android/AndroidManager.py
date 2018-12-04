@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 import os
-from Android.Resources import Pointers, Resources
+
+from Android.content.res.Resources import Pointers
 
 
 class ResourcePointers(Pointers):    
     @property
     def basepath(cls):
-        basepath = os.path.dirname(__file__)
+        bpath = os.path.dirname(__file__)
         relPathToResDirectory = r'res'
-        respath = os.path.join(basepath, relPathToResDirectory)
-        return os.path.realpath(respath)
+        bpath = os.path.join(bpath, relPathToResDirectory)
+        return os.path.realpath(bpath)
 
     class anim(object):
         accelerate_cubic = 0x050b0000
