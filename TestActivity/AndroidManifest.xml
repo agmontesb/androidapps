@@ -3,15 +3,19 @@
           package="com.AdroidApps.TestActivity"
           android:versionCode="1"
           android:versionNumber="0.0.1">
-    <application android:name="@string/appname"
+    <application android:name="MyApplicationName"
                  android:icon="@drawable/ic_launcher"
                  android:theme="@style/apptheme">
-        <activity android:class=".TestActivity" >
+        <provider
+            android:name="TodoProvider"
+            android:authorities="com.example.testactivity"
+            android:exported="true" />
+        <activity android:name=".TestActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:class=".ActivityNumber2" />
+        <activity android:name=".ActivityNumber2" />
     </application>
 </manifest>

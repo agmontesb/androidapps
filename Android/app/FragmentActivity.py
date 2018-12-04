@@ -2,21 +2,11 @@
 import Tkinter as tk
 
 from Android import BasicViews
-from Android.Activity import Activity
-from Android.Activity import ON_CREATE, ON_START, ON_RESUME
-from Android.Activity import ON_PAUSE, ON_STOP, ON_DESTROY
-from Android.Fragment import Fragment
-from Android.FragmentManager import FragmentManager
-
-
-# class FragmentManager(object):
-#     _fragmentManager = []
-#
-#     def add(self, fragment):
-#         self._fragmentManager.append(fragment)
-#
-#     def getFragments(self):
-#         return self._fragmentManager
+from Android.app.Activity import Activity
+from Android.app.Activity import ON_CREATE, ON_START, ON_RESUME
+from Android.app.Activity import ON_PAUSE, ON_STOP, ON_DESTROY
+from Android.app.Fragment import Fragment
+from Android.app.FragmentManager import FragmentManager
 
 
 class FragmentActivity(Activity):
@@ -164,7 +154,7 @@ class FragmentActivity(Activity):
             id, tag, name = map(item.get, ('id', 'tag', 'name'))
             resid = self.getResources().getIdentifier(id)
             fInstance = Fragment.instantiate(self, name)
-            ft.attach(fInstance).add(fInstance, resid, tag)
+            ft.add(fInstance, resid, tag)
         self.form = form = BasicViews.formFrameGen(self.frame, settings, selPanel)
         ft.commitNow()
         form.pack(fill=tk.BOTH, expand=tk.YES)
@@ -187,7 +177,7 @@ class FragmentActivity(Activity):
                 fragment.onResume()
         elif event == ON_PAUSE:
             for id, tag, fragment in fm.getFragments():
-                fragment.onPauseCreated()
+                fragment.onPause()
             self.onPause()
         elif event == ON_STOP:
             for id, tag, fragment in fm.getFragments():

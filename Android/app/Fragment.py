@@ -14,6 +14,9 @@ class Fragment(object):
     _tag = ''
     _args = []
     _hasOptionsMenu = False
+    _isAdded = False
+    _isDetached = True
+    _isInLayout = False
 
     def dump(self, prefix, fd, writer, args):
         """Print the Fragments's state into the given stream."""
@@ -165,11 +168,11 @@ class Fragment(object):
 
     def isAdded(self):
         """Return true if the fragment is currently added to its activity."""
-        pass
+        return self._isAdded
 
     def isDetached(self):
         """Return true if the fragment has been explicitly detached from the UI."""
-        pass
+        return self._isDetached
 
     def isHidden(self):
         """Return true if the fragment has been hidden."""
@@ -201,6 +204,7 @@ class Fragment(object):
     def onActivityCreated(self, savedInstanceState):
         """Called when the fragment's activity has been created and this
         fragment's view hierarchy instantiated."""
+        self._isAdded = True
         pass
 
     def onActivityResult(self, requestCode, resultCode, data):
@@ -211,6 +215,7 @@ class Fragment(object):
     def onAttach(self, context):
         """Called when a fragment is first attached to its context."""
         self._activity = context
+        self._isDetached = False
 
     def onAttachFragment(self, childFragment):
         """Called when a fragment is attached as a child of this fragment."""
@@ -242,10 +247,14 @@ class Fragment(object):
 
     def onCreateView(self, context, container, savedInstanceState):
         """Called to have the fragment instantiate its user interface view."""
+        id = container._id
+        res = self.getActivity().getResources()
+        self._id = res.getIdentifier(id)
         pass
 
     def onDestroy(self):
         """Called when the fragment is no longer in use."""
+        self._isDetached = True
         pass
 
     def onDestroyOptionsMenu(self):
@@ -261,6 +270,7 @@ class Fragment(object):
 
     def onDetach(self):
         """Called when the fragment is no longer attached to its activity."""
+        self._activity = None
         pass
 
     def onGetLayoutInflater(self, savedInstanceState):

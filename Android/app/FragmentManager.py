@@ -1,15 +1,80 @@
 # -*- coding: utf-8 -*-
-from interface.IFragmentManager import IFragmentManager
+from Android.interface.IFragmentManager import IFragmentManager
 from FragmentTransaction import FragmentTransaction
+import Tkinter as tk
 
 class FragmentManager(IFragmentManager):
     _backStack = []
     _backStackChangedListener = []
     _fmFragments = []
     _fragmentActivity = None
+    _fragmentLifecycleCallbacks = []
 
     def _setFragmentActivity(self, fragmentActivity):
         self._fragmentActivity = self._fragmentActivity or fragmentActivity
+
+    def _broadcastToBackStackChangeListeners(self, operationId):
+        for listener in self._backStackChangedListener:
+            bFlag = listener(operationId)
+            if not bFlag: break
+        return bFlag
+
+    def _addToBackStack(self, name, fragmentTransaction):
+        bFlag = self._broadcastToBackStackChangeListeners('add', name, fragmentTransaction)
+        if bFlag: self._backStack.append((name, fragmentTransaction))
+
+    def _onFragmentEvent(self, event, fragment, *args):
+        if event == 'onActivityCreated':
+            pass
+        elif event == 'onAttach':
+            for cb in self._fragmentLifecycleCallbacks:
+                cb.onFragmentPreAttached(self, fragment, self._fragmentActivity)
+            fragment.onAttach(*args)
+            for cb in self._fragmentLifecycleCallbacks:
+                cb.onFragmentAttached(self, fragment, self._fragmentActivity)
+        elif event == 'onCreate':
+            bundle, = args
+            for cb in self._fragmentLifecycleCallbacks:
+                cb.onFragmentPreCreated(self, fragment, bundle)
+            fragment.onCreate(bundle)
+            for cb in self._fragmentLifecycleCallbacks:
+                cb.onFragmentCreated(self, fragment, bundle)
+        elif event == 'onDestroy':
+            fragment.onDestroy()
+            for cb in self._fragmentLifecycleCallbacks:
+                cb.onFragmentDestroyed(self, fragment)
+        elif event == 'onDetach':
+            fragment.onDetach()
+            for cb in self._fragmentLifecycleCallbacks:
+                cb.onFragmentDetached(self, fragment)
+        elif event == 'onPause':
+            fragment.onPause()
+            for cb in self._fragmentLifecycleCallbacks:
+                cb.onFragmentPaused(self, fragment)
+        elif event == 'onResume':
+            fragment.onResume()
+            for cb in self._fragmentLifecycleCallbacks:
+                cb.onFragmentResumed(self, fragment)
+        elif event == 'onStart':
+            fragment.onStart()
+            for cb in self._fragmentLifecycleCallbacks:
+                cb.onFragmentStarted(self, fragment)
+        elif event == 'onStop':
+            fragment.onStop()
+            for cb in self._fragmentLifecycleCallbacks:
+                cb.onFragmentStopped(self, fragment)
+        elif event == 'onCreateView':
+            inflater, viewgroup, bundle = args
+            view = fragment.onCreateView(inflater, viewgroup, bundle)
+            if view:
+                view.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
+                fragment.onViewCreated(view, bundle)
+                for cb in self._fragmentLifecycleCallbacks:
+                    cb.onFragmentViewCreated(self, fragment, view, bundle)
+        elif event == 'onDestroyView':
+            fragment.onDestroyView()
+            for cb in self._fragmentLifecycleCallbacks:
+                cb.onFragmentViewDestroyed(self, fragment)
 
     def addOnBackStackChangedListener(self, listener):
         """Add a new listener for changes to the fragment back stack."""
@@ -35,21 +100,28 @@ class FragmentManager(IFragmentManager):
         """After a FragmentTransaction is committed with
         FragmentTransaction.commit(), it is scheduled to be executed asynchronously
         on the process's main thread."""
+        self.__fragmentActivity.frame.update_idletasks()
         pass
 
     def findFragmentById(self, id):
         """Finds a fragment that was identified by the given id either when
         inflated from XML or as the container ID when added in a transaction."""
-        filterf = lambda x: x.getId() == id
+        filterf = lambda x: x[0] == id
         filterFragments = filter(filterf, self._fmFragments)
         if filterFragments is None:
             """Search in the Transactions"""
-            pass
+            return None
+        return filterFragments[0]
 
     def findFragmentByTag(self, tag):
         """Finds a fragment that was identified by the given tag either when
         inflated from XML or as supplied when added in a transaction."""
-        pass
+        filterf = lambda x: x[1].getId() == tag
+        filterFragments = filter(filterf, self._fmFragments)
+        if filterFragments is None:
+            """Search in the Transactions"""
+            return None
+        return filterFragments[0]
 
     def getBackStackEntryAt(self, index):
         """Return the BackStackEntry at index index in the back stack; entries
@@ -95,6 +167,7 @@ class FragmentManager(IFragmentManager):
     def popBackStackImmediate(self, id=None, name=None, flags=None):
         """Like popBackStack(), but performs the operation immediately inside
         of the call."""
+        bFlag = self._broadcastToBackStackChangeListeners('pop', id, name, flags)
         try:
             if id:
                 filterf = lambda x: x.getId() != id
@@ -117,6 +190,7 @@ class FragmentManager(IFragmentManager):
     def registerFragmentLifecycleCallbacks(self, cb, recursive):
         """Registers a FragmentManager.FragmentLifecycleCallbacks to listen to
         fragment lifecycle events happening in this FragmentManager."""
+        self._fragmentLifecycleCallbacks.append(cb)
         pass
 
     def removeOnBackStackChangedListener(self, listener):
@@ -131,4 +205,5 @@ class FragmentManager(IFragmentManager):
     def unregisterFragmentLifecycleCallbacks(self, cb):
         """Unregisters a previously registered
         FragmentManager.FragmentLifecycleCallbacks."""
+        self._fragmentLifecycleCallbacks.remove(cb)
         pass

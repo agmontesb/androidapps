@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-from Android.Resources import Pointers, Resources
+from Android.content.res.Resources import Pointers
 
 
 class ResourcePointers(Pointers):    

@@ -1,8 +1,7 @@
 import pytest
-from Android.Intent import Intent
-from Android.IntentFilter import IntentFilter
-from Android.IntentFilter import PATTERN_LITERAL, PATTERN_PREFIX, PATTERN_SIMPLE_GLOB
-from Android.IntentFilter import NO_MATCH_CATEGORY, NO_MATCH_ACTION, NO_MATCH_DATA, NO_MATCH_TYPE
+from Android.content.Intent import Intent
+from Android.content.IntentFilter import IntentFilter
+from Android.content.IntentFilter import NO_MATCH_CATEGORY, NO_MATCH_ACTION
 from Android.Uri import Uri
 
 manifestStr = '''<manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -86,7 +85,7 @@ def getMatchFilters(intentFilters, action, mimetype='', data=None, category=''):
     intent = Intent(action=action, uri=data).addCategory(category).setType(mimetype)
     intent = intent.getSelector()
     action = intent.getAction()
-    data = intent.getData()
+    data = intent.getData() or Uri.parse('')
     mimetype = intent.resolveType('') or intent.getType()
     scheme = intent.getScheme()
     categories = intent.getCategories()

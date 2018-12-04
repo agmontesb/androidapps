@@ -4,8 +4,8 @@ import xml.etree.ElementTree as ET
 import Tkinter as tk
 import re
 import bisect
-import BasicViews
-import Resources
+import Android.BasicViews
+from Android.content.res import Resources
 
 ON_CREATE = 'onCreate'
 ON_START = 'onStart'
@@ -78,15 +78,18 @@ class Activity(object):
 
     def setContentView(self, viewid, settings=None):
         selPanel = self.getResources().getLayout(viewid).find('category')
-        form = BasicViews.formFrameGen(self.frame, settings, selPanel)
+        form = Android.BasicViews.formFrameGen(self.frame, settings, selPanel)
         form.pack(fill=tk.BOTH, expand=tk.YES)
         form.onClickEvent = self.onClickEvent
         form.onChangeSelEvent = self.onChangeSelEvent
         self.form = form
 
     def findViewById(self, viewid):
-        viewname = self.getResources().getResourceEntryName(viewid)
-        viewname = viewname.lower()
+        if isinstance(viewid, basestring):
+            viewname = viewid
+        else:
+            viewname = self.getResources().getResourceEntryName(viewid)
+            viewname = viewname.lower()
         return getattr(self.form, viewname)
 
     def setResult(self, resultCode, anIntent):

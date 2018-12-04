@@ -1,16 +1,15 @@
 # -*- coding: utf-8 -*-
-import sys
 import os
 import xml.etree.ElementTree as ET
 import collections
 import re
 import inspect
-from abc import ABCMeta, abstractproperty, abstractmethod
-from PIL import Image, ImageTk
+from abc import abstractproperty
+from PIL import Image
 import itertools
 
-from ResourceGenerator import android_resource_directories, \
-    android_element_name, android_resource_tags, android_res_maping
+from Android.content.res.ResourceGenerator import android_resource_directories, \
+    android_resource_tags, android_res_maping
 
 NS_MAP = "xmlns:map"
 
@@ -441,10 +440,10 @@ class Resources(object):
             if not isinstance(nameorid, int):
                 raise IOError('nameorid not a string or integer')
             restype = rawtype_id(nameorid)
-            if fresource[restype] == 'id': return nameorid
+            if fresource[restype] == 'id' or not resolveRefs: return nameorid
             method = getattr(self, fresource[restype])
             answ = method(nameorid)
-            if not resolveRefs: break
+            # if not resolveRefs: break
             if fresource[restype] in ['obtainTypedArray', 'getStringArray', 'getString']:
                 pck = self.getResourcePackageName(nameorid)
                 for k in range(len(answ)):
@@ -479,7 +478,7 @@ class Resources(object):
     def newTheme(self):
         pass
 
-    def obtainAtributes(self, aset, attrs):
+    def obtainAtributes(self, aset, attrs, resolveRefs=False):
         def styleableDef(styleableIds, xmlns=None):
             attrs_name = []
             restype = element_indx('attr')
@@ -524,7 +523,7 @@ class Resources(object):
                 for formato in formatos:
                     try:
                         if xval.startswith('@') and '/' in xval:
-                            xval = self.getValue(xval, None, resolveRefs=True)
+                            xval = self.getValue(xval, None, resolveRefs=resolveRefs)
                             break
                         else:
                             if formato == 'reference': continue

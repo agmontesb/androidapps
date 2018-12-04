@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-import pytest
 import Tkinter as tk
 
-from Android.Activity import AndroidMenu, MenuItem
+from Android.app.Activity import AndroidMenu, MenuItem
 
 
 class TestAndroidMenu:

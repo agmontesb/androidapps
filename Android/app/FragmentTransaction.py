@@ -1,20 +1,23 @@
 # -*- coding: utf-8 -*-
 
-from interface.IFragmentTransaction import IFragmentTransaction
+from Android.interface.IFragmentTransaction import IFragmentTransaction
 import Tkinter as tk
 
 
 class FragmentTransaction(IFragmentTransaction):
-    _ftransaction = []
-    _allowAddToBackStack = True
-    _fragmentManager = None
-    _isAddedToBackStack = False
+    def __init__(self):
+        super(FragmentTransaction, self).__init__()
+        self._ftransaction = []
+        self._allowAddToBackStack = True
+        self._fragmentManager = None
+        self._isAddedToBackStack = False
 
     def _setFragmentManager(self, fm):
         self._fragmentManager = self._fragmentManager or fm
 
     def add(self, fragment, containerViewId=None, tag=''):
         """Add a fragment to the activity state."""
+        if fragment.isDetached(): self.attach(fragment)
         self._ftransaction.append(('add', (fragment, containerViewId, tag)))
         return self
 
@@ -27,7 +30,8 @@ class FragmentTransaction(IFragmentTransaction):
         """Add this transaction to the back stack."""
         if not self._allowAddToBackStack:
             raise Exception('IllegalStateException')
-        self._ftransaction.append(('addToBackStack', (name, )))
+        fm = self._fragmentManager
+        fm._addToBackStack(name, self)
         self._isAddedToBackStack = True
         return self
 
@@ -39,6 +43,9 @@ class FragmentTransaction(IFragmentTransaction):
 
     def commit(self):
         """Schedules a commit of this transaction."""
+        fm = self._fragmentManager
+        fa = fm._fragmentActivity
+        fa.frame.after(100, self.commitNow)
         pass
 
     def commitAllowingStateLoss(self):
@@ -55,36 +62,63 @@ class FragmentTransaction(IFragmentTransaction):
             operation, args = stack.pop()
             if operation == 'add':
                 fInstance, resid, tag = args
+                # fInstance.onCreate(None)
+                fm._onFragmentEvent('onCreate', fInstance, None)
                 if resid:
                     container = fa.findViewById(resid)
-                    frame = fInstance.onCreateView(fa, container, None)
-                    if not frame: continue
-                    frame.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
-                    fInstance.onViewCreated(frame, None)
-                fInstance.onCreate(None)
+                    # frame = fInstance.onCreateView(fa, container, None)
+                    fm._onFragmentEvent('onCreateView', fInstance, fa, container, None)
                 fm._fmFragments.append((resid, tag, fInstance))
             elif operation == 'remove':
                 fInstance, = args
+                fFrame = self._fragmentFrame(fInstance)
+                # fInstance.onDestroyView()
+                fm._onFragmentEvent('onDestroyView', fInstance)
+                fFrame.destroy()
+                # fInstance.onDestroy()
+                fm._onFragmentEvent('onDestroy', fInstance)
+                stack.append(('detach', (fInstance,)))
                 pass
             elif operation == 'replace':
+                containerViewId, fInstance, tag = args
+                stack.append(('add', (fInstance, containerViewId, tag)))
+                stack.append(('attach', (fInstance, )))
+                if containerViewId:
+                    fg = fm.findFragmentById(containerViewId)
+                else:
+                    fg = fm.findFragmentById(tag)
+                if fg:
+                    id, tag, fg = fg
+                    stack.append(('remove', (fg, )))
                 pass
             elif operation == 'attach':
                 fInstance, = args
-                fInstance.onAttach(fa)
+                # fInstance.onAttach(fa)
+                fm._onFragmentEvent('onAttach', fInstance, fa)
             elif operation == 'detach':
+                fInstance, = args
+                # fInstance.onDetach()
+                fm._onFragmentEvent('onDetach', fInstance)
                 pass
             elif operation == 'hide':
                 fInstance, = args
-                pass
+                fFrame = self._fragmentFrame(fInstance)
+                fFrame.pack_forget()
             elif operation == 'show':
                 fInstance, = args
-                pass
+                fFrame = self._fragmentFrame(fInstance)
+                fFrame.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
             elif operation == 'runOnCommit':
                 pass
-
-
-
         pass
+
+    def _fragmentFrame(self, fragment):
+        fm = self._fragmentManager
+        fa = fm._fragmentActivity
+        id = fragment.getId()
+        container = fa.findViewById(id)
+        children = container.winfo_children()
+        return children[1]
 
     def commitNowAllowingStateLoss(self):
         """Like commitNow() but allows the commit to be executed after an 

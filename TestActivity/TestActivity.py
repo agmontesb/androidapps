@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from Android import Activity, BasicViews
-from Android.Intent import Intent
+from Android.content.Intent import Intent
 from TestActivityManager import R
 from Launcher import App
 

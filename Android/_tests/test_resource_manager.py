@@ -9,7 +9,7 @@ import pytest
 
 R = TestActivity.R
 context = dict(android=android.R, R=R)
-res = android.Resources.Resources(context)
+res = Android.content.pm.Resources.Resources(context)
 
 
 class TestResourceManager:

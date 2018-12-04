@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import pytest
-import Android.Intent as Intent
+import Android.content.Intent as Intent
 
 
 def test_parseUri():
