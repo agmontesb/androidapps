@@ -28,7 +28,7 @@ class DatosEod(Activity):
         selId = treew.selection()[0]
         mnemo = treew.set(selId, column = 'Mnemo')
         datosMnemo =  filter(lambda x: x[0] == mnemo, self.extras['datosIntradia'])
-        anIntent = Intent(component=('DatosBVC', 'DatosIntradia'))
+        anIntent = Intent().setComponent(*('DatosBVC', '.DatosIntradia'))
         extras = dict(datosMnemo=datosMnemo)
         anIntent.putExtras(extras)
         self.startActivity(anIntent)

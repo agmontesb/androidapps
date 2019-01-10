@@ -2,7 +2,7 @@
 """https://developer.android.com/reference/android/content/pm/ActivityInfo"""
 from Android import overload, Object
 from Android.content.pm.ComponentInfo import ComponentInfo
-from Android.interface.IParcelable import IParcelable, ICreator
+from Android.interface.IParcelable import IParcelable
 from Android.Os.Parcel import Parcel
 
 """
@@ -547,7 +547,7 @@ class ActivityInfo(ComponentInfo, IParcelable):
     """
     CREATOR = type(
         'ActivityInfoCreator',
-        (ICreator,), {
+        (IParcelable.ICreator,), {
             'createFromParcel': lambda self, inparcel: ActivityInfo()._readFromParcel(inparcel),
             'newArray': lambda self, size: (size * ActivityInfo)()
         })()

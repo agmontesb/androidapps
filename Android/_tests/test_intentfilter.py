@@ -1,10 +1,15 @@
 import pytest
+
 from Android.content.Intent import Intent
+from Android.content.Intent import ACTION_MAIN, ACTION_VIEW, ACTION_PICK
+from Android.content.Intent import ACTION_GET_CONTENT, ACTION_EDIT, ACTION_INSERT
+from Android.content.Intent import CATEGORY_LAUNCHER, CATEGORY_DEFAULT
 from Android.content.IntentFilter import IntentFilter
-from Android.content.IntentFilter import NO_MATCH_CATEGORY, NO_MATCH_ACTION
+from Android.content.IntentFilter import MATCH_CATEGORY_MASK, NO_MATCH_ACTION
 from Android.Uri import Uri
 
-manifestStr = '''<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+manifestStr = \
+'''<manifest xmlns:android="http://schemas.android.com/apk/res/android"
        package="com.android.notepad">
      <application android:icon="@drawable/app_notes"
              android:label="@string/app_name">
@@ -66,6 +71,24 @@ import StringIO
 NS_MAP = "xmlns:map"
 
 
+class ContentResolver(object):
+
+    def getType(self, data):
+        try:
+            scheme = data.getScheme()
+            if scheme == 'content':
+                try:
+                    int(data.getLastPathSegment())
+                    return "vnd.android.cursor.item/*"
+                except:
+                    return "vnd.android.cursor.dir/*"
+        except:
+            pass
+
+
+resolver = ContentResolver()
+
+
 def parse_nsmap(file):
     events = "start", "start-ns", "end-ns"
     root = None
@@ -81,27 +104,27 @@ def parse_nsmap(file):
             elem.set(NS_MAP, dict(ns_map))
     return ET.ElementTree(root)
 
-def getMatchFilters(intentFilters, action, mimetype='', data=None, category=''):
-    intent = Intent(action=action, uri=data).addCategory(category).setType(mimetype)
-    intent = intent.getSelector()
-    action = intent.getAction()
-    data = intent.getData() or Uri.parse('')
-    mimetype = intent.resolveType('') or intent.getType()
-    scheme = intent.getScheme()
-    categories = intent.getCategories()
-    matchArgs =  action, mimetype, scheme, data, categories, ''
+
+def getMatchFilters(intentFilters, action, mimetype=None, data=None, category=None):
+    intent = Intent(action)
+    if category: intent.addCategory(category)
+    if data:
+        intent.setDataAndTypeAndNormalize(data, mimetype)
+    else: intent.setTypeAndNormalize(mimetype)
     matches = []
     for k, intentfilter in enumerate(intentFilters):
-        result = intentfilter.match(*matchArgs)
-        if result >= NO_MATCH_CATEGORY: continue
+        result = intentfilter.match(resolver, intent, True, '')
+        if result < 0: continue
         matches.append(k)
     return matches
+
 
 @pytest.fixture(scope='module')
 def intentFiltersXml():
     fd = StringIO.StringIO(manifestStr)
     manifest =  parse_nsmap(fd).getroot()
     return manifest.findall('.//intent-filter')
+
 
 @pytest.fixture(scope='module')
 def intentFilters(intentFiltersXml):
@@ -112,10 +135,11 @@ def intentFilters(intentFiltersXml):
         filters.append(filter)
     return filters
 
+
 def test_filterActionCategory(intentFilters):
     anIntentFilter = intentFilters[0]
-    anAction = 'android.intent.action.MAIN'
-    aCategory = 'android.intent.category.LAUNCHER'
+    anAction = ACTION_MAIN
+    aCategory = CATEGORY_LAUNCHER
     assert anIntentFilter.countActions() == 1, 'countActions: Bad countActions'
     assert anIntentFilter.getAction(0) == anAction, 'getAction: Bad action on index'
     assert anIntentFilter.countCategories() == 1, 'countCategories: Bad countCategories'
@@ -126,7 +150,6 @@ def test_filterActionCategory(intentFilters):
     assert anIntentFilter.matchCategories([aCategory,]) is None, 'matchCategories: Not returning True'
     assert anIntentFilter.matchCategories([]) is None, 'matchCategories: Not returning True'
     assert anIntentFilter.matchCategories([aCategory, 'a' + aCategory]) == 'a' + aCategory, 'matchCategories: Not returning False'
-
 
 
 def test_filterData(intentFilters):
@@ -141,43 +164,44 @@ def test_filterData(intentFilters):
     assert anIntentFilter.countDataTypes() > 0, 'countDataTypes: Bad countDataTypes'
     assert anIntentFilter.getDataType(0) == dataType, "getDataType: Bad getDataType"
 
+
 def test_filterResolution(intentFilters):
-    action = 'android.app.action.MAIN'
+    action = ACTION_MAIN
     matches = getMatchFilters(intentFilters, action)
     assert matches == [0], 'match: Not match'
 
-    action = 'android.app.action.MAIN'
-    category = 'android.app.category.LAUNCHER'
+    action = ACTION_MAIN
+    category = CATEGORY_LAUNCHER
     matches = getMatchFilters(intentFilters, action, category=category)
     assert matches == [0], 'match: Not match'
 
-    action = 'android.intent.action.VIEW'
+    action = ACTION_VIEW
     data = Uri.parse('content://com.google.provider.NotePad/notes')
     categories = ''
     matches = getMatchFilters(intentFilters, action, data=data)
     assert matches == [1], 'match: Not match'
 
-    action = 'android.app.action.PICK'
+    action = ACTION_PICK
     data = Uri.parse('content://com.google.provider.NotePad/notes')
     matches = getMatchFilters(intentFilters, action, data=data)
     assert matches == [1], 'match: Not match'
 
-    action = 'android.app.action.GET_CONTENT'
+    action = ACTION_GET_CONTENT
     mimetype = 'vnd.android.cursor.item/vnd.google.note'
     matches = getMatchFilters(intentFilters, action, mimetype=mimetype)
     assert matches == [2], 'match: Not match'
 
-    action = 'android.intent.action.VIEW'
+    action = ACTION_VIEW
     data = Uri.parse('content://com.google.provider.NotePad/notes/1234')
     matches = getMatchFilters(intentFilters, action, data=data)
     assert matches == [3], 'match: Not match'
 
-    action = 'android.intent.action.EDIT'
+    action = ACTION_EDIT
     data = Uri.parse('content://com.google.provider.NotePad/notes/1234')
     matches = getMatchFilters(intentFilters, action, data=data)
     assert matches == [3], 'match: Not match'
 
-    action = 'android.app.action.INSERT'
+    action = ACTION_INSERT
     data = Uri.parse('content://com.google.provider.NotePad/notes')
     matches = getMatchFilters(intentFilters, action, data=data)
     assert matches == [4], 'match: Not match'

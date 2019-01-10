@@ -2,7 +2,7 @@
 """https://developer.android.com/reference/android/content/pm/PackageInfo"""
 from Android import overload, Object
 from Android.content.pm.ComponentInfo import ComponentInfo
-from Android.interface.IParcelable import IParcelable, ICreator
+from Android.interface.IParcelable import IParcelable
 
 """
 public static final int INSTALL_LOCATION_AUTO:
@@ -33,7 +33,7 @@ is currently granted to the application.
 REQUESTED_PERMISSION_GRANTED = 0x00000002
 
 
-class PackageInfo(Object, IParcelable):
+class PackageInfo(IParcelable):
     """
     Overall information about the contents of a package. This corresponds to 
     all of the information collected from AndroidManifest.xml.
@@ -45,7 +45,7 @@ class PackageInfo(Object, IParcelable):
     """
     CREATOR = type(
         'PackageInfoCreator',
-        (ICreator,), {
+        (IParcelable.ICreator,), {
             'createFromParcel': lambda self, inparcel: PackageInfo()._readFromParcel(inparcel),
             'newArray': lambda self, size: (size * PackageInfo)()
         })()
@@ -137,7 +137,7 @@ class PackageInfo(Object, IParcelable):
         The name of this package.  From the <manifest> tag's "name"
         attribute.
         """
-        self.packageName = ''
+        self.packageName = None
 
         """
         public PermissionInfo[] permissions:

@@ -63,7 +63,7 @@ class MainActivity(Activity):
 
             result = idewidgets.waitWindow(self, self.bilboard, 'dummy', thManager.lock)
 
-            anIntent = Intent(component=('DatosBVC', 'DatosEod'))
+            anIntent = Intent().setComponent(*('DatosBVC', '.DatosEod'))
             extras = dict(datosEOD=self.datosEOD, datosIntradia=self.datosIntradia)
             anIntent.putExtras(extras)
             self.startActivity(anIntent)

@@ -219,7 +219,7 @@ class SQLiteDatabase(object):
     def needUpgrade(self, newVersion):
         """Returns true if the new version code is greater than the current
         database version."""
-        return newVersion > self.getVersion()
+        return newVersion > self.getVersion()[0]
 
     @classmethod
     def openDatabase(cls, path, factory=None, flags=0, errorHandler=None, openParams=None):
@@ -390,9 +390,10 @@ class SQLiteDatabase(object):
         cursor = self._execSQL(sqlStatement, None)
         answ = None
         if not strValue:
-            answ = cursor.fetchone()
-            if not fetchAll:
-                answ = answ[0]
+            if fetchAll:
+                answ = cursor.fetchall()
+            else:
+                answ = cursor.fetchone()
         cursor.close()
         return answ
 

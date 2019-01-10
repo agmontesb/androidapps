@@ -2,6 +2,8 @@
 import Android as android
 import AppCompat as appcompat
 from Android import Activity, BasicViews
+from Android.content.ComponentName import ComponentName
+from Android.content.Intent import Intent
 from TestActivityManager import R
 
 
@@ -21,6 +23,10 @@ class ActivityNumber2(Activity):
 
     def onOptionsItemSelected(self, menuitem):
         itemId = menuitem.getItemId()
+        if itemId == R.id.create_new:
+            component = ComponentName('TestActivity', '.FragmentTest')
+            anIntent = Intent().setComponent(component)
+            self.startActivity(anIntent)
         print self.getResources().getResourceName(itemId)
 
     def onClickAction(self, resourceEntry):

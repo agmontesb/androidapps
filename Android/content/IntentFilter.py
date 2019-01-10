@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
-"""https://developer.android.com/reference/android/content/IntentFilter"""
+"""
+https://developer.android.com/reference/android/content/IntentFilter
+ported from:
+https://android.googlesource.com/platform/frameworks/base/+/483f3b06ea84440a082e21b68ec2c2e54046f5a6/core/java/android/content/IntentFilter.java
+"""
 import itertools
 
 from Android import overload, Object
 from Android.Os.PatternMatcher import PatternMatcher
 from Android.Uri import Uri
 from Android.content.Intent import Intent
-from Android.interface.IParcelable import IParcelable, ICreator
+from Android.interface.IParcelable import IParcelable
 
 """
 public static final int MATCH_ADJUSTMENT_MASK:
@@ -86,26 +90,26 @@ MATCH_CATEGORY_TYPE = 0x00600000
 public static final int NO_MATCH_ACTION:
 The filter didn't match due to different actions.
 """
-NO_MATCH_ACTION = 0xfffffffd
+NO_MATCH_ACTION = -3
 
 """
 public static final int NO_MATCH_CATEGORY:
 The filter didn't match because it required one or more categories
 that were not in the Intent.
 """
-NO_MATCH_CATEGORY = 0xfffffffc
+NO_MATCH_CATEGORY = -4
 
 """
 public static final int NO_MATCH_DATA:
 The filter didn't match due to different data URIs.
 """
-NO_MATCH_DATA = 0xfffffffe
+NO_MATCH_DATA = -2
 
 """
 public static final int NO_MATCH_TYPE:
 The filter didn't match due to different MIME types.
 """
-NO_MATCH_TYPE = 0xffffffff
+NO_MATCH_TYPE = -1
 
 """
 public static final int SYSTEM_HIGH_PRIORITY:
@@ -114,7 +118,7 @@ receivers are placed; that is, receivers that should execute before
 application code. Applications should never use filters with this or
 higher priorities.See also:setPriority(int)
 """
-SYSTEM_HIGH_PRIORITY = 0x000003e8
+SYSTEM_HIGH_PRIORITY = 1000
 
 """
 public static final int SYSTEM_LOW_PRIORITY:
@@ -123,10 +127,10 @@ receivers are placed; that is, receivers that should execute after
 application code. Applications should never use filters with this or
 lower priorities.See also:setPriority(int)
 """
-SYSTEM_LOW_PRIORITY = 0xfffffc18
+SYSTEM_LOW_PRIORITY = -1000
 
 
-class IntentFilter(Object, IParcelable):
+class IntentFilter(IParcelable):
     """
     Structured description of Intent values to be matched. An IntentFilter
     can match against actions, categories, and data (either via its type,
@@ -139,7 +143,7 @@ class IntentFilter(Object, IParcelable):
     """
     CREATOR = type(
         'IntentFilterCreator',
-        (ICreator,), {
+        (IParcelable.ICreator,), {
             'createFromParcel': lambda self, inparcel: IntentFilter()._readFromParcel(inparcel),
             'newArray': lambda self, size: (size * IntentFilter)()
         })()
@@ -148,12 +152,13 @@ class IntentFilter(Object, IParcelable):
     def __init__(self):
         super(IntentFilter, self).__init__()
         self._action = []
-        self._categories = []
-        self._dataauthorities = []
-        self._datapath = []
-        self._datascheme = []
-        self._datassp = []
-        self._datatype = []
+        self._categories = None
+        self._dataauthorities = None
+        self._datapath = None
+        self._datascheme = None
+        self._datassp = None
+        self._datatype = None
+        self._hasPartialTypes = False
         self.setPriority(0)
         pass
 
@@ -181,6 +186,13 @@ class IntentFilter(Object, IParcelable):
         """
         :param o: IntentFilter.
         """
+        self.__init__()
+        self.setPriority(o.getPriority())
+        self._hasPartialTypes = o._hasPartialTypes
+        vars = ['_action', '_categories', '_dataauthorities', '_datapath',
+                '_datascheme', '_datassp', '_datatype']
+        vars = filter(lambda x: getattr(o, x) is not None, vars)
+        map(lambda x: setattr(self, x, getattr(o, x)[:]), vars)
         pass
 
     def actionsIterator(self):
@@ -213,6 +225,7 @@ class IntentFilter(Object, IParcelable):
         :param category: String: Name of category to match, such as
         Intent.CATEGORY_EMBED.
         """
+        self._categories = self._categories or []
         if not self.hasCategory(category):
             self._categories.append(category)
 
@@ -236,10 +249,10 @@ class IntentFilter(Object, IParcelable):
         addDataScheme(String)
         """
         authority = AuthorityEntry(host, port)
-        if authority not in self._dataauthorities:
-            self._dataauthorities.append(authority)
+        self._dataauthorities = self._dataauthorities or []
+        self._dataauthorities.append(authority)
 
-    def addDataPath(self, path, type_):
+    def addDataPath(self, path, mimetype):
         """
         Add a new Intent data path to match against.  The filter must include
         one or more schemes (via addDataScheme(String)) and one or more
@@ -254,7 +267,7 @@ class IntentFilter(Object, IParcelable):
         the next character.
         :param path: String: Either a raw string that must exactly match the
         file path, or a simple pattern, depending on type.
-        :param type: int: Determines how path will be compared to determine a
+        :param mimetype: int: Determines how path will be compared to determine a
         match: either PatternMatcher.PATTERN_LITERAL,
         PatternMatcher.PATTERN_PREFIX, or PatternMatcher.PATTERN_SIMPLE_GLOB.
         See also:
@@ -262,9 +275,9 @@ class IntentFilter(Object, IParcelable):
         addDataScheme(String)
         addDataAuthority(String, String)
         """
-        patternmatcher = PatternMatcher(path, type_)
-        if not self.hasDataPath(patternmatcher):
-            self._datapath.append(patternmatcher)
+        self._datapath = self._datapath or []
+        patternmatcher = PatternMatcher(path, mimetype)
+        self._datapath.append(patternmatcher)
 
     def addDataScheme(self, scheme):
         """
@@ -279,6 +292,7 @@ class IntentFilter(Object, IParcelable):
         :param scheme: String: Name of the scheme to match, such as "http".
         See also: matchData(String, String, Uri)
         """
+        self._datascheme = self._datascheme or []
         if not self.hasDataScheme(scheme):
             self._datascheme.append(scheme)
 
@@ -304,11 +318,11 @@ class IntentFilter(Object, IParcelable):
         PatternMatcher.PATTERN_PREFIX, or PatternMatcher.PATTERN_SIMPLE_GLOB.
         See also: matchData(String, String, Uri)addDataScheme(String)
         """
+        self._datassp = self._datassp or []
         patternmatcher = PatternMatcher(ssp, datatype)
-        if not self.hasDataSchemeSpecificPart(patternmatcher):
-            self._datassp.append(patternmatcher)
+        self._datassp.append(patternmatcher)
 
-    def addDataType(self, type_):
+    def addDataType(self, mimetype):
         """
         Add a new Intent data type to match against.  If any types are
         included in the filter, then an Intent's data must be either one of
@@ -320,23 +334,31 @@ class IntentFilter(Object, IParcelable):
         Android should be converted to lower case before supplying them
         here.Throws IntentFilter.MalformedMimeTypeException if the given MIME
         type is not syntactically correct.
-        :param type_: String: Name of the data type to match, such as
+        :param mimetype: String: Name of the data type to match, such as
         "vnd.android.cursor.dir/person".
         :raises: IntentFilter.MalformedMimeTypeException
         See also: matchData(String, String, Uri)
         """
-        if type_:
-            if Intent.normalizeMimeType(type_) != type_:
-                raise Exception('Malformed Mime Type')
-            if not self.hasDataType(type_):
-                self._datatype.append(type_)
+        try:
+            prefix, suffix = mimetype.split('/')
+            if prefix and suffix:
+                self._datatype = self._datatype or []
+                if suffix == '*':
+                    mimetype = prefix
+                    self._hasPartialTypes = True
+                if not self.hasDataType(mimetype):
+                    self._datatype.append(mimetype)
+                return
+        except:
+            pass
+        raise Exception('Malformed Mime Type')
 
     def authoritiesIterator(self):
         """
         Return an iterator over the filter's data authorities.
         :return: Iterator<IntentFilter.AuthorityEntry>.
         """
-        return iter(self._dataauthorities)
+        return iter(self._dataauthorities) if self._dataauthorities else None
 
     def categoriesIterator(self):
         """
@@ -344,56 +366,56 @@ class IntentFilter(Object, IParcelable):
         :return: Iterator<String>. Iterator if this filter has categories or
         null if none.
         """
-        return iter(self._categories)
+        return iter(self._categories) if self._categories else None
 
     def countActions(self):
         """
         Return the number of actions in the filter.
         :return: int.
         """
-        return len(self._action)
+        return len(self._action or [])
 
     def countCategories(self):
         """
         Return the number of categories in the filter.
         :return: int.
         """
-        return len(self._categories)
+        return len(self._categories or [])
 
     def countDataAuthorities(self):
         """
         Return the number of data authorities in the filter.
         :return: int.
         """
-        return len(self._dataauthorities)
+        return len(self._dataauthorities or [])
 
     def countDataPaths(self):
         """
         Return the number of data paths in the filter.
         :return: int.
         """
-        return len(self._datapath)
+        return len(self._datapath or [])
 
     def countDataSchemeSpecificParts(self):
         """
         Return the number of data scheme specific parts in the filter.
         :return: int.
         """
-        return len(self._datassp)
+        return len(self._datassp or [])
 
     def countDataSchemes(self):
         """
         Return the number of data schemes in the filter.
         :return: int.
         """
-        return len(self._datascheme)
+        return len(self._datascheme or [])
 
     def countDataTypes(self):
         """
         Return the number of data types in the filter.
         :return: int.
         """
-        return len(self._datatype)
+        return len(self._datatype or [])
 
     @classmethod
     def create(self, action, dataType):
@@ -429,6 +451,24 @@ class IntentFilter(Object, IParcelable):
         :param du: Printer
         :param prefix: String
         """
+        strTemplate = '{0} {1}: "{2}"'
+        def println(key, values, prefix):
+            for value in values:
+                print strTemplate.format(prefix, key, value)
+
+        mapIterator = [('Action', self.actionsIterator()),
+                       ('Category', self.categoriesIterator()),
+                       ('Scheme', self.schemesIterator()),
+                       ('Authority', self.authoritiesIterator()),
+                       ('Path', self.pathsIterator()),
+                       ('SchemeSpecificParts', self.schemeSpecificPartsIterator()),
+                       ('Type', self.typesIterator())]
+        map(lambda x: println(x[0], x[1], prefix), mapIterator)
+        if self.getPriority() or self._hasPartialTypes:
+            print '{0} Priority={1}, HasPartialTypes={2}'.format(
+                self.getPriority(),
+                self._hasPartialTypes
+            )
         pass
 
     def getAction(self, index):
@@ -503,7 +543,7 @@ class IntentFilter(Object, IParcelable):
         :return: boolean. True if the action is explicitly mentioned in the
         filter.
         """
-        if action.startswith('android.app.action'): action = action.replace('.app.', '.intent.')
+        # if action.startswith('android.app.action'): action = action.replace('.app.', '.intent.')
         return action in self._action
 
     def hasCategory(self, category):
@@ -513,8 +553,11 @@ class IntentFilter(Object, IParcelable):
         :return: boolean. True if the category is explicitly mentioned in the
         filter.
         """
-        if category.startswith('android.app.category'): category = category.replace('.app.', '.intent.')
-        return category in self._categories
+        # if category.startswith('android.app.category'): category = category.replace('.app.', '.intent.')
+        try:
+            return category in self._categories
+        except:
+            return False
 
     def hasDataAuthority(self, data):
         """
@@ -524,7 +567,7 @@ class IntentFilter(Object, IParcelable):
         :return: boolean. Returns true if the data string matches an authority
         listed in the filter.
         """
-        return data in self._dataauthorities
+        return self.matchDataAuthority(data) >= 0
 
     def hasDataPath(self, data):
         """
@@ -535,7 +578,14 @@ class IntentFilter(Object, IParcelable):
         :return: boolean. True if the data string matches a path listed in the
         filter.
         """
-        return any(map(lambda x: x.match(data), self._datapath))
+        try:
+            it = itertools.dropwhile(
+                lambda x: not x.match(data),
+                self._datapath
+            )
+            return bool(it.next())
+        except:
+            return False
 
     def hasDataScheme(self, scheme):
         """
@@ -545,7 +595,10 @@ class IntentFilter(Object, IParcelable):
         :return: boolean. True if the scheme is explicitly mentioned in the
         filter.
         """
-        return scheme in self._datascheme
+        try:
+            return scheme in self._datascheme
+        except:
+            return False
 
     def hasDataSchemeSpecificPart(self, data):
         """
@@ -556,19 +609,39 @@ class IntentFilter(Object, IParcelable):
         :return: boolean. Returns true if the data string matches a scheme
         specific part listed in the filter.
         """
-        return any(map(lambda x: x.match(data), self._datassp))
+        try:
+            it = itertools.dropwhile(
+                lambda x: not x.match(data),
+                self._datassp
+            )
+            return bool(it.next())
+        except:
+            return False
 
-    def hasDataType(self, datatype):
+    def hasDataType(self, mimetype):
         """
         Is the given data type included in the filter?  Note that if the
         filter does not include any type, false will always be returned.
-        :param datatype: String: The data type to look for.
+        :param mimetype: String: The data type to look for.
         :return: boolean. True if the type is explicitly mentioned in the
         filter.
         """
-        return datatype in self._datatype
+        if mimetype is None or self._datatype is None: return False
+        if mimetype in self._datatype: return True
+        if mimetype == '*/*': return self.countDataTypes() > 0
+        try:
+            prefix, suffix = mimetype.split('/')
+        except:
+            raise Exception('Malformed Mime Type')
+        if self._hasPartialTypes and (
+                '*' in self._datatype or
+                prefix in self._datatype
+        ): return True
+        if suffix == '*':
+            return any(map(lambda x: x.startswith(prefix + '/'), self._datatype))
+        return False
 
-    @overload('str', 'str', 'str', 'Uri', 'set', 'str')
+    @overload('str', '@str', '@str', '@Uri', '@set', 'str')
     def match(self, action, mimetype, scheme, data, categories, logTag):
         """
         Test whether this filter matches the given intent data.  A match is
@@ -598,15 +671,21 @@ class IntentFilter(Object, IParcelable):
         Intent.getData()
         Intent.getCategories()
         """
-        bFlag = self.matchAction(action)
-        if not bFlag: return NO_MATCH_ACTION
-        retDataVal = self.matchData(mimetype, scheme, data)
-        if retDataVal in (NO_MATCH_DATA, NO_MATCH_TYPE): return retDataVal
-        retCatVal = self.matchCategories(categories or set())
-        if not retCatVal: return retDataVal
-        return NO_MATCH_CATEGORY
+        if action and not self.matchAction(action):
+            return NO_MATCH_ACTION
 
-    @match.adddef('ContentResolver', 'Intent', 'bool', 'str')
+        dataMatch = self.matchData(mimetype, scheme, data)
+        if dataMatch < 0:
+            return dataMatch
+
+        if self.matchCategories(categories) is not None:
+            return NO_MATCH_CATEGORY
+
+        if categories and self.countCategories():
+            dataMatch -= self.countCategories() - len(categories)
+        return dataMatch
+
+    @match.adddef('@ContentResolver', 'Intent', 'bool', 'str')
     def match(self, resolver, intent, resolve, logTag):
         """
         Test whether this filter matches the given intent.
@@ -623,12 +702,15 @@ class IntentFilter(Object, IParcelable):
         or NO_MATCH_CATEGORY if one or more categories didn't match.
         See also: match(String, String, String, android.net.Uri, Set, String)
         """
-        action = intent.getAction()
         mimetype = intent.resolveType(resolver) if resolve else intent.getType()
-        scheme = intent.getScheme()
-        data = intent.getData()
-        categories = intent.getCategories()
-        return self.match(action, mimetype, scheme, data, categories, logTag)
+        return self.match(
+            intent.getAction(),                 # action
+            mimetype,                           # mimetype
+            intent.getScheme(),                 # scheme
+            intent.getData(),                   # data
+            intent.getCategories(),             # categories
+            logTag                              # logTag
+        )
 
     def matchAction(self, action):
         """
@@ -637,9 +719,7 @@ class IntentFilter(Object, IParcelable):
         :param action: String: The desired action to look for.
         :return: boolean. True if the action is listed in the filter.
         """
-        if action:
-            return self.hasAction(action)
-        return not bool(self.countActions())
+        return self.hasAction(action)
 
     def matchCategories(self, categories):
         """
@@ -651,14 +731,15 @@ class IntentFilter(Object, IParcelable):
         :return: String. If all categories match (success), null; else the
         name of the first category that didn't match.
         """
-        it = itertools.dropwhile(lambda x: self.hasCategory(x), sorted(categories))
         try:
+            if categories == set(['']): categories = None  #TODO: Retirar luego
+            it = itertools.dropwhile(
+                lambda x: self.hasCategory(x),
+                sorted(categories)
+            )
             return it.next()
         except:
-            pass
-        # diff = filter(lambda x: not self.hasCategory(x), categories)
-        # if diff:
-        #     return diff[0]
+            return None
 
     def matchData(self, mimetype, scheme, data):
         """
@@ -692,83 +773,44 @@ class IntentFilter(Object, IParcelable):
         scheme/path didn't match.
         See also: match(ContentResolver, Intent, boolean, String)
         """
-        assert isinstance(mimetype, basestring)
-        assert isinstance(scheme, basestring)
-        assert not data or isinstance(data, Uri)
-        retValue = MATCH_ADJUSTMENT_NORMAL
-        bFlag1 = not self.countDataTypes() and \
-                 not (self.countDataSchemes() or self.countDataPaths())
-        bFlag2 = not (mimetype or data)
-        if bFlag1 and bFlag2:
-            retValue |= MATCH_CATEGORY_TYPE
-            return retValue + 1
 
-        bFlag1 = not self.countDataTypes()
-        bFlag2 = not mimetype
-        if (bFlag1 and bFlag2): return retValue
+        match = MATCH_CATEGORY_EMPTY
 
-        if mimetype and self.countDataTypes():
-            isPattern = lambda x: x.endswith('/*')
-            patterns = filter(isPattern, self.typesIterator())
-            nopatterns = filter(lambda x: not isPattern(x), self.typesIterator())
-            if isPattern(mimetype):
-                bflag = mimetype in patterns
-                bflag = bflag or itertools.dropwhile(lambda x: not x.startswith(mimetype[:-1]), nopatterns)
-            else:
-                bflag = mimetype in nopatterns
-                bflag = bflag or itertools.dropwhile(lambda x: not mimetype.startswith(x[:-1]), patterns)
-            if not isinstance(bflag, bool):
-                try:
-                    bflag.next()
-                    bflag = True
-                except:
-                    bflag = False
-            if not bflag:
-                return NO_MATCH_TYPE
-            retValue |= MATCH_CATEGORY_TYPE
-            retValue += 1
-        bFlag1 = not self.countDataSchemes()
-        if bFlag1:
-            bFlag2 = not scheme or scheme in ('content', 'file')
-            bflag = (bFlag1 and bFlag2)
+        if self.countDataTypes() == 0 and self.countDataSchemes() == 0:
+            match = NO_MATCH_DATA
+            if not mimetype and not scheme:
+                match = MATCH_CATEGORY_EMPTY+MATCH_ADJUSTMENT_NORMAL
+            return match
+
+        scheme = scheme or ''
+        if self.countDataSchemes():
+            if scheme not in self._datascheme:
+                return NO_MATCH_DATA
+            match = MATCH_CATEGORY_SCHEME
+
+            if self.countDataAuthorities():
+                authMatch = self.matchDataAuthority(data)
+                if not authMatch < 0: return NO_MATCH_DATA
+                if not self.countDataPaths():
+                    match = authMatch
+                elif self.hasDataPath(data.getPath()) and not self.countDataSchemeSpecificParts():
+                    match = MATCH_CATEGORY_PATH
+                elif self.hasDataSchemeSpecificPart(data):
+                    match = MATCH_CATEGORY_SCHEME_SPECIFIC_PART
+                else:
+                    return NO_MATCH_DATA
         else:
-            if scheme:
-                it = itertools.dropwhile(lambda x: x == scheme, self.schemesIterator())
-                try:
-                    it.next()
-                    bflag = True
-                except:
-                    bflag = False
-            else:
-                bflag = False
+            if scheme and scheme not in ('content', 'file'):
+                return NO_MATCH_DATA
 
-        if not bflag:
-            return NO_MATCH_DATA
-        retValue |= MATCH_CATEGORY_SCHEME
-        retValue += 1
-        if not data:
-            retValue |= MATCH_CATEGORY_EMPTY
-            return retValue + 1
-        ssp = data.getSchemeSpecificPart()
-        if ssp:
-            bFlag = self.hasDataSchemeSpecificPart(ssp)
-            if bFlag:
-                retValue |= MATCH_CATEGORY_SCHEME_SPECIFIC_PART
-                return retValue + 1
-
-        if not bFlag and data.isOpaque(): return NO_MATCH_DATA
-
-        answ = self.matchDataAuthority(data)
-        if answ == NO_MATCH_DATA: return answ
-        retValue |= answ
-        retValue += 1
-        path = data.getPath()
-        if path:
-            bFlag = self.hasDataPath(path)
-            if not bFlag: return NO_MATCH_DATA
-            retValue |= MATCH_CATEGORY_PATH
-            retValue += 1
-        return retValue
+        if self.countDataTypes():
+            if not self.hasDataType(mimetype):
+                return NO_MATCH_TYPE
+            match = MATCH_CATEGORY_TYPE
+        else:
+            if mimetype:
+                return NO_MATCH_TYPE
+        return match + MATCH_ADJUSTMENT_NORMAL
 
     def matchDataAuthority(self, data):
         """
@@ -779,32 +821,22 @@ class IntentFilter(Object, IParcelable):
         :return: int. Returns either MATCH_CATEGORY_HOST, MATCH_CATEGORY_PORT,
         NO_MATCH_DATA.
         """
-        it = itertools.dropwhile(lambda x: x.match(data) == NO_MATCH_DATA, self.authoritiesIterator())
         try:
+            it = itertools.dropwhile(
+                lambda x: x.match(data) == NO_MATCH_DATA,
+                self.authoritiesIterator()
+            )
             authority = it.next()
             return authority.match(data)
         except:
             return NO_MATCH_DATA
-        # host, port = data.getHost(), data.getPort()
-        # if self.countDataAuthorities():
-        #     for dataAuthority in self.authoritiesIterator():
-        #         dataHost, dataPort = dataAuthority
-        #         if host == dataHost:
-        #             retval = MATCH_CATEGORY_HOST
-        #             if not dataPort:
-        #                 return retval
-        #         elif port == dataPort:
-        #             return retval | MATCH_CATEGORY_PORT
-        #     else:
-        #         return NO_MATCH_DATA
-        # return 0x0000000
 
     def pathsIterator(self):
         """
         Return an iterator over the filter's data paths.
         :return: Iterator<PatternMatcher>.
         """
-        return iter(self._datapath)
+        return iter(self._datapath) if self._datapath else None
 
     def readFromXml(self, parser):
         """
@@ -886,7 +918,7 @@ class IntentFilter(Object, IParcelable):
         Return an iterator over the filter's data types.
         :return: Iterator<String>.
         """
-        return iter(self._datatype)
+        return iter(self._datatype) if self._datatype else None
 
     def writeToParcel(self, dest, flags):
         """
@@ -895,7 +927,33 @@ class IntentFilter(Object, IParcelable):
         :param flags: int: Additional flags about how the object should be
         written. May be 0 or Parcelable.PARCELABLE_WRITE_RETURN_VALUE.
         """
+        dest.writeStringList(self._action)
+        dest.writeStringList(self._categories)
+        dest.writeStringList(self._datascheme)
+        dest.writeStringList(self._datatype)
+        n = self.countDataAuthorities() or -1
+        dest.writeInt(n)
+        if n > 0:
+            map(lambda x: x.writeToParcel(dest), self._dataauthorities)
+        dest.writeTypedList(self._datapath)
+        dest.writeTypedList(self._datassp)
+        dest.writeInt(self._priority)
+        dest.writeInt(1*self._hasPartialTypes)
         pass
+    
+    def _readFromParcel(self, inparcel):
+        self._action = inparcel.createStringArrayList() or []
+        self._categories = inparcel.createStringArrayList()
+        self._datascheme = inparcel.createStringArrayList()
+        self._datatype = inparcel.createStringArrayList()
+        n = inparcel.readInt()
+        if n > 0:
+            self._dataauthorities = map(lambda x: AuthorityEntry(inparcel), range(n))
+        self._datapath = inparcel.createTypedArrayList(PatternMatcher.CREATOR)
+        self._datassp = inparcel.createTypedArrayList(PatternMatcher.CREATOR)
+        self._priority = inparcel.readInt()
+        self._hasPartialTypes = bool(inparcel.readInt())
+        return self
 
     def writeToXml(self, serializer):
         """
@@ -909,20 +967,36 @@ class IntentFilter(Object, IParcelable):
         for category in self.categoriesIterator():
             outstr += '    ' + '<category android:name="%s" />\n' % category
         for mimetype in self.typesIterator():
+            if '/' not in mimetype: mimetype += '/*'
             outstr += '    ' + '<data android:mimeType="%s" />\n' % mimetype
         for scheme in self.schemesIterator():
             outstr += '    ' + '<data android:scheme="%s" />\n' % scheme
-        for ssp, ssptype in self.schemeSpecificPartsIterator():
-            ssptype = ['ssp', 'sspprefix', 'sspPattern'][ssptype]
-            outstr += '    ' + '<data android:%s="%s" />\n' % (ssptype, ssp)
         for host, port in self.authoritiesIterator():
             datastr = '    ' + '<data android:host="%s" />\n' % host
             if port:
                 datastr = datastr.replace('/>', 'android:port="%s" />' % port)
             outstr += datastr
-        for path, pathtype in self.pathsIterator():
-            pathtype = ['path', 'pathprefix', 'pathPattern'][pathtype]
-            outstr += '    ' + '<data android:%s="%s" />\n' % (pathtype, path)
+        for path in self.pathsIterator():
+            pmtype = path.getType()
+            if pmtype == PatternMatcher.PATTERN_LITERAL:
+                name = 'path'
+            elif pmtype == PatternMatcher.PATTERN_PREFIX:
+                name = 'pathprefix'
+            elif pmtype == PatternMatcher.PATTERN_SIMPLE_GLOB:
+                name = 'pathPattern'
+            elif pmtype == PatternMatcher.PATTERN_ADVANCED_GLOB:
+                name = 'pathAdvancedPattern'
+            outstr += '    ' + '<data android:%s="%s" />\n' % (name, path.getPath())
+
+        for ssp in self.schemeSpecificPartsIterator():
+            pmtype = ssp.getType()
+            if pmtype == PatternMatcher.PATTERN_LITERAL:
+                name = 'ssp'
+            elif pmtype == PatternMatcher.PATTERN_PREFIX:
+                name = 'sspprefix'
+            elif pmtype == PatternMatcher.PATTERN_SIMPLE_GLOB:
+                name = 'sspPattern'
+            outstr += '    ' + '<data android:%s="%s" />\n' % (name, ssp.getPath())
         outstr += '</intent-filter>'
         serializer.write(outstr)
         serializer.seek(0)
@@ -933,13 +1007,25 @@ class AuthorityEntry(Object):
     This is an entry for a single authority in the Iterator returned by
     IntentFilter.authoritiesIterator() .
     """
+    @overload('str', 'str')
     def __init__(self, host, port):
-        """
-        :param host: String.
-        :param port: String.
-        """
+        '''
+        :param host: String
+        :param port: String
+        '''
+        super(AuthorityEntry, self).__init__()
         self._host = host
-        self._port = port
+        self._port = int(port) if port is not None else -1
+
+    @__init__.adddef('Parcel')
+    def __init__(self, parcel):
+        super(AuthorityEntry, self).__init__()
+        self._host = parcel.readString()
+        self._port = parcel.readInt()
+
+    def writeToParcel(self, parcel):
+        parcel.writeString(self._host)
+        parcel.writeInt(self._port)
 
     def equals(self, obj):
         """
@@ -990,10 +1076,13 @@ class AuthorityEntry(Object):
         :return: int. Returns either IntentFilter.NO_MATCH_DATA,
         IntentFilter.MATCH_CATEGORY_PORT, or IntentFilter.MATCH_CATEGORY_HOST.
         """
-        host, port = data.getHost(), data.getPort()
-        answ = 0
-        if host and host == self.getHost():
-            answ |= MATCH_CATEGORY_HOST
-        if port and port == self.getPort():
-            answ |= MATCH_CATEGORY_PORT
-        return answ or NO_MATCH_DATA
+        host = data.getHost().lower()
+        if host is None: return NO_MATCH_DATA
+        mhost = self._host.lstrip('*').lower()
+        if not host.endswith(mhost): return NO_MATCH_DATA
+        if self._port > 0:
+            if self._port != data.getPort(): return NO_MATCH_DATA
+            return MATCH_CATEGORY_PORT
+        return MATCH_CATEGORY_HOST
+
+

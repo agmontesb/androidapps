@@ -5,6 +5,7 @@ Created on 18/09/2014
 '''
 
 import Tkinter as tk
+import re
 import tkSimpleDialog
 import tkFileDialog
 import ttk
@@ -80,7 +81,8 @@ def formFrameGen(master, settings, selPane):
     if selPane.get('lib'):
         libname = selPane.get('lib')
         try:
-            baseframe = master.nametowidget('.base_frame')
+            parentname = re.match(r'(\.0x[0-9a-f]+)\.?', str(master))
+            baseframe = master.nametowidget(parentname.group(1))
         except:
             pckname = master.__module__.rsplit('.', 1)[0]
         else:
@@ -307,7 +309,8 @@ class baseWidget(tk.Frame, object):
 
     def getDroidInstance(self):
         try:
-            basic_frame = self.master.nametowidget('.base_frame')
+            parentname = re.match(r'(\.0x[0-9a-f]+)\.?', str(self.master))
+            basic_frame = self.master.nametowidget(parentname.group(1))
         except:
             return
         return basic_frame.droidInstance

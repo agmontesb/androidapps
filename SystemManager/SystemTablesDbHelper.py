@@ -3,7 +3,9 @@ import os
 import collections
 import xml.etree.ElementTree as ET
 
+from Android.AndroidManifest import AndroidManifest
 from Android.interface.ISQLiteOpenHelper import ISQLiteOpenHelper
+from Android.ClossureTable import ClossureTable
 
 import SystemTablesContract
 PACKAGE_TABLE = SystemTablesContract.InstalledPackages
@@ -20,11 +22,35 @@ class SystemTablesDbHelper(ISQLiteOpenHelper):
     If you change the database schema, you must increment the database version or the onUpgrade
     method will not be called.
     '''
-    DATABASE_VERSION = 4
+    DATABASE_VERSION = 6
 
     def __init__(self, context):
         super(SystemTablesDbHelper, self).__init__(self.DATABASE_NAME, self.DATABASE_VERSION, context)
-        self._db_directory = 'E:\BASURA\databases'
+        self._db_directory = '/media/amontesb/HITACHI/BASURA/databases'
+        self._sqlite_db = None
+
+    @property
+    def _db(self):
+        return self._sqlite_db
+
+    @_db.setter
+    def _db(self, db):
+        self._sqlite_db = db
+        if db:
+            self._clossure = ClossureTable(
+                db,
+                COMPONENTS_TABLE.TABLE_NAME,
+                COMPONENTS_TABLE._ID,
+                COMPONENTS_TABLE.COLUMN_PARENT
+            )
+
+    def __getattr__(self, name):
+        try:
+            clossure = self._clossure
+            return getattr(clossure, name)
+        except:
+            raise AttributeError()
+        pass
 
     def onCreate(self, db):
         '''
@@ -58,6 +84,12 @@ class SystemTablesDbHelper(ISQLiteOpenHelper):
          that SQL with the execSQL method of our SQLite database object.
         '''
         db.execSQL(SQL_CREATE_TABLE)
+
+        '''
+        The ClossureTable class, creates and maintains a clossure table for
+        the tree of the AndroidManifiest file 
+        '''
+        ClossureTable.onCreate(db)
         db.setVersion(self.DATABASE_VERSION)
 
     def onUpgrade(self, db, oldVersion, newVersion):
@@ -71,56 +103,20 @@ class SystemTablesDbHelper(ISQLiteOpenHelper):
         cursor.close()
         for table_class in table_classes:
             db.execSQL("DROP TABLE IF EXISTS " + table_class.TABLE_NAME)
+        db.execSQL("DROP TABLE IF EXISTS clossure")
         self.onCreate(db)
-
         map(self.processAndroidManifest, manifest_paths)
 
     def processAndroidManifest(self, manifest_path):
-        import pickle
-        from Android.IntentFilter import IntentFilter
-
-        manifest_file = os.path.join(manifest_path, 'AndroidManifest.xml')
+        context = self._context
         db = self.getWritableDatabase()
-        insertValueMap = lambda table_class, valueMap: \
-            db.insert(table_class.TABLE_NAME, None, valueMap)
+        am = AndroidManifest(context)
+        PACKAGE_TABLE_NAME = PACKAGE_TABLE.TABLE_NAME
+        COMPONENTS_TABLE_NAME = COMPONENTS_TABLE.TABLE_NAME
+        am.processAndroidManifest(
+            manifest_path,
+            db,
+            PACKAGE_TABLE_NAME,
+            COMPONENTS_TABLE_NAME
+        )
 
-        stack = collections.deque()
-        root = self.parse_nsmap(manifest_file).getroot()
-        package = root.attrib.pop('package')
-
-        valueMap = dict(name=package, path=manifest_path)
-        package_id = insertValueMap(PACKAGE_TABLE, valueMap)
-
-        stack.append((-1, root))
-        while stack:
-            parent_id, element = stack.popleft()
-            # items = [(key.split('}')[-1], value) for key, value in element.items()]
-            tag, attrib = element.tag, element.attrib
-            if tag == 'intent-filter':
-                ifilter = IntentFilter()
-                ifilter.readFromXml(element)
-                content = pickle.dumps(ifilter)
-                element = []
-            else:
-                content = ' '.join(['%s="%s"' % x for x in attrib.items()])
-            valueMap = dict(package_id=package_id, parent=parent_id,
-                            tag_type=tag, content=content)
-            tagid = insertValueMap(COMPONENTS_TABLE, valueMap)
-            stack.extend([(tagid, item) for item in element])
-
-    @staticmethod
-    def parse_nsmap(file):
-        NS_MAP = "xmlns:map"
-        events = "start", "start-ns", "end-ns"
-        root = None
-        ns_map = []
-        for event, elem in ET.iterparse(file, events):
-            if event == "start-ns":
-                ns_map.append(elem)
-            elif event == "end-ns":
-                ns_map.pop()
-            elif event == "start":
-                if root is None:
-                    root = elem
-                elem.set(NS_MAP, dict(ns_map))
-        return ET.ElementTree(root)

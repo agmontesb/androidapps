@@ -3,7 +3,7 @@
 from Android import overload
 from Android.Os.Parcel import Parcel
 from Android.content.pm.ComponentInfo import ComponentInfo
-from Android.interface.IParcelable import IParcelable, ICreator
+from Android.interface.IParcelable import IParcelable
 
 
 """
@@ -27,7 +27,7 @@ class ProviderInfo(ComponentInfo, IParcelable):
     """
     CREATOR = type(
         'ProviderInfoCreator',
-        (ICreator,), {
+        (IParcelable.ICreator,), {
             'createFromParcel': lambda self, inparcel: ProviderInfo()._readFromParcel(inparcel),
             'newArray': lambda self, size: (size * ProviderInfo)()
         })()

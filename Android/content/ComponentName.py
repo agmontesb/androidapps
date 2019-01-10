@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from Android.interface.IParcelable import ICreator, IParcelable
+from Android import overload
+from Android.interface.IParcelable import IParcelable
 
 
 class ComponentName(IParcelable):
@@ -14,19 +15,36 @@ class ComponentName(IParcelable):
     """
     public static final Creator<ComponentName> CREATOR:
     """
-    CREATOR = type('ComponentNameCreator', (ICreator,), {
+    CREATOR = type('ComponentNameCreator', (IParcelable.ICreator,), {
         'createFromParcel': lambda self, inparcel: ComponentName.readFromParcel(inparcel),
         'newArray': lambda self, size: (size * ComponentName)()
     })()
 
-    _mPackage = ''
-    _mClass = ''
+    @overload('str', 'str')
+    def __init__(self, pck_name, cls_name):
+        super(ComponentName, self).__init__()
+        assert pck_name, 'Package name is None'
+        assert cls_name, 'Class name is None'
+        self._mPackage = pck_name
+        self._mClass = cls_name
 
-    def __init__(self, pck, cls):
-        assert pck, 'Package name is None'
-        assert cls, 'Class name is None'
-        self._mPackage = pck
-        self._mClass = cls
+    @__init__.adddef('Context', 'str')
+    def __init__(self, pck_name, cls_name):
+        super(ComponentName, self).__init__()
+        assert pck_name, 'Context is None'
+        assert cls_name, 'Class name is None'
+        self._mPackage = pck_name.getPackageName()
+        self._mClass = cls_name
+
+    @__init__.adddef('Parcel')
+    def __init__(self, parcelin):
+        super(ComponentName, self).__init__()
+        pck_name = parcelin.readString()
+        cls_name = parcelin.readString()
+        assert pck_name, 'Context is None'
+        assert cls_name, 'Class name is None'
+        self._mPackage = pck_name.getPackageName()
+        self._mClass = cls_name
 
     def clone(self):
         """
@@ -118,6 +136,7 @@ class ComponentName(IParcelable):
     #     :return: ComponentName. the new ComponentName This value will never be
     #     null.
     #     """
+    #     return self.createRelative(pkg.getPackageName(), cls
     #     pass
 
     def describeContents(self):
@@ -256,7 +275,7 @@ class ComponentName(IParcelable):
             thecls = parcel.readString()
         except:
             return None
-        return cls(pck, thecls)
+        return cls.createRelative(pck, thecls)
 
     def toShortString(self):
         """
@@ -305,8 +324,8 @@ class ComponentName(IParcelable):
         try:
             pck, cls = strin.split('/')
         except:
-            return None
-        return ComponentName.createRelative(pck, cls)
+            cls = None
+        if cls: return ComponentName.createRelative(pck, cls)
 
     # @classmethod
     # def writeToParcel(self, c, out):
@@ -318,6 +337,10 @@ class ComponentName(IParcelable):
     #     placed.
     #     See also: readFromParcel(Parcel)
     #     """
+    #     if c:
+    #         c.writeToParcel(out)
+    #     else:
+    #         out.writeString(None)
     #     pass
 
     def writeToParcel(self, out, flags):

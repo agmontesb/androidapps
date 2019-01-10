@@ -116,7 +116,7 @@ class  ISQLiteOpenHelper(object):
             if bflag:
                 self.onCreate(db)
                 db.setVersion(self._version)
-        newVersion, oldVersion = self._version, db.getVersion()
+        newVersion, oldVersion = self._version, db.getVersion()[0]
         if newVersion != oldVersion:
             if db.needUpgrade(newVersion):
                 self.onUpgrade(db, oldVersion, newVersion)

@@ -54,7 +54,7 @@ class PackageItemInfo(Object):
         will only be filled in if you set the PackageManager.GET_META_DATA 
         flag when requesting the info.
         """
-        self.metaData = Bundle.EMPTY
+        self.metaData = Bundle()
 
         """
         public String name:

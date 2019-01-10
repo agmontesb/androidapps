@@ -36,7 +36,7 @@ class SystemComponents(IBaseColumns):
     /* The base CONTENT_URI used to query the SystemComponents table 
     from the content provider */
     """
-    CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI.toString(), TABLE_NAME)
+    CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI, TABLE_NAME)
 
     @staticmethod
     def buildUriWithId(id):
@@ -48,7 +48,7 @@ class SystemComponents(IBaseColumns):
         :param id: Unique id pointing to that row
         :return: to query details about a single todo entry
         """
-        return Uri.withAppendedPath(BASE_CONTENT_URI.toString(), '%s/%s' % (SystemComponents.TABLE_NAME, str(id)))
+        return Uri.withAppendedPath(BASE_CONTENT_URI, '%s/%s' % (SystemComponents.TABLE_NAME, str(id)))
 
 
 class InstalledPackages(IBaseColumns):
@@ -66,7 +66,7 @@ class InstalledPackages(IBaseColumns):
     /* The base CONTENT_URI used to query the installed_packages table 
     from the content provider */
     """
-    CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI.toString(), TABLE_NAME)
+    CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI, TABLE_NAME)
 
     @staticmethod
     def buildUriWithId(id):
@@ -78,4 +78,4 @@ class InstalledPackages(IBaseColumns):
         :param id: Unique id pointing to that row
         :return: to query details about a single todo entry
         """
-        return Uri.withAppendedPath(BASE_CONTENT_URI.toString(), '%s/%s' % (SystemComponents.TABLE_NAME, str(id)))
+        return Uri.withAppendedPath(BASE_CONTENT_URI, '%s/%s' % (SystemComponents.TABLE_NAME, str(id)))

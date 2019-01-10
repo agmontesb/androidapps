@@ -19,7 +19,7 @@ class UriMatcher(object):
 
     def match(self, uri):
         authority = uri.getAuthority()
-        path = uri.getPath()
+        path = uri.getPath().lstrip('/')
         patterns = self._uri_tree[authority]
         for pattern, code in patterns:
             if pattern.match(path):

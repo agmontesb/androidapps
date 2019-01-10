@@ -99,7 +99,7 @@ class BaseBundle(Android.Object):
         :param defaultValue: boolean: Value to return if key does not exist
         :return: boolean. a boolean value
         """
-        return self._readtype(key, 'b', defaultValue)
+        return bool(self._readtype(key, 'b', defaultValue))
 
     def getBooleanArray(self, key):
         """

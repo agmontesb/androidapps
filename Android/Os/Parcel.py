@@ -502,9 +502,10 @@ class Parcel(Object):
         :param outVal: Map
         :param loader: ClassLoader
         """
-        keys = self.createStringArrayList()
-        values = self.readArray(loader)
-        outVal.update(zip(keys, values))
+        if self.readInt() >= 0:
+            keys = self.createStringArrayList()
+            values = self.readArray(loader)
+            outVal.update(zip(keys, values))
 
     def readParcelable(self, loader):
         """
@@ -716,7 +717,9 @@ class Parcel(Object):
         elif valueType == 5:
             return self.readString()
         elif valueType == 6:
-            return self.readMap()
+            aMap = {}
+            self.readMap(aMap, loader)
+            return aMap
         elif valueType == 7:
             return self.readArrayList(loader)
         elif valueType == 2:
@@ -827,7 +830,7 @@ class Parcel(Object):
         growing dataCapacity() if needed.
         :param val: Bundle
         """
-        self.writeParcelable(val, 0)
+        self.writeTypedObject(val, 0)
 
     def writeByte(self, val):
         """
@@ -847,7 +850,7 @@ class Parcel(Object):
         self._writePrimitiveArray(ctypes.c_byte, b)
         pass
 
-    @writeByteArray.adddef('list', 'int', 'int')
+    @writeByteArray.adddef('bytearray', 'int', 'int')
     def writeByteArray(self, b, offset, len):
         """
         Write a byte array into the parcel at the current dataPosition(),
@@ -985,9 +988,13 @@ class Parcel(Object):
         allows you to avoid mysterious type errors at the point of marshalling.
         :param val: Map
         """
-        keys, values = zip(*val.items())
-        self.writeStringList(keys)
-        self.writeArray(values)
+        if val is None:
+            self.writeInt(-1)
+        else:
+            self.writeInt(0)
+            keys, values = zip(*val.items())
+            self.writeStringList(keys)
+            self.writeArray(values)
 
     def writeNoException(self):
         """
@@ -1030,10 +1037,10 @@ class Parcel(Object):
         """
         if value is None:
             self.writeInt(-1)
-            return
-        size = len(value)
-        self.writeInt(size)
-        map(lambda x: self.writeParcelable(x, parcelableFlags), value)
+        else:
+            size = len(value)
+            self.writeInt(size)
+            map(lambda x: self.writeParcelable(x, parcelableFlags), value)
         pass
 
     def writePersistableBundle(self, val):
@@ -1092,6 +1099,7 @@ class Parcel(Object):
         growing dataCapacity() if needed.
         :param val: String
         """
+        val = val or ''
         size = len(val) + 1
         self._incrementDataCapacity(size)
         pos = self.dataPosition()
@@ -1117,8 +1125,11 @@ class Parcel(Object):
         createStringArrayList()
         readStringList(List)
         """
-        self.writeInt(len(val))
-        map(self.writeString, val)
+        if val is None:
+            self.writeInt(-1)
+        else:
+            self.writeInt(len(val))
+            map(self.writeString, val)
         pass
 
     def writeStrongBinder(self, val):

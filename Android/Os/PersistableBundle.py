@@ -2,7 +2,7 @@
 """https://developer.android.com/reference/android/os/PersistableBundle"""
 import copy
 
-from Android.interface.IParcelable import IParcelable, ICreator
+from Android.interface.IParcelable import IParcelable
 from Android.Os.Parcel import Parcel
 from BaseBundle import BaseBundle
 from Android import overload
@@ -34,7 +34,7 @@ class PersistableBundle(BaseBundle, IParcelable):
     """
     CREATOR = type(
         'PersistableBundleCreator',
-        (ICreator,), {
+        (IParcelable.ICreator,), {
             'createFromParcel': lambda self, inparcel: PersistableBundle(inparcel),
             'newArray': lambda self, size: (size * PersistableBundle)()
         })()

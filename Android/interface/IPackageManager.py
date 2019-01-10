@@ -1584,7 +1584,7 @@ class IPackageManager(object):
         is to be retrieved.
         :return Drawable: Returns the image of the banner, or null if the
         activity has no banner specified.
-        :raises: PackageManager.NameNotFoundExceptionThrown if the resources
+        :raises: PackageManager.NameNotFoundException. Thrown if the resources
         for the given activity could not be loaded.
         See also:
         getActivityBanner(Intent)
@@ -2921,7 +2921,8 @@ class IPackageManager(object):
         :param flags: int: Additional option flags to modify the data
         returned. The most important is MATCH_DEFAULT_ONLY, to limit the
         resolution to only those activities that support the
-        Intent.CATEGORY_DEFAULT.Value is either 0 or combination of
+        Intent.CATEGORY_DEFAULT.
+        Value is either 0 or combination of
         GET_META_DATA, GET_SIGNATURES, GET_SHARED_LIBRARY_FILES, MATCH_ALL,
         MATCH_DISABLED_COMPONENTS, MATCH_DISABLED_UNTIL_USED_COMPONENTS,
         MATCH_DEFAULT_ONLY, MATCH_DIRECT_BOOT_AWARE,

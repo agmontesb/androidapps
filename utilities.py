@@ -90,7 +90,7 @@ class CreateAndroidClassStub(object):
         texto = self._getSectionText('Constants')
         pattern = r'(?#<div data-version-added .*>)'
         lista = self._getStringContent(pattern, texto)
-        indent = '\n'
+        indent = '\n    '
         for raw in lista:
             raw = map(lambda x: x.strip(' '), raw.split('\n'))
             key, value = raw[0], raw[-1][1:-1]
@@ -98,8 +98,9 @@ class CreateAndroidClassStub(object):
             cdoc = cdoc.replace(key, key + ':\n')
             cdoc = cdoc.replace('Constant Value:', '').strip('\n')
             cdoc = self.formatDocString(cdoc, indent, 80)
+            if not value.startswith('0x'): value = "'%s'" % value
             print(cdoc, file=self._log)
-            print('%s = %s' % (key, value), file=self._log)
+            print(indent[1:] + '%s = %s' % (key, value), file=self._log)
 
     def parseClassDefinition(self):
         if not self._classSignature:
@@ -146,7 +147,7 @@ class CreateAndroidClassStub(object):
             except:
                 fdef = '{0}@overload{0}def __init__(self)'.format('\n    ', k)
                 fdoc = ''
-                template = '''{0}:{2}pass'''
+                template = u'''{0}:{2}pass'''
             else:
                 signature = "'%s'" % "', '".join(varstype)
                 vars = ', '.join(varsname)
@@ -158,7 +159,7 @@ class CreateAndroidClassStub(object):
                     params += '\n:param {0}: {1}.'.format(*var)
                 fdoc = params[1:]
                 fdoc = self.formatDocString(fdoc, indent, 80)
-                template = '''{0}:{1}{2}pass'''
+                template = u'''{0}:{1}{2}pass'''
             ofunc = template.format(fdef, fdoc, indent)
             print(ofunc, file=self._log)
 
@@ -267,9 +268,9 @@ class CreateAndroidClassStub(object):
                 parts = map(lambda x: re.sub('\n(?!:)', ' ', x).strip(' \n'), parts)
                 fdoc = '\n'.join(filter(lambda x: x, parts))
                 fdoc = self.formatDocString(fdoc, indent, 80)
-                template = '''{0}:{1}{2}pass'''
+                template = u'''{0}:{1}{2}pass'''
             else:
-                template = '''{0}:{2}pass'''
+                template = u'''{0}:{2}pass'''
                 fdoc = ''
 
             ofunc = template.format(fdef, fdoc, indent)
@@ -279,8 +280,8 @@ class CreateAndroidClassStub(object):
         if filename:
             self._log = open(filename, 'w')
         self.parseClassDefinition()
+        # self.parseClassDefinition()
         self.parseAndroidConstants()
-        self.parseClassDefinition()
         self.parseAndroidFields()
         self.parseAndroidPublicConstructors()
         self.parseAndroidMethods()

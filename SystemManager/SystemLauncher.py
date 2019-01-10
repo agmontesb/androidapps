@@ -4,7 +4,9 @@ import os
 import tkFileDialog
 from Android import Activity, BasicViews
 import xml.etree.ElementTree as ET
-from Android.content.Intent import Intent
+from Android.content import Intent
+from Android.content.ComponentName import ComponentName
+from Android.content.pm.PackageManager import PackageManager
 from SystemManagerManager import R
 from SystemTablesProvider import SystemTablesProvider
 from SystemTablesContract import InstalledPackages, SystemComponents
@@ -17,12 +19,29 @@ classnames = ['FragmentTest', 'MainActivity']
 
 
 class SystemLauncher(Activity):
+    componentPackage = []
+    packages = []
+
     def onCreate(self):
         Activity.onCreate(self)
         self.setContentView(R.layout.SystemLauncher)
         view = self.findViewById(R.id.installed_applications)
+        self.packages = packages = self.getAvailablePackages()
         view.setValue(packages)
         pass
+
+    def getAvailablePackages(self):
+        intent = Intent.Intent(Intent.ACTION_MAIN)
+        intent.addCategory(Intent.CATEGORY_LAUNCHER)
+        pm = PackageManager()
+        allapps = pm.queryIntentActivities(intent, 0)
+        self.componentPackage = []
+        packages = []
+        for ri in allapps:
+            ai = ri.activityInfo
+            packages.append(ai.applicationInfo.name)
+            self.componentPackage.append(ComponentName(ai.packageName, ai.name))
+        return packages
 
     def onCreateOptionsMenu(self, menuframe):
         Activity.onCreateOptionsMenu(self, menuframe)
@@ -40,11 +59,10 @@ class SystemLauncher(Activity):
         scrlist = self.findViewById(resid)
         selId = scrlist.tree.selection()[0]
         package = scrlist.tree.set(selId, column='Nombre')
-        pckindx = packages.index(package)
-        activity = classnames[pckindx]
-        component = (package, activity)
-        anIntent = Intent(component=component)
-        self.startActivity(anIntent)
+        pckindx = self.packages.index(package)
+        component = self.componentPackage[pckindx]
+        anIntent = Intent.Intent().setComponent(component)
+        self.startActivity(anIntent, 1)
 
     def onInstall(self):
         manifest_path = tkFileDialog.askdirectory(title='Enter path for Application To Install')

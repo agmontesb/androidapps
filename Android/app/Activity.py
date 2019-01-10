@@ -18,7 +18,8 @@ class Activity(object):
     def __init__(self, launcher, intent):
         self.widgetMapping = {}
         self.master = launcher
-        self.frame = frame = tk.Frame(launcher, name='base_frame')
+        name = hex(16*self.__hash__())
+        self.frame = frame = tk.Frame(launcher, name=name)
         frame.droidInstance = self
         self.menuframe = menuframe = tk.Frame(frame, padx=4, pady=4, bg='light sea green')
         menuframe.pack(side=tk.TOP, fill=tk.X)
@@ -118,8 +119,8 @@ class Activity(object):
 
     """ Delegate Methods"""
 
-    def startActivity(self, anIntent):
-        return self.master.startActivity(anIntent)
+    def startActivity(self, anIntent, options=None):
+        return self.master.startActivity(anIntent, options)
 
     def startActivityForResult(self, anIntent, requestCode, options=None):
         return self.master.startActivityForResult(anIntent, requestCode, options)
@@ -256,7 +257,8 @@ class MenuItem(object):
         self._itemId = itemId
         self._menumaster = menumaster
         try:
-            parent = menumaster.nametowidget('.base_frame')
+            parentname = re.match(r'(\.0x[0-9a-f]+)\.', str(menumaster))
+            parent = menumaster.nametowidget(parentname.group(1))
         except:
             self._res = None
         else:
@@ -432,7 +434,8 @@ class AndroidMenu(tk.Menu):
 
         if not isinstance(title, basestring):
             try:
-                parent = self.nametowidget('.base_frame')
+                parentname = re.match(r'(\.0x[0-9a-f]+)\.', str(self))
+                parent = self.nametowidget(parentname.group(1))
             except:
                 title = ''
             else:

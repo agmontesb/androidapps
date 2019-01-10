@@ -3,22 +3,23 @@
 # Resources for appCompat:
 # https://github.com/aosp-mirror/platform_frameworks_support.git
 #
-
-
 import sys
 import Tkinter as tk
 import importlib
+
 import Android.BasicViews as BasicViews
+from Android.content.ComponentName import ComponentName
 from Android.content.Intent import Intent
 from Android.app.Activity import Activity
 from Android.app.Activity import ON_CREATE, ON_START, ON_RESUME
 from Android.app.Activity import ON_PAUSE, ON_STOP, ON_DESTROY
+from Android.content.pm.PackageManager import PackageManager
 
-
+ACTIVITY_SHOW = 'show'
+ACTIVITY_HIDE = 'hide'
+ACTIVITY_DESTROY = 'destroy'
 PACK_OPTIONS = dict(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
-packages = ['TestActivity', 'DatosBVC']
-classnames = ['FragmentTest', 'MainActivity']
-
+ROOT_PACKAGE = 'com.AdroidApps.'
 
 class AppStart(tk.Tk):
 
@@ -29,6 +30,7 @@ class AppStart(tk.Tk):
         self.bind_all("<Control-q>", self.quit)
         self.activetask = None
         self.tasks = dict()
+        starterComponent = ComponentName(*starterComponent)
         self.setGUI(starterComponent)
 
     def setGUI(self, starterComponent):
@@ -38,18 +40,10 @@ class AppStart(tk.Tk):
         tk.Button(bottomFrame, text='Home', command=self.activateLauncher).pack(side=tk.LEFT)
         tk.Button(bottomFrame, text='Back', command=self.backbtn).pack(side=tk.RIGHT)
         backStack = self.tasks.setdefault('StarterActivity', [])
-        if starterComponent is None:
-            frame = BasicViews.settContainer(self, label='Available Apps',
-                                                          scrollable='true')
-            for k, label in enumerate(packages):
-                btn = BasicViews.settAction(frame.innerframe, label=label, id=str(k))
-                frame.applyGeoManager(btn)
-                pass
-        else:
-            anIntent = Intent(component=starterComponent)
-            activity = self.resolveComponent(anIntent)
-            frame = activity(self, anIntent)
-            frame.onLifecycleEvent(ON_CREATE)
+        anIntent = Intent().setComponent(starterComponent)
+        activity = self.resolveComponent(anIntent)
+        frame = activity(self, anIntent)
+        frame.onLifecycleEvent(ON_CREATE)
         backStack.append(frame)
         self.activateLauncher()
 
@@ -59,15 +53,17 @@ class AppStart(tk.Tk):
     def backbtn(self):
         self.finishActivity()
 
-    def onClickEvent(self, wdgid):
-        wdgid = int(wdgid)
-        components = zip(packages, classnames)
-        package, module = component = components[wdgid]
-        if package not in self.tasks:
-            anIntent = Intent(component=component)
-            self.startActivity(anIntent)
+    def windowEvent(self, activity, event):
+        windowid = hex(16*activity.__hash__())
+        display = self.children[windowid]
+        if event == ACTIVITY_SHOW:
+            display.pack(**PACK_OPTIONS)
+        elif event == ACTIVITY_HIDE:
+            display.pack_forget()
+        elif event == ACTIVITY_DESTROY:
+            display.destroy()
         else:
-            self.setTaskOn(package)
+            raise Exception('displayEvent: Not an allowed event')
 
     def setTaskOn(self, task):
         if self.activetask == task: return
@@ -81,7 +77,7 @@ class AppStart(tk.Tk):
         activity = taskStack[-1]
         if isinstance(activity, Activity):
             activity.onLifecycleEvent(ON_PAUSE)
-            activity.frame.pack_forget()
+            self.windowEvent(activity, ACTIVITY_HIDE)
             activity.onLifecycleEvent(ON_STOP)
         else:
             activity.pack_forget()
@@ -93,21 +89,19 @@ class AppStart(tk.Tk):
         activity = taskStack[-1]
         if isinstance(activity, Activity):
             activity.onLifecycleEvent(ON_START)
-            activity.frame.pack(**PACK_OPTIONS)
+            self.windowEvent(activity, ACTIVITY_SHOW)
             activity.onLifecycleEvent(ON_RESUME)
         else:
             activity.pack(**PACK_OPTIONS)
         return taskStack
 
     def resolveComponent(self, anIntent):
-        selector = anIntent.getSelector()
-        component = selector.getComponent()
-        if not component:
-            # TODO: Establecer la lógica para resolver el intent implícito
-            pass
-        package, module = component
+        pm = PackageManager()
+        component = anIntent.resolveActivity(pm)
+        package, fullmodulename = component.getPackageName(), component.getClassName()
+        fullmodulename = fullmodulename.split(ROOT_PACKAGE, 1)[-1]
+        module = fullmodulename.rsplit('.', 1)[-1]
         try:
-            fullmodulename = '%s.%s' % (package, module)
             return getattr(importlib.import_module(fullmodulename), module)
         except Exception as e:
             raise Exception('ActivityNotFoundException')
@@ -125,13 +119,14 @@ class AppStart(tk.Tk):
     def startActivityForResult(self, anIntent, requestCode, options=None):
         activity = self.resolveComponent(anIntent)
         self.setActiveTaskOff()
-        newFrame = activity(self, anIntent)
-        self.activetask = activetask = anIntent.getPackage()
+        self.activetask = activetask = anIntent.getComponent().getPackageName().split(ROOT_PACKAGE, 1)[-1]
         taskStack = self.tasks.setdefault(activetask, [])
-        taskStack.append(newFrame)
-        if requestCode >= 0:
-            newFrame.requestcode = requestCode
-        newFrame.onLifecycleEvent(ON_CREATE)
+        if not options or not taskStack:
+            newFrame = activity(self, anIntent)
+            taskStack.append(newFrame)
+            if requestCode >= 0:
+                newFrame.requestcode = requestCode
+            newFrame.onLifecycleEvent(ON_CREATE)
         self.setActiveTaskOn()
 
     def finishActivity(self):
@@ -144,13 +139,13 @@ class AppStart(tk.Tk):
             requestCode = activity.requestcode
             resultCode, anIntent = activity._result
         activity.onLifecycleEvent(ON_DESTROY)
-        del activity.frame
+        self.windowEvent(activity, ACTIVITY_DESTROY)
         del activity
 
         if taskStack:
             activity = taskStack[-1]
             activity.onLifecycleEvent(ON_START)
-            activity.frame.pack(**PACK_OPTIONS)
+            self.windowEvent(activity, ACTIVITY_SHOW)
             activity.onLifecycleEvent(ON_RESUME)
             if bflag:
                 activity.onActivityResult(requestCode, resultCode, anIntent)

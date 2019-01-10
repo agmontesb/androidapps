@@ -2,7 +2,7 @@
 """https://developer.android.com/reference/android/os/Bundle"""
 import copy
 
-from Android.interface.IParcelable import IParcelable, ICreator
+from Android.interface.IParcelable import IParcelable
 from Android.Os.Parcel import Parcel
 from BaseBundle import BaseBundle
 from Android import overload, Object
@@ -34,7 +34,7 @@ class Bundle(BaseBundle, IParcelable):
     """
     CREATOR = type(
         'PersistableBundleCreator',
-        (ICreator,), {
+        (IParcelable.ICreator,), {
             'createFromParcel': lambda self, inparcel: Bundle().readFromParcel(inparcel),
             'newArray': lambda self, size: (size * Bundle)()
         })()
@@ -588,10 +588,10 @@ class Bundle(BaseBundle, IParcelable):
         to be passed through an IBinder connection.
         :param parcel: Parcel: The parcel to overwrite this bundle from.
         """
-        parcel.readStringList(self._keys)
+        self._keys = parcel.createStringArrayList()
         self._format = parcel.readString()
-        parcel.readIntArray(self._itemsize)
-        aparcel = parcel.createByteArray()
+        self._itemsize = list(parcel.createIntArray())
+        aparcel = bytearray(parcel.createByteArray())
         self._parcel.unmarshall(aparcel, 0, len(aparcel))
         return self
 

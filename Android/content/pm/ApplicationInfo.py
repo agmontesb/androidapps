@@ -2,7 +2,7 @@
 """https://developer.android.com/reference/android/content/pm/ApplicationInfo"""
 from Android import overload
 from PackageItemInfo import PackageItemInfo
-from Android.interface.IParcelable import IParcelable, ICreator
+from Android.interface.IParcelable import IParcelable
 from Android.Os.Parcel import Parcel
 
 
@@ -390,7 +390,7 @@ class ApplicationInfo(PackageItemInfo, IParcelable):
     """
     CREATOR = type(
         'ApplicationInfoCreator',
-        (ICreator,), {
+        (IParcelable.ICreator,), {
             'createFromParcel': lambda self, inparcel: ApplicationInfo()._readFromParcel(inparcel),
             'newArray': lambda self, size: (size * ApplicationInfo)()
         })()

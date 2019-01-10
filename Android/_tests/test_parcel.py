@@ -4,15 +4,15 @@ import pytest
 
 from Android import Object, overload
 from Android.Os.Parcel import Parcel
-from Android.interface.IParcelable import IParcelable, ICreator
+from Android.interface.IParcelable import IParcelable
 from Android.Os.PersistableBundle import PersistableBundle
 from Android.Os.Bundle import Bundle
 
 
-class MyParcelable(Object, IParcelable):
+class MyParcelable(IParcelable):
     CREATOR = type(
         'MyParcelableCreator',
-        (ICreator,), {
+        (IParcelable.ICreator,), {
             'createFromParcel': lambda self, inparcel: MyParcelable(inparcel),
             'newArray': lambda self, size: (size * MyParcelable)()
         })()

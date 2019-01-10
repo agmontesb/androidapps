@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """https://developer.android.com/reference/java/lang/Object"""
-import warnings
 import inspect
 
 
@@ -26,6 +25,13 @@ class overload(object):
             self._func.append(func)
 
     def adddef(self, *args):
+        '''
+        Signature for the overloaded function.
+        :param args: String list with the class name of the positional arguments.
+        When a positional argument can be None, it must be prefixed with @
+        character.
+        :return NoneType: None.
+        '''
         def wrapped(func):
             fargs = inspect.getargspec(func).args[1:]
             errorstr = 'ERROR: Signature for %s args, but function with %s args'
@@ -47,21 +53,25 @@ class overload(object):
             return func(instance, *args)
         return newfunction
 
-    def _getfuncOLD(self, args):
-        argsclass = tuple(map(lambda x: x.__class__.__name__, args))
-        try:
-            npos = self._signature.index(argsclass)
-            func = self._func[npos]
-        except:
-            name = self._func[0].__name__
-            raise TypeError('%s%s, unknown function signature.' % (name, argsclass))
-        return func
-
     def _getfunc(self, args):
         argsclass = map(lambda x: inspect.getmro(x.__class__), args)
         argsclass = map(lambda x: map(lambda y: y.__name__, x), argsclass)
         mask = map(lambda x: len(x) == len(args) and zip(x, argsclass), self._signature)
-        mask = map(lambda x: isinstance(x, list) and all(map(lambda m: m[0] in m[1],x)), mask)
+        # mask = map(
+        #     lambda x: isinstance(x, list) and
+        #               all(map(lambda m: m[0] in m[1],x)),
+        #     mask
+        # )
+        mask = map(
+            lambda x: isinstance(x, list) and
+                      all(
+                          map(lambda m: (m[0][0] != '@' and m[0] in m[1]) or \
+                                        ((m[0][0] == '@') and (m[0][1:] in m[1] or \
+                                         'NoneType' in m[1])),
+                              x)
+                      ),
+            mask
+        )
         mask = filter(lambda x: mask[x], range(len(mask)))
         assert len(mask) < 2
         try:
@@ -81,7 +91,7 @@ class Object(object):
     class.
     """
     def __init__(self, *args):
-        super(Object, self).__init__(*args)
+        super(Object, self).__init__()
         pass
 
     def equals(self, obj):
@@ -334,3 +344,8 @@ class Object(object):
         See also: WeakReferencePhantomReference
         """
         pass
+
+
+
+
+

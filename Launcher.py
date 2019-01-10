@@ -14,7 +14,7 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--activity', action='store', dest='activity', help='Activity name')
     parser.add_argument('--hasargs', action='store_true', default=False)
     args = parser.parse_args()
-    component = ('SystemManager', 'SystemLauncher')
+    component = ('SystemManager', '.SystemLauncher')
     if args.hasargs and args.package and args.activity:
         component = (args.package, args.activity)
 

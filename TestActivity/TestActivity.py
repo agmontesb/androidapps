@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from Android import Activity, BasicViews
+from Android.content.ComponentName import ComponentName
 from Android.content.Intent import Intent
 from TestActivityManager import R
-from Launcher import App
 
 
 class TestActivity(Activity):
@@ -20,7 +20,8 @@ class TestActivity(Activity):
     def onOptionsItemSelected(self, menuitem):
         itemId = menuitem.getItemId()
         if itemId == R.id.create_new:
-            anIntent = Intent(component=('TestActivity', 'ActivityNumber2'))
+            component = ComponentName('TestActivity', '.ActivityNumber2')
+            anIntent = Intent().setComponent(component)
             self.startActivity(anIntent)
         print self.getResources().getResourceName(itemId)
 

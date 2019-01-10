@@ -17,7 +17,7 @@ class test(object):
     def funcA(self, x1, x2, x3):
         return 'funcA_3 x1={0}, x2={1}, x3={2}'.format('str', 'str', 'int')
 
-    @overload('int', 'str')
+    @overload('@int', 'str')
     def funcB(self, x1, x2):
         return 'funcB_1 x1={0}, x2={1}'.format('int', 'str')
 
@@ -41,3 +41,12 @@ def test_overload():
     with pytest.raises(TypeError) as excinfo:
         a.funcB()
     assert str(excinfo.value) == 'funcB(), unknown function signature.'
+
+    '''
+    Using nullable variables
+    '''
+    assert a.funcB(None, 'uno') == 'funcB_1 x1={0}, x2={1}'.format('int', 'str')
+
+    with pytest.raises(TypeError) as excinfo:
+        a.funcB(3, None)
+    assert str(excinfo.value) == "funcB('int', 'NoneType'), unknown function signature."

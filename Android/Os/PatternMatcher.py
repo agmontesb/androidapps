@@ -3,7 +3,7 @@
 import re
 
 from Android import overload, Object
-from Android.interface.IParcelable import IParcelable, ICreator
+from Android.interface.IParcelable import IParcelable
 
 """
 public static final int PATTERN_ADVANCED_GLOB:
@@ -44,7 +44,7 @@ wildcard part of a normal regexp.
 """
 PATTERN_SIMPLE_GLOB = 0x00000002
 
-class PatternMatcher(Object, IParcelable):
+class PatternMatcher(IParcelable):
     """
     A simple pattern matcher, which is safe to use on untrusted data: it does 
     not provide full reg-exp support, only simple globbing that can not be 
@@ -57,7 +57,7 @@ class PatternMatcher(Object, IParcelable):
     """
     CREATOR = type(
         'PatternMatcherCreator',
-        (ICreator,), {
+        (IParcelable.ICreator,), {
             'createFromParcel': lambda self, inparcel: PatternMatcher._readFromParcel(inparcel),
             'newArray': lambda self, size: (size * PatternMatcher)()
         })()
