@@ -5,7 +5,7 @@ import Android as android
 from Android.AndroidManifest import AndroidManifest
 from Android.Os.Parcel import Parcel
 from Android.UriMatcher import UriMatcher
-import Android.interface.IPackageManager as PckMng
+from Android.interface.IPackageManager import IPackageManager as PckMng
 from Android.content import Intent
 from Android.content.ComponentName import ComponentName
 from Android.content.pm.ActivityInfo import ActivityInfo

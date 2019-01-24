@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """https://developer.android.com/reference/android/content/pm/ApplicationInfo"""
+import os
+
+import Android
 from Android import overload
 from PackageItemInfo import PackageItemInfo
 from Android.interface.IParcelable import IParcelable
@@ -650,10 +653,12 @@ class ApplicationInfo(PackageItemInfo, IParcelable):
         """
         self.uid = 0
 
+        self._name = ''
+
         pass
 
     @__init__.adddef('ApplicationInfo')
-    def ApplicationInfo(self, orig):
+    def __init__(self, orig):
         """
         :param orig: ApplicationInfo.
         """
@@ -662,6 +667,24 @@ class ApplicationInfo(PackageItemInfo, IParcelable):
         parcel.setDataPosition(0)
         self.__init__()
         self._readFromParcel(parcel)
+
+    @property
+    def packageName(self):
+        return self._name
+
+    @packageName.setter
+    def packageName(self, value):
+        self._name = value
+        if not value: return
+        baseDir = os.path.dirname(Android.__file__)
+        baseDir = os.path.dirname(baseDir)
+        if value == 'android':
+            self.dataDir = baseDir
+            return
+        # self.deviceProtectedDataDir = self.deviceProtectedDataDir or os.path.join(baseDir, 'data', 'data', value)
+        # self.credentialProtectedDataDir = self.deviceProtectedDataDir
+        value = value.rsplit('.', 1)[-1]
+        self.dataDir = os.path.join(baseDir, 'data', 'data', value)
 
     def describeContents(self):
         """

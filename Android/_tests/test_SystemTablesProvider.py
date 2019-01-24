@@ -5,7 +5,7 @@ import os
 import Android as android
 from Android.content import Intent
 from Android.content.ComponentName import ComponentName
-import Android.interface.IPackageManager as PckMng
+from Android.interface.IPackageManager import IPackageManager as PckMng
 from SystemManager import SystemTablesContract
 from SystemManager.SystemTablesDbHelper import SystemTablesDbHelper
 from SystemManager.SystemTablesProvider import SystemTablesProvider

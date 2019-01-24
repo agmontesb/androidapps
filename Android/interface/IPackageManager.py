@@ -4,1346 +4,6 @@ import abc
 
 from Android import overload
 
-"""
-public static final int CERT_INPUT_RAW_X509:
-Certificate input bytes: the input bytes represent an encoded X.509 
-Certificate which could
-be generated using an CertificateFactory
-"""
-CERT_INPUT_RAW_X509 = 0x00000000
-
-"""
-public static final int CERT_INPUT_SHA256:
-Certificate input bytes: the input bytes represent the SHA256 output of an 
-encoded X.509
-Certificate.
-"""
-CERT_INPUT_SHA256 = 0x00000001
-
-"""
-public static final int COMPONENT_ENABLED_STATE_DEFAULT:
-Flag for setApplicationEnabledSetting(String, int, int) and
-setComponentEnabledSetting(ComponentName, int, int): This
-component or application is in its default enabled state (as specified in
-its manifest).
-
-Explicitly setting the component state to this value restores it's
-enabled state to whatever is set in the manifest.
-"""
-COMPONENT_ENABLED_STATE_DEFAULT = 0x00000000
-
-"""
-public static final int COMPONENT_ENABLED_STATE_DISABLED:
-Flag for setApplicationEnabledSetting(String, int, int)
-and setComponentEnabledSetting(ComponentName, int, int): This
-component or application has been explicitly disabled, regardless of
-what it has specified in its manifest.
-"""
-COMPONENT_ENABLED_STATE_DISABLED = 0x00000002
-
-"""
-public static final int COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED:
-Flag for setApplicationEnabledSetting(String, int, int) only: This
-application should be considered, until the point where the user actually
-wants to use it.  This means that it will not normally show up to the user
-(such as in the launcher), but various parts of the user interface can
-use GET_DISABLED_UNTIL_USED_COMPONENTS to still see it and allow
-the user to select it (as for example an IME, device admin, etc).  Such code,
-once the user has selected the app, should at that point also make it enabled.
-This option currently can not be used with
-setComponentEnabledSetting(ComponentName, int, int).
-"""
-COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED = 0x00000004
-
-"""
-public static final int COMPONENT_ENABLED_STATE_DISABLED_USER:
-Flag for setApplicationEnabledSetting(String, int, int) only: The
-user has explicitly disabled the application, regardless of what it has
-specified in its manifest.  Because this is due to the user's request,
-they may re-enable it if desired through the appropriate system UI.  This
-option currently cannot be used with
-setComponentEnabledSetting(ComponentName, int, int).
-"""
-COMPONENT_ENABLED_STATE_DISABLED_USER = 0x00000003
-
-"""
-public static final int COMPONENT_ENABLED_STATE_ENABLED:
-Flag for setApplicationEnabledSetting(String, int, int)
-and setComponentEnabledSetting(ComponentName, int, int): This
-component or application has been explictily enabled, regardless of
-what it has specified in its manifest.
-"""
-COMPONENT_ENABLED_STATE_ENABLED = 0x00000001
-
-"""
-public static final int DONT_KILL_APP:
-Flag parameter for
-setComponentEnabledSetting(android.content.ComponentName, int, int) to indicate
-that you don't want to kill the app containing the component.  Be careful when 
-you set this
-since changing component states can make the containing application's behavior 
-unpredictable.
-"""
-DONT_KILL_APP = 0x00000001
-
-"""
-public static final String EXTRA_VERIFICATION_ID:
-Extra field name for the ID of a package pending verification. Passed to
-a package verifier and is used to call back to
-"""
-EXTRA_VERIFICATION_ID = 'android.content.pm.extra.VERIFICATION_ID'
-
-"""
-public static final String EXTRA_VERIFICATION_RESULT:
-Extra field name for the result of a verification, either
-VERIFICATION_ALLOW, or VERIFICATION_REJECT.
-Passed to package verifiers after a package is verified.
-"""
-EXTRA_VERIFICATION_RESULT = 'android.content.pm.extra.VERIFICATION_RESULT'
-
-"""
-public static final String FEATURE_ACTIVITIES_ON_SECONDARY_DISPLAYS:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device supports running activities on secondary displays.
-"""
-FEATURE_ACTIVITIES_ON_SECONDARY_DISPLAYS = 'android.software.activities_on_secondary_displays'
-
-"""
-public static final String FEATURE_APP_WIDGETS:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports app widgets.
-"""
-FEATURE_APP_WIDGETS = 'android.software.app_widgets'
-
-"""
-public static final String FEATURE_AUDIO_LOW_LATENCY:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String): The 
-device's
-audio pipeline is low-latency, more suitable for audio applications sensitive 
-to delays or
-lag in sound input or output.
-"""
-FEATURE_AUDIO_LOW_LATENCY = 'android.hardware.audio.low_latency'
-
-"""
-public static final String FEATURE_AUDIO_OUTPUT:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device includes at least one form of audio
-output, as defined in the Android Compatibility Definition Document (CDD)
-section 7.8 Audio.
-"""
-FEATURE_AUDIO_OUTPUT = 'android.hardware.audio.output'
-
-"""
-public static final String FEATURE_AUDIO_PRO:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device has professional audio level of functionality and performance.
-"""
-FEATURE_AUDIO_PRO = 'android.hardware.audio.pro'
-
-"""
-public static final String FEATURE_AUTOFILL:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device supports autofill of user credentials, addresses, credit cards, etc
-via integration with autofill
-providers.
-"""
-FEATURE_AUTOFILL = 'android.software.autofill'
-
-"""
-public static final String FEATURE_AUTOMOTIVE:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): This is a device dedicated to showing UI
-on a vehicle headunit. A headunit here is defined to be inside a
-vehicle that may or may not be moving. A headunit uses either a
-primary display in the center console and/or additional displays in
-the instrument cluster or elsewhere in the vehicle. Headunit display(s)
-have limited size and resolution. The user will likely be focused on
-driving so limiting driver distraction is a primary concern. User input
-can be a variety of hard buttons, touch, rotary controllers and even mouse-
-like interfaces.
-"""
-FEATURE_AUTOMOTIVE = 'android.hardware.type.automotive'
-
-"""
-public static final String FEATURE_BACKUP:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device can perform backup and restore operations on installed applications.
-"""
-FEATURE_BACKUP = 'android.software.backup'
-
-"""
-public static final String FEATURE_BLUETOOTH:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device is capable of communicating with
-other devices via Bluetooth.
-"""
-FEATURE_BLUETOOTH = 'android.hardware.bluetooth'
-
-"""
-public static final String FEATURE_BLUETOOTH_LE:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device is capable of communicating with
-other devices via Bluetooth Low Energy radio.
-"""
-FEATURE_BLUETOOTH_LE = 'android.hardware.bluetooth_le'
-
-"""
-public static final String FEATURE_CAMERA:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device has a camera facing away
-from the screen.
-"""
-FEATURE_CAMERA = 'android.hardware.camera'
-
-"""
-public static final String FEATURE_CAMERA_ANY:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device has at least one camera pointing in
-some direction, or can support an external camera being connected to it.
-"""
-FEATURE_CAMERA_ANY = 'android.hardware.camera.any'
-
-"""
-public static final String FEATURE_CAMERA_AR:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String): At 
-least one
-of the cameras on the device supports the
-MOTION_TRACKING capability level.
-"""
-FEATURE_CAMERA_AR = 'android.hardware.camera.ar'
-
-"""
-public static final String FEATURE_CAMERA_AUTOFOCUS:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device's camera supports auto-focus.
-"""
-FEATURE_CAMERA_AUTOFOCUS = 'android.hardware.camera.autofocus'
-
-"""
-public static final String FEATURE_CAMERA_CAPABILITY_MANUAL_POST_PROCESSING:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String): At 
-least one
-of the cameras on the device supports the
-manual post-processing
-capability level.
-"""
-FEATURE_CAMERA_CAPABILITY_MANUAL_POST_PROCESSING = 'android.hardware.camera.capability.manual_post_processing'
-
-"""
-public static final String FEATURE_CAMERA_CAPABILITY_MANUAL_SENSOR:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String): At 
-least one
-of the cameras on the device supports the
-manual sensor
-capability level.
-"""
-FEATURE_CAMERA_CAPABILITY_MANUAL_SENSOR = 'android.hardware.camera.capability.manual_sensor'
-
-"""
-public static final String FEATURE_CAMERA_CAPABILITY_RAW:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String): At 
-least one
-of the cameras on the device supports the
-RAW
-capability level.
-"""
-FEATURE_CAMERA_CAPABILITY_RAW = 'android.hardware.camera.capability.raw'
-
-"""
-public static final String FEATURE_CAMERA_EXTERNAL:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device can support having an external camera 
-connected to it.
-The external camera may not always be connected or available to applications 
-to use.
-"""
-FEATURE_CAMERA_EXTERNAL = 'android.hardware.camera.external'
-
-"""
-public static final String FEATURE_CAMERA_FLASH:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device's camera supports flash.
-"""
-FEATURE_CAMERA_FLASH = 'android.hardware.camera.flash'
-
-"""
-public static final String FEATURE_CAMERA_FRONT:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device has a front facing camera.
-"""
-FEATURE_CAMERA_FRONT = 'android.hardware.camera.front'
-
-"""
-public static final String FEATURE_CAMERA_LEVEL_FULL:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String): At 
-least one
-of the cameras on the device supports the
-full hardware
-capability level.
-"""
-FEATURE_CAMERA_LEVEL_FULL = 'android.hardware.camera.level.full'
-
-"""
-public static final String FEATURE_COMPANION_DEVICE_SETUP:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device supports associating
-with devices via CompanionDeviceManager.
-"""
-FEATURE_COMPANION_DEVICE_SETUP = 'android.software.companion_device_setup'
-
-"""
-public static final String FEATURE_CONNECTION_SERVICE:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The Connection Service API is enabled on the device.
-"""
-FEATURE_CONNECTION_SERVICE = 'android.software.connectionservice'
-
-"""
-public static final String FEATURE_CONSUMER_IR:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device is capable of communicating with
-consumer IR devices.
-"""
-FEATURE_CONSUMER_IR = 'android.hardware.consumerir'
-
-"""
-public static final String FEATURE_DEVICE_ADMIN:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports device policy enforcement via 
-device admins.
-"""
-FEATURE_DEVICE_ADMIN = 'android.software.device_admin'
-
-"""
-public static final String FEATURE_EMBEDDED:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): This is a device for IoT and may not have an UI. An 
-embedded
-device is defined as a full stack Android device with or without a display and 
-no
-user-installable apps.
-"""
-FEATURE_EMBEDDED = 'android.hardware.type.embedded'
-
-"""
-public static final String FEATURE_ETHERNET:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): This device supports ethernet.
-"""
-FEATURE_ETHERNET = 'android.hardware.ethernet'
-
-"""
-public static final String FEATURE_FAKETOUCH:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device does not have a touch screen, but
-does support touch emulation for basic events. For instance, the
-device might use a mouse or remote control to drive a cursor, and
-emulate basic touch pointer events like down, up, drag, etc. All
-devices that support android.hardware.touchscreen or a sub-feature are
-presumed to also support faketouch.
-"""
-FEATURE_FAKETOUCH = 'android.hardware.faketouch'
-
-"""
-public static final String FEATURE_FAKETOUCH_MULTITOUCH_DISTINCT:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device does not have a touch screen, but
-does support touch emulation for basic events that supports distinct
-tracking of two or more fingers.  This is an extension of
-FEATURE_FAKETOUCH for input devices with this capability.  Note
-that unlike a distinct multitouch screen as defined by
-FEATURE_TOUCHSCREEN_MULTITOUCH_DISTINCT, these kinds of input
-devices will not actually provide full two-finger gestures since the
-input is being transformed to cursor movement on the screen.  That is,
-single finger gestures will move a cursor; two-finger swipes will
-result in single-finger touch events; other two-finger gestures will
-result in the corresponding two-finger touch event.
-"""
-FEATURE_FAKETOUCH_MULTITOUCH_DISTINCT = 'android.hardware.faketouch.multitouch.distinct'
-
-"""
-public static final String FEATURE_FAKETOUCH_MULTITOUCH_JAZZHAND:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device does not have a touch screen, but
-does support touch emulation for basic events that supports tracking
-a hand of fingers (5 or more fingers) fully independently.
-This is an extension of
-FEATURE_FAKETOUCH for input devices with this capability.  Note
-that unlike a multitouch screen as defined by
-FEATURE_TOUCHSCREEN_MULTITOUCH_JAZZHAND, not all two finger
-gestures can be detected due to the limitations described for
-FEATURE_FAKETOUCH_MULTITOUCH_DISTINCT.
-"""
-FEATURE_FAKETOUCH_MULTITOUCH_JAZZHAND = 'android.hardware.faketouch.multitouch.jazzhand'
-
-"""
-public static final String FEATURE_FINGERPRINT:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device has biometric hardware to detect a 
-fingerprint.
-"""
-FEATURE_FINGERPRINT = 'android.hardware.fingerprint'
-
-"""
-public static final String FEATURE_FREEFORM_WINDOW_MANAGEMENT:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports freeform window management.
-Windows have title bars and can be moved and resized.
-"""
-FEATURE_FREEFORM_WINDOW_MANAGEMENT = 'android.software.freeform_window_management'
-
-"""
-public static final String FEATURE_GAMEPAD:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device has all of the inputs necessary to be considered a compatible game 
-controller, or
-includes a compatible game controller in the box.
-"""
-FEATURE_GAMEPAD = 'android.hardware.gamepad'
-
-"""
-public static final String FEATURE_HIFI_SENSORS:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports high fidelity sensor processing
-capabilities.
-"""
-FEATURE_HIFI_SENSORS = 'android.hardware.sensor.hifi_sensors'
-
-"""
-public static final String FEATURE_HOME_SCREEN:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports a home screen that is replaceable
-by third party applications.
-"""
-FEATURE_HOME_SCREEN = 'android.software.home_screen'
-
-"""
-public static final String FEATURE_INPUT_METHODS:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports adding new input methods 
-implemented
-with the InputMethodService API.
-"""
-FEATURE_INPUT_METHODS = 'android.software.input_methods'
-
-"""
-public static final String FEATURE_LEANBACK:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports leanback UI. This is
-typically used in a living room television experience, but is a software
-feature unlike FEATURE_TELEVISION. Devices running with this
-feature will use resources associated with the "television" UI mode.
-"""
-FEATURE_LEANBACK = 'android.software.leanback'
-
-"""
-public static final String FEATURE_LEANBACK_ONLY:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports only leanback UI. Only
-applications designed for this experience should be run, though this is
-not enforced by the system.
-"""
-FEATURE_LEANBACK_ONLY = 'android.software.leanback_only'
-
-"""
-public static final String FEATURE_LIVE_TV:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports live TV and can display
-contents from TV inputs implemented with the
-TvInputService API.
-"""
-FEATURE_LIVE_TV = 'android.software.live_tv'
-
-"""
-public static final String FEATURE_LIVE_WALLPAPER:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports live wallpapers.
-"""
-FEATURE_LIVE_WALLPAPER = 'android.software.live_wallpaper'
-
-"""
-public static final String FEATURE_LOCATION:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports one or more methods of
-reporting current location.
-"""
-FEATURE_LOCATION = 'android.hardware.location'
-
-"""
-public static final String FEATURE_LOCATION_GPS:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device has a Global Positioning System
-receiver and can report precise location.
-"""
-FEATURE_LOCATION_GPS = 'android.hardware.location.gps'
-
-"""
-public static final String FEATURE_LOCATION_NETWORK:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device can report location with coarse
-accuracy using a network-based geolocation system.
-"""
-FEATURE_LOCATION_NETWORK = 'android.hardware.location.network'
-
-"""
-public static final String FEATURE_MANAGED_USERS:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device supports creating secondary users and managed profiles via
-DevicePolicyManager.
-"""
-FEATURE_MANAGED_USERS = 'android.software.managed_users'
-
-"""
-public static final String FEATURE_MICROPHONE:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device can record audio via a
-microphone.
-"""
-FEATURE_MICROPHONE = 'android.hardware.microphone'
-
-"""
-public static final String FEATURE_MIDI:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device has a full implementation of the android.media.midi.* APIs.
-"""
-FEATURE_MIDI = 'android.software.midi'
-
-"""
-public static final String FEATURE_NFC:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device can communicate using Near-Field
-Communications (NFC).
-"""
-FEATURE_NFC = 'ndroid.hardware.nfc'
-
-"""
-public static final String FEATURE_NFC_HOST_CARD_EMULATION:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports host-
-based NFC card emulation.
-"""
-FEATURE_NFC_HOST_CARD_EMULATION = 'android.hardware.nfc.hce'
-
-"""
-public static final String FEATURE_NFC_HOST_CARD_EMULATION_NFCF:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports host-
-based NFC-F card emulation.
-"""
-FEATURE_NFC_HOST_CARD_EMULATION_NFCF = 'android.hardware.nfc.hcef'
-
-"""
-public static final String FEATURE_OPENGLES_EXTENSION_PACK:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports the OpenGL ES
-
-Android Extension Pack.
-"""
-FEATURE_OPENGLES_EXTENSION_PACK = 'android.hardware.opengles.aep'
-
-"""
-public static final String FEATURE_PC:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): This is a device dedicated to be primarily used
-with keyboard, mouse or touchpad. This includes traditional desktop
-computers, laptops and variants such as convertibles or detachables.
-Due to the larger screen, the device will most likely use the
-FEATURE_FREEFORM_WINDOW_MANAGEMENT feature as well.
-"""
-FEATURE_PC = 'android.hardware.type.pc'
-
-"""
-public static final String FEATURE_PICTURE_IN_PICTURE:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device supports picture-in-picture multi-window mode.
-"""
-FEATURE_PICTURE_IN_PICTURE = 'android.software.picture_in_picture'
-
-"""
-public static final String FEATURE_PRINTING:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device supports printing.
-"""
-FEATURE_PRINTING = 'android.software.print'
-
-"""
-public static final String FEATURE_RAM_LOW:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device's
-ActivityManager.isLowRamDevice() method returns
-true.
-"""
-FEATURE_RAM_LOW = 'android.hardware.ram.low'
-
-"""
-public static final String FEATURE_RAM_NORMAL:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device's
-ActivityManager.isLowRamDevice() method returns
-false.
-"""
-FEATURE_RAM_NORMAL = 'android.hardware.ram.normal'
-
-"""
-public static final String FEATURE_SCREEN_LANDSCAPE:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports landscape orientation
-screens.  For backwards compatibility, you can assume that if neither
-this nor FEATURE_SCREEN_PORTRAIT is set then the device supports
-both portrait and landscape.
-"""
-FEATURE_SCREEN_LANDSCAPE = 'android.hardware.screen.landscape'
-
-"""
-public static final String FEATURE_SCREEN_PORTRAIT:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports portrait orientation
-screens.  For backwards compatibility, you can assume that if neither
-this nor FEATURE_SCREEN_LANDSCAPE is set then the device supports
-both portrait and landscape.
-"""
-FEATURE_SCREEN_PORTRAIT = 'android.hardware.screen.portrait'
-
-"""
-public static final String FEATURE_SECURELY_REMOVES_USERS:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device supports secure removal of users. When a user is deleted the data 
-associated
-with that user is securely deleted and no longer available.
-"""
-FEATURE_SECURELY_REMOVES_USERS = 'android.software.securely_removes_users'
-
-"""
-public static final String FEATURE_SENSOR_ACCELEROMETER:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device includes an accelerometer.
-"""
-FEATURE_SENSOR_ACCELEROMETER = 'android.hardware.sensor.accelerometer'
-
-"""
-public static final String FEATURE_SENSOR_AMBIENT_TEMPERATURE:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device includes an ambient temperature sensor.
-"""
-FEATURE_SENSOR_AMBIENT_TEMPERATURE = 'android.hardware.sensor.ambient_temperature'
-
-"""
-public static final String FEATURE_SENSOR_BAROMETER:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device includes a barometer (air
-pressure sensor.)
-"""
-FEATURE_SENSOR_BAROMETER = 'android.hardware.sensor.barometer'
-
-"""
-public static final String FEATURE_SENSOR_COMPASS:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device includes a magnetometer (compass).
-"""
-FEATURE_SENSOR_COMPASS = 'android.hardware.sensor.compass'
-
-"""
-public static final String FEATURE_SENSOR_GYROSCOPE:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device includes a gyroscope.
-"""
-FEATURE_SENSOR_GYROSCOPE = 'android.hardware.sensor.gyroscope'
-
-"""
-public static final String FEATURE_SENSOR_HEART_RATE:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device includes a heart rate monitor.
-"""
-FEATURE_SENSOR_HEART_RATE = 'android.hardware.sensor.heartrate'
-
-"""
-public static final String FEATURE_SENSOR_HEART_RATE_ECG:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The heart rate sensor on this device is an 
-Electrocardiogram.
-"""
-FEATURE_SENSOR_HEART_RATE_ECG = 'android.hardware.sensor.heartrate.ecg'
-
-"""
-public static final String FEATURE_SENSOR_LIGHT:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device includes a light sensor.
-"""
-FEATURE_SENSOR_LIGHT = 'android.hardware.sensor.light'
-
-"""
-public static final String FEATURE_SENSOR_PROXIMITY:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device includes a proximity sensor.
-"""
-FEATURE_SENSOR_PROXIMITY = 'android.hardware.sensor.proximity'
-
-"""
-public static final String FEATURE_SENSOR_RELATIVE_HUMIDITY:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device includes a relative humidity sensor.
-"""
-FEATURE_SENSOR_RELATIVE_HUMIDITY = 'android.hardware.sensor.relative_humidity'
-
-"""
-public static final String FEATURE_SENSOR_STEP_COUNTER:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device includes a hardware step counter.
-"""
-FEATURE_SENSOR_STEP_COUNTER = 'android.hardware.sensor.stepcounter'
-
-"""
-public static final String FEATURE_SENSOR_STEP_DETECTOR:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device includes a hardware step detector.
-"""
-FEATURE_SENSOR_STEP_DETECTOR = 'android.hardware.sensor.stepdetector'
-
-"""
-public static final String FEATURE_SIP:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The SIP API is enabled on the device.
-"""
-FEATURE_SIP = 'android.software.sip'
-
-"""
-public static final String FEATURE_SIP_VOIP:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports SIP-based VOIP.
-"""
-FEATURE_SIP_VOIP = 'android.software.sip.voip'
-
-"""
-public static final String FEATURE_STRONGBOX_KEYSTORE:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device has a StrongBox hardware-backed Keystore.
-"""
-FEATURE_STRONGBOX_KEYSTORE = 'android.hardware.strongbox_keystore'
-
-"""
-public static final String FEATURE_TELEPHONY:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device has a telephony radio with data
-communication support.
-"""
-FEATURE_TELEPHONY = 'android.hardware.telephony'
-
-"""
-public static final String FEATURE_TELEPHONY_CDMA:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device has a CDMA telephony stack.
-"""
-FEATURE_TELEPHONY_CDMA = 'android.hardware.telephony.cdma'
-
-"""
-public static final String FEATURE_TELEPHONY_EUICC:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String): The 
-device
-supports embedded subscriptions on eUICCs.
-"""
-FEATURE_TELEPHONY_EUICC = 'android.hardware.telephony.euicc'
-
-"""
-public static final String FEATURE_TELEPHONY_GSM:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device has a GSM telephony stack.
-"""
-FEATURE_TELEPHONY_GSM = 'android.hardware.telephony.gsm'
-
-"""
-public static final String FEATURE_TELEPHONY_MBMS:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String): The 
-device
-supports cell-broadcast reception using the MBMS APIs.
-"""
-FEATURE_TELEPHONY_MBMS = 'android.hardware.telephony.mbms'
-
-"""
-public static final String FEATURE_TELEVISION:
-
-This constant was deprecated
-in API level 21.
-use FEATURE_LEANBACK instead.
-
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): This is a device dedicated to showing UI
-on a television.  Television here is defined to be a typical living
-room television experience: displayed on a big screen, where the user
-is sitting far away from it, and the dominant form of input will be
-"""
-FEATURE_TELEVISION = 'android.hardware.type.television'
-
-"""
-public static final String FEATURE_TOUCHSCREEN:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device's display has a touch screen.
-"""
-FEATURE_TOUCHSCREEN = 'android.hardware.touchscreen'
-
-"""
-public static final String FEATURE_TOUCHSCREEN_MULTITOUCH:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device's touch screen supports
-multitouch sufficient for basic two-finger gesture detection.
-"""
-FEATURE_TOUCHSCREEN_MULTITOUCH = 'android.hardware.touchscreen.multitouch'
-
-"""
-public static final String FEATURE_TOUCHSCREEN_MULTITOUCH_DISTINCT:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device's touch screen is capable of
-tracking two or more fingers fully independently.
-"""
-FEATURE_TOUCHSCREEN_MULTITOUCH_DISTINCT = 'android.hardware.touchscreen.multitouch.distinct'
-
-"""
-public static final String FEATURE_TOUCHSCREEN_MULTITOUCH_JAZZHAND:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device's touch screen is capable of
-tracking a full hand of fingers fully independently -- that is, 5 or
-more simultaneous independent pointers.
-"""
-FEATURE_TOUCHSCREEN_MULTITOUCH_JAZZHAND = 'android.hardware.touchscreen.multitouch.jazzhand'
-
-"""
-public static final String FEATURE_USB_ACCESSORY:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports connecting to USB accessories.
-"""
-FEATURE_USB_ACCESSORY = 'android.hardware.usb.accessory'
-
-"""
-public static final String FEATURE_USB_HOST:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports connecting to USB devices
-as the USB host.
-"""
-FEATURE_USB_HOST = 'android.hardware.usb.host'
-
-"""
-public static final String FEATURE_VERIFIED_BOOT:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device supports verified boot.
-"""
-FEATURE_VERIFIED_BOOT = 'android.software.verified_boot'
-
-"""
-public static final String FEATURE_VR_HEADTRACKING:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device implements headtracking suitable for a VR device.
-"""
-FEATURE_VR_HEADTRACKING = 'android.hardware.vr.headtracking'
-
-"""
-public static final String FEATURE_VR_MODE:
-
-This constant was deprecated
-in API level 28.
-use FEATURE_VR_MODE:
-_HIGH_PERFORMANCE instead.
-
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device implements an optimized mode for virtual reality (VR) applications 
-that handles
-stereoscopic rendering of notifications, and disables most monocular system UI 
-components
-while a VR application has user focus.
-Devices declaring this feature must include an application implementing a
-VrListenerService that can be targeted by VR applications via
-"""
-FEATURE_VR_MODE = 'android.software.vr.mode'
-
-"""
-public static final String FEATURE_VR_MODE_HIGH_PERFORMANCE:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device implements an optimized mode for virtual reality (VR) applications 
-that handles
-stereoscopic rendering of notifications, disables most monocular system UI 
-components
-while a VR application has user focus and meets extra CDD requirements to 
-provide a
-high-quality VR experience.
-Devices declaring this feature must include an application implementing a
-VrListenerService that can be targeted by VR applications via
-Activity.setVrModeEnabled(boolean, ComponentName).
-and must meet CDD requirements to provide a high-quality VR experience.
-"""
-FEATURE_VR_MODE_HIGH_PERFORMANCE = 'android.hardware.vr.high_performance'
-
-"""
-public static final String FEATURE_VULKAN_HARDWARE_COMPUTE:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String, int): If this feature is supported, the Vulkan native 
-API
-will enumerate at least one VkPhysicalDevice, and the feature version will 
-indicate
-what level of optional compute features that device supports beyond the Vulkan 
-1.0
-requirements.
-
-Compute level 0 indicates:
-The VK_KHR_variable_pointers extension and
-VkPhysicalDeviceVariablePointerFeaturesKHR::variablePointers feature are
-"""
-FEATURE_VULKAN_HARDWARE_COMPUTE = 'android.hardware.vulkan.compute'
-
-"""
-public static final String FEATURE_VULKAN_HARDWARE_LEVEL:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String, int): If this feature is supported, the Vulkan native 
-API
-will enumerate at least one VkPhysicalDevice, and the feature version will 
-indicate
-what level of optional hardware features limits it supports.
-
-Level 0 includes the base Vulkan requirements as well as:
-VkPhysicalDeviceFeatures::textureCompressionETC2
-Level 1 additionally includes:
-"""
-FEATURE_VULKAN_HARDWARE_LEVEL = 'android.hardware.vulkan.level'
-
-"""
-public static final String FEATURE_VULKAN_HARDWARE_VERSION:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String, int): The version of this feature indicates the 
-highest
-VkPhysicalDeviceProperties::apiVersion supported by the physical devices that 
-support
-the hardware level indicated by FEATURE_VULKAN_HARDWARE_LEVEL. The feature 
-version
-uses the same encoding as Vulkan version numbers:
-Major version number in bits 31-22Minor version number in bits 21-12Patch 
-version number in bits 11-0
-A version of 1.1.0 or higher also indicates:
-SYNC_FD external semaphore and fence handles are 
-
-supported.VkPhysicalDeviceSamplerYcbcrConversionFeatures::samplerYcbcrConversion is
-"""
-FEATURE_VULKAN_HARDWARE_VERSION = 'android.hardware.vulkan.version'
-
-"""
-public static final String FEATURE_WATCH:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): This is a device dedicated to showing UI
-on a watch. A watch here is defined to be a device worn on the body, perhaps on
-the wrist. The user is very close when interacting with the device.
-"""
-FEATURE_WATCH = 'android.hardware.type.watch'
-
-"""
-public static final String FEATURE_WEBVIEW:
-Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
-The device has a full implementation of the android.webkit.* APIs. Devices
-lacking this feature will not have a functioning WebView implementation.
-"""
-FEATURE_WEBVIEW = 'android.software.webview'
-
-"""
-public static final String FEATURE_WIFI:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports WiFi (802.11) networking.
-"""
-FEATURE_WIFI = 'android.hardware.wifi'
-
-"""
-public static final String FEATURE_WIFI_AWARE:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports Wi-Fi Aware.
-"""
-FEATURE_WIFI_AWARE = 'android.hardware.wifi.aware'
-
-"""
-public static final String FEATURE_WIFI_DIRECT:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports Wi-Fi Direct networking.
-"""
-FEATURE_WIFI_DIRECT = 'android.hardware.wifi.direct'
-
-"""
-public static final String FEATURE_WIFI_PASSPOINT:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports Wi-Fi Passpoint and all
-Passpoint related APIs in WifiManager are supported. Refer to
-WifiManager.addOrUpdatePasspointConfiguration(PasspointConfiguration) for more 
-info.
-"""
-FEATURE_WIFI_PASSPOINT = 'android.hardware.wifi.passpoint'
-
-"""
-public static final String FEATURE_WIFI_RTT:
-Feature for getSystemAvailableFeatures() and
-hasSystemFeature(String): The device supports Wi-Fi RTT (IEEE 802.11mc).
-"""
-FEATURE_WIFI_RTT = 'android.hardware.wifi.rtt'
-
-"""
-public static final int GET_ACTIVITIES:
-PackageInfo flag: return information about
-activities in the package in PackageInfo.activities.
-"""
-GET_ACTIVITIES = 0x00000001
-
-"""
-public static final int GET_CONFIGURATIONS:
-PackageInfo flag: return information about
-hardware preferences in
-PackageInfo.configPreferences,
-and requested features in PackageInfo.reqFeatures and
-PackageInfo.featureGroups.
-"""
-GET_CONFIGURATIONS = 0x00004000
-
-"""
-public static final int GET_DISABLED_COMPONENTS:
-
-This constant was deprecated
-in API level 24.
-replaced with MATCH_DISABLED_COMPONENTS
-"""
-GET_DISABLED_COMPONENTS = 0x00000200
-
-"""
-public static final int GET_DISABLED_UNTIL_USED_COMPONENTS:
-
-This constant was deprecated
-in API level 24.
-replaced with MATCH_DISABLED_UNTIL_USED_COMPONENTS.
-"""
-GET_DISABLED_UNTIL_USED_COMPONENTS = 0x00008000
-
-"""
-public static final int GET_GIDS:
-PackageInfo flag: return the
-group ids that are associated with an
-application.
-This applies for any API returning a PackageInfo class, either
-directly or nested inside of another.
-"""
-GET_GIDS = 0x00000100
-
-"""
-public static final int GET_INSTRUMENTATION:
-PackageInfo flag: return information about
-instrumentation in the package in
-PackageInfo.instrumentation.
-"""
-GET_INSTRUMENTATION = 0x00000010
-
-"""
-public static final int GET_INTENT_FILTERS:
-PackageInfo flag: return information about the
-intent filters supported by the activity.
-"""
-GET_INTENT_FILTERS = 0x00000020
-
-"""
-public static final int GET_META_DATA:
-ComponentInfo flag: return the PackageItemInfo.metaData
-data Bundles that are associated with a component.
-This applies for any API returning a ComponentInfo subclass.
-"""
-GET_META_DATA = 0x00000080
-
-"""
-public static final int GET_PERMISSIONS:
-PackageInfo flag: return information about
-permissions in the package in
-PackageInfo.permissions.
-"""
-GET_PERMISSIONS = 0x00001000
-
-"""
-public static final int GET_PROVIDERS:
-PackageInfo flag: return information about
-content providers in the package in
-PackageInfo.providers.
-"""
-GET_PROVIDERS = 0x00000008
-
-"""
-public static final int GET_RECEIVERS:
-PackageInfo flag: return information about
-intent receivers in the package in
-PackageInfo.receivers.
-"""
-GET_RECEIVERS = 0x00000002
-
-"""
-public static final int GET_RESOLVED_FILTER:
-ResolveInfo flag: return the IntentFilter that
-was matched for a particular ResolveInfo in
-ResolveInfo.filter.
-"""
-GET_RESOLVED_FILTER = 0x00000040
-
-"""
-public static final int GET_SERVICES:
-PackageInfo flag: return information about
-services in the package in PackageInfo.services.
-"""
-GET_SERVICES = 0x00000004
-
-"""
-public static final int GET_SHARED_LIBRARY_FILES:
-ApplicationInfo flag: return the
-paths to the shared libraries
-that are associated with an application.
-This applies for any API returning an ApplicationInfo class, either
-directly or nested inside of another.
-"""
-GET_SHARED_LIBRARY_FILES = 0x00000400
-
-"""
-public static final int GET_SIGNATURES:
-
-This constant was deprecated
-in API level 28.
-use GET_SIGNING_CERTIFICATES instead
-
-PackageInfo flag: return information about the
-signatures included in the package.
-"""
-GET_SIGNATURES = 0x00000040
-
-"""
-public static final int GET_SIGNING_CERTIFICATES:
-PackageInfo flag: return the signing certificates associated with
-this package.  Each entry is a signing certificate that the package
-has proven it is authorized to use, usually a past signing certificate from
-which it has rotated.
-"""
-GET_SIGNING_CERTIFICATES = 0x08000000
-
-"""
-public static final int GET_UNINSTALLED_PACKAGES:
-
-This constant was deprecated
-in API level 24.
-replaced with MATCH_UNINSTALLED_PACKAGES
-"""
-GET_UNINSTALLED_PACKAGES = 0x00002000
-
-"""
-public static final int GET_URI_PERMISSION_PATTERNS:
-ProviderInfo flag: return the
-URI permission patterns
-that are associated with a content provider.
-This applies for any API returning a ProviderInfo class, either
-directly or nested inside of another.
-"""
-GET_URI_PERMISSION_PATTERNS = 0x00000800
-
-"""
-public static final int INSTALL_REASON_DEVICE_RESTORE:
-Code indicating that this package was installed as part of restoring from 
-another device.
-"""
-INSTALL_REASON_DEVICE_RESTORE = 0x00000002
-
-"""
-public static final int INSTALL_REASON_DEVICE_SETUP:
-Code indicating that this package was installed as part of device setup.
-"""
-INSTALL_REASON_DEVICE_SETUP = 0x00000003
-
-"""
-public static final int INSTALL_REASON_POLICY:
-Code indicating that this package was installed due to enterprise policy.
-"""
-INSTALL_REASON_POLICY = 0x00000001
-
-"""
-public static final int INSTALL_REASON_UNKNOWN:
-Code indicating that the reason for installing this package is unknown.
-"""
-INSTALL_REASON_UNKNOWN = 0x00000000
-
-"""
-public static final int INSTALL_REASON_USER:
-Code indicating that the package installation was initiated by the user.
-"""
-INSTALL_REASON_USER = 0x00000004
-
-"""
-public static final int MATCH_ALL:
-Querying flag: if set and if the platform is doing any filtering of the
-results, then the filtering will not happen. This is a synonym for saying
-that all results should be returned.
-This flag should be used with extreme care.
-"""
-MATCH_ALL = 0x00020000
-
-"""
-public static final int MATCH_DEFAULT_ONLY:
-Resolution and querying flag: if set, only filters that support the
-Intent.CATEGORY_DEFAULT will be considered for
-matching.  This is a synonym for including the CATEGORY_DEFAULT in your
-supplied Intent.
-"""
-MATCH_DEFAULT_ONLY = 0x00010000
-
-"""
-public static final int MATCH_DIRECT_BOOT_AWARE:
-Querying flag: match components which are direct boot aware in
-the returned info, regardless of the current user state.
-
-When neither MATCH_DIRECT_BOOT_AWARE:
- nor
-MATCH_DIRECT_BOOT_UNAWARE are specified, the default behavior is
-to match only runnable components based on the user state. For example,
-when a user is started but credentials have not been presented yet, the
-user is running "locked" and only MATCH_DIRECT_BOOT_AWARE:
-
-components are returned. Once the user credentials have been presented,
-the user is running "unlocked" and both MATCH_DIRECT_BOOT_AWARE:
-
-and MATCH_DIRECT_BOOT_UNAWARE components are returned.See 
-also:UserManager.isUserUnlocked()
-"""
-MATCH_DIRECT_BOOT_AWARE = 0x00080000
-
-"""
-public static final int MATCH_DIRECT_BOOT_UNAWARE:
-Querying flag: match components which are direct boot unaware in
-the returned info, regardless of the current user state.
-
-When neither MATCH_DIRECT_BOOT_AWARE nor
-MATCH_DIRECT_BOOT_UNAWARE:
- are specified, the default behavior is
-to match only runnable components based on the user state. For example,
-when a user is started but credentials have not been presented yet, the
-user is running "locked" and only MATCH_DIRECT_BOOT_AWARE
-components are returned. Once the user credentials have been presented,
-the user is running "unlocked" and both MATCH_DIRECT_BOOT_AWARE
-and MATCH_DIRECT_BOOT_UNAWARE:
- components are returned.
- See also:UserManager.isUserUnlocked()
-"""
-MATCH_DIRECT_BOOT_UNAWARE = 0x00040000
-
-"""
-public static final int MATCH_DISABLED_COMPONENTS:
-PackageInfo flag: include disabled components in the returned info.
-"""
-MATCH_DISABLED_COMPONENTS = 0x00000200
-
-"""
-public static final int MATCH_DISABLED_UNTIL_USED_COMPONENTS:
-PackageInfo flag: include disabled components which are in
-that state only because of COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED
-in the returned info.  Note that if you set this flag, applications
-that are in this disabled state will be reported as enabled.
-"""
-MATCH_DISABLED_UNTIL_USED_COMPONENTS = 0x00008000
-
-"""
-public static final int MATCH_SYSTEM_ONLY:
-Querying flag: include only components from applications that are marked
-with ApplicationInfo.FLAG_SYSTEM.
-"""
-MATCH_SYSTEM_ONLY = 0x00100000
-
-"""
-public static final int MATCH_UNINSTALLED_PACKAGES:
-Flag parameter to retrieve some information about all applications (even
-uninstalled ones) which have data directories. This state could have
-resulted if applications have been deleted with flag
-DONT_DELETE_DATA with a possibility of being replaced or
-reinstalled in future.
-
-Note: this flag may cause less information about currently installed
-applications to be returned.
-"""
-MATCH_UNINSTALLED_PACKAGES = 0x00002000
-
-"""
-public static final long MAXIMUM_VERIFICATION_TIMEOUT:
-Can be used as the millisecondsToDelay argument for
-extendVerificationTimeout(int, int, long). This is the
-maximum time PackageManager waits for the verification
-agent to return (in milliseconds).
-"""
-MAXIMUM_VERIFICATION_TIMEOUT = 0x000000000036ee80
-
-"""
-public static final int PERMISSION_DENIED:
-Permission check result: this is returned by checkPermission(String, String)
-if the permission has not been granted to the given package.
-"""
-PERMISSION_DENIED = 0xffffffff
-
-"""
-public static final int PERMISSION_GRANTED:
-Permission check result: this is returned by checkPermission(String, String)
-if the permission has been granted to the given package.
-"""
-PERMISSION_GRANTED = 0x00000000
-
-"""
-public static final int SIGNATURE_FIRST_NOT_SIGNED:
-Signature check result: this is returned by checkSignatures(int, int)
-if the first package is not signed but the second is.
-"""
-SIGNATURE_FIRST_NOT_SIGNED = 0xffffffff
-
-"""
-public static final int SIGNATURE_MATCH:
-Signature check result: this is returned by checkSignatures(int, int)
-if all signatures on the two packages match.
-"""
-SIGNATURE_MATCH = 0x00000000
-
-"""
-public static final int SIGNATURE_NEITHER_SIGNED:
-Signature check result: this is returned by checkSignatures(int, int)
-if neither of the two packages is signed.
-"""
-SIGNATURE_NEITHER_SIGNED = 0x00000001
-
-"""
-public static final int SIGNATURE_NO_MATCH:
-Signature check result: this is returned by checkSignatures(int, int)
-if not all signatures on both packages match.
-"""
-SIGNATURE_NO_MATCH = 0xfffffffd
-
-"""
-public static final int SIGNATURE_SECOND_NOT_SIGNED:
-Signature check result: this is returned by checkSignatures(int, int)
-if the second package is not signed but the first is.
-"""
-SIGNATURE_SECOND_NOT_SIGNED = 0xfffffffe
-
-"""
-public static final int SIGNATURE_UNKNOWN_PACKAGE:
-Signature check result: this is returned by checkSignatures(int, int)
-if either of the packages are not valid.
-"""
-SIGNATURE_UNKNOWN_PACKAGE = 0xfffffffc
-
-"""
-public static final int VERIFICATION_ALLOW:
-Used as the verificationCode argument for
-verifyPendingInstall(int, int) to indicate that the calling
-package verifier allows the installation to proceed.
-"""
-VERIFICATION_ALLOW = 0x00000001
-
-"""
-public static final int VERIFICATION_REJECT:
-Used as the verificationCode argument for
-verifyPendingInstall(int, int) to indicate the calling
-package verifier does not vote to allow the installation to proceed.
-"""
-VERIFICATION_REJECT = 0xffffffff
-
-"""
-public static final int VERSION_CODE_HIGHEST:
-Constant for specifying the highest installed package version code.
-"""
-VERSION_CODE_HIGHEST = 0xffffffff
-
 
 class IPackageManager(object):
     """
@@ -1352,6 +12,1346 @@ class IPackageManager(object):
     find this class through Context.getPackageManager() .
     """
     __metaclass__ = abc.ABCMeta
+
+    """
+    public static final int CERT_INPUT_RAW_X509:
+    Certificate input bytes: the input bytes represent an encoded X.509 
+    Certificate which could
+    be generated using an CertificateFactory
+    """
+    CERT_INPUT_RAW_X509 = 0x00000000
+
+    """
+    public static final int CERT_INPUT_SHA256:
+    Certificate input bytes: the input bytes represent the SHA256 output of an 
+    encoded X.509
+    Certificate.
+    """
+    CERT_INPUT_SHA256 = 0x00000001
+
+    """
+    public static final int COMPONENT_ENABLED_STATE_DEFAULT:
+    Flag for setApplicationEnabledSetting(String, int, int) and
+    setComponentEnabledSetting(ComponentName, int, int): This
+    component or application is in its default enabled state (as specified in
+    its manifest).
+
+    Explicitly setting the component state to this value restores it's
+    enabled state to whatever is set in the manifest.
+    """
+    COMPONENT_ENABLED_STATE_DEFAULT = 0x00000000
+
+    """
+    public static final int COMPONENT_ENABLED_STATE_DISABLED:
+    Flag for setApplicationEnabledSetting(String, int, int)
+    and setComponentEnabledSetting(ComponentName, int, int): This
+    component or application has been explicitly disabled, regardless of
+    what it has specified in its manifest.
+    """
+    COMPONENT_ENABLED_STATE_DISABLED = 0x00000002
+
+    """
+    public static final int COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED:
+    Flag for setApplicationEnabledSetting(String, int, int) only: This
+    application should be considered, until the point where the user actually
+    wants to use it.  This means that it will not normally show up to the user
+    (such as in the launcher), but various parts of the user interface can
+    use GET_DISABLED_UNTIL_USED_COMPONENTS to still see it and allow
+    the user to select it (as for example an IME, device admin, etc).  Such code,
+    once the user has selected the app, should at that point also make it enabled.
+    This option currently can not be used with
+    setComponentEnabledSetting(ComponentName, int, int).
+    """
+    COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED = 0x00000004
+
+    """
+    public static final int COMPONENT_ENABLED_STATE_DISABLED_USER:
+    Flag for setApplicationEnabledSetting(String, int, int) only: The
+    user has explicitly disabled the application, regardless of what it has
+    specified in its manifest.  Because this is due to the user's request,
+    they may re-enable it if desired through the appropriate system UI.  This
+    option currently cannot be used with
+    setComponentEnabledSetting(ComponentName, int, int).
+    """
+    COMPONENT_ENABLED_STATE_DISABLED_USER = 0x00000003
+
+    """
+    public static final int COMPONENT_ENABLED_STATE_ENABLED:
+    Flag for setApplicationEnabledSetting(String, int, int)
+    and setComponentEnabledSetting(ComponentName, int, int): This
+    component or application has been explictily enabled, regardless of
+    what it has specified in its manifest.
+    """
+    COMPONENT_ENABLED_STATE_ENABLED = 0x00000001
+
+    """
+    public static final int DONT_KILL_APP:
+    Flag parameter for
+    setComponentEnabledSetting(android.content.ComponentName, int, int) to indicate
+    that you don't want to kill the app containing the component.  Be careful when 
+    you set this
+    since changing component states can make the containing application's behavior 
+    unpredictable.
+    """
+    DONT_KILL_APP = 0x00000001
+
+    """
+    public static final String EXTRA_VERIFICATION_ID:
+    Extra field name for the ID of a package pending verification. Passed to
+    a package verifier and is used to call back to
+    """
+    EXTRA_VERIFICATION_ID = 'android.content.pm.extra.VERIFICATION_ID'
+
+    """
+    public static final String EXTRA_VERIFICATION_RESULT:
+    Extra field name for the result of a verification, either
+    VERIFICATION_ALLOW, or VERIFICATION_REJECT.
+    Passed to package verifiers after a package is verified.
+    """
+    EXTRA_VERIFICATION_RESULT = 'android.content.pm.extra.VERIFICATION_RESULT'
+
+    """
+    public static final String FEATURE_ACTIVITIES_ON_SECONDARY_DISPLAYS:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device supports running activities on secondary displays.
+    """
+    FEATURE_ACTIVITIES_ON_SECONDARY_DISPLAYS = 'android.software.activities_on_secondary_displays'
+
+    """
+    public static final String FEATURE_APP_WIDGETS:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports app widgets.
+    """
+    FEATURE_APP_WIDGETS = 'android.software.app_widgets'
+
+    """
+    public static final String FEATURE_AUDIO_LOW_LATENCY:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String): The 
+    device's
+    audio pipeline is low-latency, more suitable for audio applications sensitive 
+    to delays or
+    lag in sound input or output.
+    """
+    FEATURE_AUDIO_LOW_LATENCY = 'android.hardware.audio.low_latency'
+
+    """
+    public static final String FEATURE_AUDIO_OUTPUT:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device includes at least one form of audio
+    output, as defined in the Android Compatibility Definition Document (CDD)
+    section 7.8 Audio.
+    """
+    FEATURE_AUDIO_OUTPUT = 'android.hardware.audio.output'
+
+    """
+    public static final String FEATURE_AUDIO_PRO:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device has professional audio level of functionality and performance.
+    """
+    FEATURE_AUDIO_PRO = 'android.hardware.audio.pro'
+
+    """
+    public static final String FEATURE_AUTOFILL:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device supports autofill of user credentials, addresses, credit cards, etc
+    via integration with autofill
+    providers.
+    """
+    FEATURE_AUTOFILL = 'android.software.autofill'
+
+    """
+    public static final String FEATURE_AUTOMOTIVE:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): This is a device dedicated to showing UI
+    on a vehicle headunit. A headunit here is defined to be inside a
+    vehicle that may or may not be moving. A headunit uses either a
+    primary display in the center console and/or additional displays in
+    the instrument cluster or elsewhere in the vehicle. Headunit display(s)
+    have limited size and resolution. The user will likely be focused on
+    driving so limiting driver distraction is a primary concern. User input
+    can be a variety of hard buttons, touch, rotary controllers and even mouse-
+    like interfaces.
+    """
+    FEATURE_AUTOMOTIVE = 'android.hardware.type.automotive'
+
+    """
+    public static final String FEATURE_BACKUP:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device can perform backup and restore operations on installed applications.
+    """
+    FEATURE_BACKUP = 'android.software.backup'
+
+    """
+    public static final String FEATURE_BLUETOOTH:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device is capable of communicating with
+    other devices via Bluetooth.
+    """
+    FEATURE_BLUETOOTH = 'android.hardware.bluetooth'
+
+    """
+    public static final String FEATURE_BLUETOOTH_LE:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device is capable of communicating with
+    other devices via Bluetooth Low Energy radio.
+    """
+    FEATURE_BLUETOOTH_LE = 'android.hardware.bluetooth_le'
+
+    """
+    public static final String FEATURE_CAMERA:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device has a camera facing away
+    from the screen.
+    """
+    FEATURE_CAMERA = 'android.hardware.camera'
+
+    """
+    public static final String FEATURE_CAMERA_ANY:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device has at least one camera pointing in
+    some direction, or can support an external camera being connected to it.
+    """
+    FEATURE_CAMERA_ANY = 'android.hardware.camera.any'
+
+    """
+    public static final String FEATURE_CAMERA_AR:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String): At 
+    least one
+    of the cameras on the device supports the
+    MOTION_TRACKING capability level.
+    """
+    FEATURE_CAMERA_AR = 'android.hardware.camera.ar'
+
+    """
+    public static final String FEATURE_CAMERA_AUTOFOCUS:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device's camera supports auto-focus.
+    """
+    FEATURE_CAMERA_AUTOFOCUS = 'android.hardware.camera.autofocus'
+
+    """
+    public static final String FEATURE_CAMERA_CAPABILITY_MANUAL_POST_PROCESSING:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String): At 
+    least one
+    of the cameras on the device supports the
+    manual post-processing
+    capability level.
+    """
+    FEATURE_CAMERA_CAPABILITY_MANUAL_POST_PROCESSING = 'android.hardware.camera.capability.manual_post_processing'
+
+    """
+    public static final String FEATURE_CAMERA_CAPABILITY_MANUAL_SENSOR:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String): At 
+    least one
+    of the cameras on the device supports the
+    manual sensor
+    capability level.
+    """
+    FEATURE_CAMERA_CAPABILITY_MANUAL_SENSOR = 'android.hardware.camera.capability.manual_sensor'
+
+    """
+    public static final String FEATURE_CAMERA_CAPABILITY_RAW:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String): At 
+    least one
+    of the cameras on the device supports the
+    RAW
+    capability level.
+    """
+    FEATURE_CAMERA_CAPABILITY_RAW = 'android.hardware.camera.capability.raw'
+
+    """
+    public static final String FEATURE_CAMERA_EXTERNAL:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device can support having an external camera 
+    connected to it.
+    The external camera may not always be connected or available to applications 
+    to use.
+    """
+    FEATURE_CAMERA_EXTERNAL = 'android.hardware.camera.external'
+
+    """
+    public static final String FEATURE_CAMERA_FLASH:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device's camera supports flash.
+    """
+    FEATURE_CAMERA_FLASH = 'android.hardware.camera.flash'
+
+    """
+    public static final String FEATURE_CAMERA_FRONT:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device has a front facing camera.
+    """
+    FEATURE_CAMERA_FRONT = 'android.hardware.camera.front'
+
+    """
+    public static final String FEATURE_CAMERA_LEVEL_FULL:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String): At 
+    least one
+    of the cameras on the device supports the
+    full hardware
+    capability level.
+    """
+    FEATURE_CAMERA_LEVEL_FULL = 'android.hardware.camera.level.full'
+
+    """
+    public static final String FEATURE_COMPANION_DEVICE_SETUP:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device supports associating
+    with devices via CompanionDeviceManager.
+    """
+    FEATURE_COMPANION_DEVICE_SETUP = 'android.software.companion_device_setup'
+
+    """
+    public static final String FEATURE_CONNECTION_SERVICE:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The Connection Service API is enabled on the device.
+    """
+    FEATURE_CONNECTION_SERVICE = 'android.software.connectionservice'
+
+    """
+    public static final String FEATURE_CONSUMER_IR:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device is capable of communicating with
+    consumer IR devices.
+    """
+    FEATURE_CONSUMER_IR = 'android.hardware.consumerir'
+
+    """
+    public static final String FEATURE_DEVICE_ADMIN:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports device policy enforcement via 
+    device admins.
+    """
+    FEATURE_DEVICE_ADMIN = 'android.software.device_admin'
+
+    """
+    public static final String FEATURE_EMBEDDED:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): This is a device for IoT and may not have an UI. An 
+    embedded
+    device is defined as a full stack Android device with or without a display and 
+    no
+    user-installable apps.
+    """
+    FEATURE_EMBEDDED = 'android.hardware.type.embedded'
+
+    """
+    public static final String FEATURE_ETHERNET:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): This device supports ethernet.
+    """
+    FEATURE_ETHERNET = 'android.hardware.ethernet'
+
+    """
+    public static final String FEATURE_FAKETOUCH:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device does not have a touch screen, but
+    does support touch emulation for basic events. For instance, the
+    device might use a mouse or remote control to drive a cursor, and
+    emulate basic touch pointer events like down, up, drag, etc. All
+    devices that support android.hardware.touchscreen or a sub-feature are
+    presumed to also support faketouch.
+    """
+    FEATURE_FAKETOUCH = 'android.hardware.faketouch'
+
+    """
+    public static final String FEATURE_FAKETOUCH_MULTITOUCH_DISTINCT:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device does not have a touch screen, but
+    does support touch emulation for basic events that supports distinct
+    tracking of two or more fingers.  This is an extension of
+    FEATURE_FAKETOUCH for input devices with this capability.  Note
+    that unlike a distinct multitouch screen as defined by
+    FEATURE_TOUCHSCREEN_MULTITOUCH_DISTINCT, these kinds of input
+    devices will not actually provide full two-finger gestures since the
+    input is being transformed to cursor movement on the screen.  That is,
+    single finger gestures will move a cursor; two-finger swipes will
+    result in single-finger touch events; other two-finger gestures will
+    result in the corresponding two-finger touch event.
+    """
+    FEATURE_FAKETOUCH_MULTITOUCH_DISTINCT = 'android.hardware.faketouch.multitouch.distinct'
+
+    """
+    public static final String FEATURE_FAKETOUCH_MULTITOUCH_JAZZHAND:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device does not have a touch screen, but
+    does support touch emulation for basic events that supports tracking
+    a hand of fingers (5 or more fingers) fully independently.
+    This is an extension of
+    FEATURE_FAKETOUCH for input devices with this capability.  Note
+    that unlike a multitouch screen as defined by
+    FEATURE_TOUCHSCREEN_MULTITOUCH_JAZZHAND, not all two finger
+    gestures can be detected due to the limitations described for
+    FEATURE_FAKETOUCH_MULTITOUCH_DISTINCT.
+    """
+    FEATURE_FAKETOUCH_MULTITOUCH_JAZZHAND = 'android.hardware.faketouch.multitouch.jazzhand'
+
+    """
+    public static final String FEATURE_FINGERPRINT:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device has biometric hardware to detect a 
+    fingerprint.
+    """
+    FEATURE_FINGERPRINT = 'android.hardware.fingerprint'
+
+    """
+    public static final String FEATURE_FREEFORM_WINDOW_MANAGEMENT:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports freeform window management.
+    Windows have title bars and can be moved and resized.
+    """
+    FEATURE_FREEFORM_WINDOW_MANAGEMENT = 'android.software.freeform_window_management'
+
+    """
+    public static final String FEATURE_GAMEPAD:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device has all of the inputs necessary to be considered a compatible game 
+    controller, or
+    includes a compatible game controller in the box.
+    """
+    FEATURE_GAMEPAD = 'android.hardware.gamepad'
+
+    """
+    public static final String FEATURE_HIFI_SENSORS:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports high fidelity sensor processing
+    capabilities.
+    """
+    FEATURE_HIFI_SENSORS = 'android.hardware.sensor.hifi_sensors'
+
+    """
+    public static final String FEATURE_HOME_SCREEN:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports a home screen that is replaceable
+    by third party applications.
+    """
+    FEATURE_HOME_SCREEN = 'android.software.home_screen'
+
+    """
+    public static final String FEATURE_INPUT_METHODS:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports adding new input methods 
+    implemented
+    with the InputMethodService API.
+    """
+    FEATURE_INPUT_METHODS = 'android.software.input_methods'
+
+    """
+    public static final String FEATURE_LEANBACK:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports leanback UI. This is
+    typically used in a living room television experience, but is a software
+    feature unlike FEATURE_TELEVISION. Devices running with this
+    feature will use resources associated with the "television" UI mode.
+    """
+    FEATURE_LEANBACK = 'android.software.leanback'
+
+    """
+    public static final String FEATURE_LEANBACK_ONLY:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports only leanback UI. Only
+    applications designed for this experience should be run, though this is
+    not enforced by the system.
+    """
+    FEATURE_LEANBACK_ONLY = 'android.software.leanback_only'
+
+    """
+    public static final String FEATURE_LIVE_TV:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports live TV and can display
+    contents from TV inputs implemented with the
+    TvInputService API.
+    """
+    FEATURE_LIVE_TV = 'android.software.live_tv'
+
+    """
+    public static final String FEATURE_LIVE_WALLPAPER:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports live wallpapers.
+    """
+    FEATURE_LIVE_WALLPAPER = 'android.software.live_wallpaper'
+
+    """
+    public static final String FEATURE_LOCATION:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports one or more methods of
+    reporting current location.
+    """
+    FEATURE_LOCATION = 'android.hardware.location'
+
+    """
+    public static final String FEATURE_LOCATION_GPS:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device has a Global Positioning System
+    receiver and can report precise location.
+    """
+    FEATURE_LOCATION_GPS = 'android.hardware.location.gps'
+
+    """
+    public static final String FEATURE_LOCATION_NETWORK:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device can report location with coarse
+    accuracy using a network-based geolocation system.
+    """
+    FEATURE_LOCATION_NETWORK = 'android.hardware.location.network'
+
+    """
+    public static final String FEATURE_MANAGED_USERS:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device supports creating secondary users and managed profiles via
+    DevicePolicyManager.
+    """
+    FEATURE_MANAGED_USERS = 'android.software.managed_users'
+
+    """
+    public static final String FEATURE_MICROPHONE:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device can record audio via a
+    microphone.
+    """
+    FEATURE_MICROPHONE = 'android.hardware.microphone'
+
+    """
+    public static final String FEATURE_MIDI:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device has a full implementation of the android.media.midi.* APIs.
+    """
+    FEATURE_MIDI = 'android.software.midi'
+
+    """
+    public static final String FEATURE_NFC:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device can communicate using Near-Field
+    Communications (NFC).
+    """
+    FEATURE_NFC = 'ndroid.hardware.nfc'
+
+    """
+    public static final String FEATURE_NFC_HOST_CARD_EMULATION:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports host-
+    based NFC card emulation.
+    """
+    FEATURE_NFC_HOST_CARD_EMULATION = 'android.hardware.nfc.hce'
+
+    """
+    public static final String FEATURE_NFC_HOST_CARD_EMULATION_NFCF:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports host-
+    based NFC-F card emulation.
+    """
+    FEATURE_NFC_HOST_CARD_EMULATION_NFCF = 'android.hardware.nfc.hcef'
+
+    """
+    public static final String FEATURE_OPENGLES_EXTENSION_PACK:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports the OpenGL ES
+
+    Android Extension Pack.
+    """
+    FEATURE_OPENGLES_EXTENSION_PACK = 'android.hardware.opengles.aep'
+
+    """
+    public static final String FEATURE_PC:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): This is a device dedicated to be primarily used
+    with keyboard, mouse or touchpad. This includes traditional desktop
+    computers, laptops and variants such as convertibles or detachables.
+    Due to the larger screen, the device will most likely use the
+    FEATURE_FREEFORM_WINDOW_MANAGEMENT feature as well.
+    """
+    FEATURE_PC = 'android.hardware.type.pc'
+
+    """
+    public static final String FEATURE_PICTURE_IN_PICTURE:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device supports picture-in-picture multi-window mode.
+    """
+    FEATURE_PICTURE_IN_PICTURE = 'android.software.picture_in_picture'
+
+    """
+    public static final String FEATURE_PRINTING:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device supports printing.
+    """
+    FEATURE_PRINTING = 'android.software.print'
+
+    """
+    public static final String FEATURE_RAM_LOW:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device's
+    ActivityManager.isLowRamDevice() method returns
+    true.
+    """
+    FEATURE_RAM_LOW = 'android.hardware.ram.low'
+
+    """
+    public static final String FEATURE_RAM_NORMAL:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device's
+    ActivityManager.isLowRamDevice() method returns
+    false.
+    """
+    FEATURE_RAM_NORMAL = 'android.hardware.ram.normal'
+
+    """
+    public static final String FEATURE_SCREEN_LANDSCAPE:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports landscape orientation
+    screens.  For backwards compatibility, you can assume that if neither
+    this nor FEATURE_SCREEN_PORTRAIT is set then the device supports
+    both portrait and landscape.
+    """
+    FEATURE_SCREEN_LANDSCAPE = 'android.hardware.screen.landscape'
+
+    """
+    public static final String FEATURE_SCREEN_PORTRAIT:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports portrait orientation
+    screens.  For backwards compatibility, you can assume that if neither
+    this nor FEATURE_SCREEN_LANDSCAPE is set then the device supports
+    both portrait and landscape.
+    """
+    FEATURE_SCREEN_PORTRAIT = 'android.hardware.screen.portrait'
+
+    """
+    public static final String FEATURE_SECURELY_REMOVES_USERS:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device supports secure removal of users. When a user is deleted the data 
+    associated
+    with that user is securely deleted and no longer available.
+    """
+    FEATURE_SECURELY_REMOVES_USERS = 'android.software.securely_removes_users'
+
+    """
+    public static final String FEATURE_SENSOR_ACCELEROMETER:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device includes an accelerometer.
+    """
+    FEATURE_SENSOR_ACCELEROMETER = 'android.hardware.sensor.accelerometer'
+
+    """
+    public static final String FEATURE_SENSOR_AMBIENT_TEMPERATURE:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device includes an ambient temperature sensor.
+    """
+    FEATURE_SENSOR_AMBIENT_TEMPERATURE = 'android.hardware.sensor.ambient_temperature'
+
+    """
+    public static final String FEATURE_SENSOR_BAROMETER:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device includes a barometer (air
+    pressure sensor.)
+    """
+    FEATURE_SENSOR_BAROMETER = 'android.hardware.sensor.barometer'
+
+    """
+    public static final String FEATURE_SENSOR_COMPASS:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device includes a magnetometer (compass).
+    """
+    FEATURE_SENSOR_COMPASS = 'android.hardware.sensor.compass'
+
+    """
+    public static final String FEATURE_SENSOR_GYROSCOPE:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device includes a gyroscope.
+    """
+    FEATURE_SENSOR_GYROSCOPE = 'android.hardware.sensor.gyroscope'
+
+    """
+    public static final String FEATURE_SENSOR_HEART_RATE:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device includes a heart rate monitor.
+    """
+    FEATURE_SENSOR_HEART_RATE = 'android.hardware.sensor.heartrate'
+
+    """
+    public static final String FEATURE_SENSOR_HEART_RATE_ECG:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The heart rate sensor on this device is an 
+    Electrocardiogram.
+    """
+    FEATURE_SENSOR_HEART_RATE_ECG = 'android.hardware.sensor.heartrate.ecg'
+
+    """
+    public static final String FEATURE_SENSOR_LIGHT:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device includes a light sensor.
+    """
+    FEATURE_SENSOR_LIGHT = 'android.hardware.sensor.light'
+
+    """
+    public static final String FEATURE_SENSOR_PROXIMITY:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device includes a proximity sensor.
+    """
+    FEATURE_SENSOR_PROXIMITY = 'android.hardware.sensor.proximity'
+
+    """
+    public static final String FEATURE_SENSOR_RELATIVE_HUMIDITY:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device includes a relative humidity sensor.
+    """
+    FEATURE_SENSOR_RELATIVE_HUMIDITY = 'android.hardware.sensor.relative_humidity'
+
+    """
+    public static final String FEATURE_SENSOR_STEP_COUNTER:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device includes a hardware step counter.
+    """
+    FEATURE_SENSOR_STEP_COUNTER = 'android.hardware.sensor.stepcounter'
+
+    """
+    public static final String FEATURE_SENSOR_STEP_DETECTOR:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device includes a hardware step detector.
+    """
+    FEATURE_SENSOR_STEP_DETECTOR = 'android.hardware.sensor.stepdetector'
+
+    """
+    public static final String FEATURE_SIP:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The SIP API is enabled on the device.
+    """
+    FEATURE_SIP = 'android.software.sip'
+
+    """
+    public static final String FEATURE_SIP_VOIP:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports SIP-based VOIP.
+    """
+    FEATURE_SIP_VOIP = 'android.software.sip.voip'
+
+    """
+    public static final String FEATURE_STRONGBOX_KEYSTORE:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device has a StrongBox hardware-backed Keystore.
+    """
+    FEATURE_STRONGBOX_KEYSTORE = 'android.hardware.strongbox_keystore'
+
+    """
+    public static final String FEATURE_TELEPHONY:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device has a telephony radio with data
+    communication support.
+    """
+    FEATURE_TELEPHONY = 'android.hardware.telephony'
+
+    """
+    public static final String FEATURE_TELEPHONY_CDMA:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device has a CDMA telephony stack.
+    """
+    FEATURE_TELEPHONY_CDMA = 'android.hardware.telephony.cdma'
+
+    """
+    public static final String FEATURE_TELEPHONY_EUICC:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String): The 
+    device
+    supports embedded subscriptions on eUICCs.
+    """
+    FEATURE_TELEPHONY_EUICC = 'android.hardware.telephony.euicc'
+
+    """
+    public static final String FEATURE_TELEPHONY_GSM:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device has a GSM telephony stack.
+    """
+    FEATURE_TELEPHONY_GSM = 'android.hardware.telephony.gsm'
+
+    """
+    public static final String FEATURE_TELEPHONY_MBMS:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String): The 
+    device
+    supports cell-broadcast reception using the MBMS APIs.
+    """
+    FEATURE_TELEPHONY_MBMS = 'android.hardware.telephony.mbms'
+
+    """
+    public static final String FEATURE_TELEVISION:
+
+    This constant was deprecated
+    in API level 21.
+    use FEATURE_LEANBACK instead.
+
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): This is a device dedicated to showing UI
+    on a television.  Television here is defined to be a typical living
+    room television experience: displayed on a big screen, where the user
+    is sitting far away from it, and the dominant form of input will be
+    """
+    FEATURE_TELEVISION = 'android.hardware.type.television'
+
+    """
+    public static final String FEATURE_TOUCHSCREEN:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device's display has a touch screen.
+    """
+    FEATURE_TOUCHSCREEN = 'android.hardware.touchscreen'
+
+    """
+    public static final String FEATURE_TOUCHSCREEN_MULTITOUCH:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device's touch screen supports
+    multitouch sufficient for basic two-finger gesture detection.
+    """
+    FEATURE_TOUCHSCREEN_MULTITOUCH = 'android.hardware.touchscreen.multitouch'
+
+    """
+    public static final String FEATURE_TOUCHSCREEN_MULTITOUCH_DISTINCT:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device's touch screen is capable of
+    tracking two or more fingers fully independently.
+    """
+    FEATURE_TOUCHSCREEN_MULTITOUCH_DISTINCT = 'android.hardware.touchscreen.multitouch.distinct'
+
+    """
+    public static final String FEATURE_TOUCHSCREEN_MULTITOUCH_JAZZHAND:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device's touch screen is capable of
+    tracking a full hand of fingers fully independently -- that is, 5 or
+    more simultaneous independent pointers.
+    """
+    FEATURE_TOUCHSCREEN_MULTITOUCH_JAZZHAND = 'android.hardware.touchscreen.multitouch.jazzhand'
+
+    """
+    public static final String FEATURE_USB_ACCESSORY:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports connecting to USB accessories.
+    """
+    FEATURE_USB_ACCESSORY = 'android.hardware.usb.accessory'
+
+    """
+    public static final String FEATURE_USB_HOST:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports connecting to USB devices
+    as the USB host.
+    """
+    FEATURE_USB_HOST = 'android.hardware.usb.host'
+
+    """
+    public static final String FEATURE_VERIFIED_BOOT:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device supports verified boot.
+    """
+    FEATURE_VERIFIED_BOOT = 'android.software.verified_boot'
+
+    """
+    public static final String FEATURE_VR_HEADTRACKING:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device implements headtracking suitable for a VR device.
+    """
+    FEATURE_VR_HEADTRACKING = 'android.hardware.vr.headtracking'
+
+    """
+    public static final String FEATURE_VR_MODE:
+
+    This constant was deprecated
+    in API level 28.
+    use FEATURE_VR_MODE:
+    _HIGH_PERFORMANCE instead.
+
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device implements an optimized mode for virtual reality (VR) applications 
+    that handles
+    stereoscopic rendering of notifications, and disables most monocular system UI 
+    components
+    while a VR application has user focus.
+    Devices declaring this feature must include an application implementing a
+    VrListenerService that can be targeted by VR applications via
+    """
+    FEATURE_VR_MODE = 'android.software.vr.mode'
+
+    """
+    public static final String FEATURE_VR_MODE_HIGH_PERFORMANCE:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device implements an optimized mode for virtual reality (VR) applications 
+    that handles
+    stereoscopic rendering of notifications, disables most monocular system UI 
+    components
+    while a VR application has user focus and meets extra CDD requirements to 
+    provide a
+    high-quality VR experience.
+    Devices declaring this feature must include an application implementing a
+    VrListenerService that can be targeted by VR applications via
+    Activity.setVrModeEnabled(boolean, ComponentName).
+    and must meet CDD requirements to provide a high-quality VR experience.
+    """
+    FEATURE_VR_MODE_HIGH_PERFORMANCE = 'android.hardware.vr.high_performance'
+
+    """
+    public static final String FEATURE_VULKAN_HARDWARE_COMPUTE:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String, int): If this feature is supported, the Vulkan native 
+    API
+    will enumerate at least one VkPhysicalDevice, and the feature version will 
+    indicate
+    what level of optional compute features that device supports beyond the Vulkan 
+    1.0
+    requirements.
+
+    Compute level 0 indicates:
+    The VK_KHR_variable_pointers extension and
+    VkPhysicalDeviceVariablePointerFeaturesKHR::variablePointers feature are
+    """
+    FEATURE_VULKAN_HARDWARE_COMPUTE = 'android.hardware.vulkan.compute'
+
+    """
+    public static final String FEATURE_VULKAN_HARDWARE_LEVEL:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String, int): If this feature is supported, the Vulkan native 
+    API
+    will enumerate at least one VkPhysicalDevice, and the feature version will 
+    indicate
+    what level of optional hardware features limits it supports.
+
+    Level 0 includes the base Vulkan requirements as well as:
+    VkPhysicalDeviceFeatures::textureCompressionETC2
+    Level 1 additionally includes:
+    """
+    FEATURE_VULKAN_HARDWARE_LEVEL = 'android.hardware.vulkan.level'
+
+    """
+    public static final String FEATURE_VULKAN_HARDWARE_VERSION:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String, int): The version of this feature indicates the 
+    highest
+    VkPhysicalDeviceProperties::apiVersion supported by the physical devices that 
+    support
+    the hardware level indicated by FEATURE_VULKAN_HARDWARE_LEVEL. The feature 
+    version
+    uses the same encoding as Vulkan version numbers:
+    Major version number in bits 31-22Minor version number in bits 21-12Patch 
+    version number in bits 11-0
+    A version of 1.1.0 or higher also indicates:
+    SYNC_FD external semaphore and fence handles are 
+
+    supported.VkPhysicalDeviceSamplerYcbcrConversionFeatures::samplerYcbcrConversion is
+    """
+    FEATURE_VULKAN_HARDWARE_VERSION = 'android.hardware.vulkan.version'
+
+    """
+    public static final String FEATURE_WATCH:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): This is a device dedicated to showing UI
+    on a watch. A watch here is defined to be a device worn on the body, perhaps on
+    the wrist. The user is very close when interacting with the device.
+    """
+    FEATURE_WATCH = 'android.hardware.type.watch'
+
+    """
+    public static final String FEATURE_WEBVIEW:
+    Feature for getSystemAvailableFeatures() and hasSystemFeature(String):
+    The device has a full implementation of the android.webkit.* APIs. Devices
+    lacking this feature will not have a functioning WebView implementation.
+    """
+    FEATURE_WEBVIEW = 'android.software.webview'
+
+    """
+    public static final String FEATURE_WIFI:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports WiFi (802.11) networking.
+    """
+    FEATURE_WIFI = 'android.hardware.wifi'
+
+    """
+    public static final String FEATURE_WIFI_AWARE:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports Wi-Fi Aware.
+    """
+    FEATURE_WIFI_AWARE = 'android.hardware.wifi.aware'
+
+    """
+    public static final String FEATURE_WIFI_DIRECT:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports Wi-Fi Direct networking.
+    """
+    FEATURE_WIFI_DIRECT = 'android.hardware.wifi.direct'
+
+    """
+    public static final String FEATURE_WIFI_PASSPOINT:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports Wi-Fi Passpoint and all
+    Passpoint related APIs in WifiManager are supported. Refer to
+    WifiManager.addOrUpdatePasspointConfiguration(PasspointConfiguration) for more 
+    info.
+    """
+    FEATURE_WIFI_PASSPOINT = 'android.hardware.wifi.passpoint'
+
+    """
+    public static final String FEATURE_WIFI_RTT:
+    Feature for getSystemAvailableFeatures() and
+    hasSystemFeature(String): The device supports Wi-Fi RTT (IEEE 802.11mc).
+    """
+    FEATURE_WIFI_RTT = 'android.hardware.wifi.rtt'
+
+    """
+    public static final int GET_ACTIVITIES:
+    PackageInfo flag: return information about
+    activities in the package in PackageInfo.activities.
+    """
+    GET_ACTIVITIES = 0x00000001
+
+    """
+    public static final int GET_CONFIGURATIONS:
+    PackageInfo flag: return information about
+    hardware preferences in
+    PackageInfo.configPreferences,
+    and requested features in PackageInfo.reqFeatures and
+    PackageInfo.featureGroups.
+    """
+    GET_CONFIGURATIONS = 0x00004000
+
+    """
+    public static final int GET_DISABLED_COMPONENTS:
+
+    This constant was deprecated
+    in API level 24.
+    replaced with MATCH_DISABLED_COMPONENTS
+    """
+    GET_DISABLED_COMPONENTS = 0x00000200
+
+    """
+    public static final int GET_DISABLED_UNTIL_USED_COMPONENTS:
+
+    This constant was deprecated
+    in API level 24.
+    replaced with MATCH_DISABLED_UNTIL_USED_COMPONENTS.
+    """
+    GET_DISABLED_UNTIL_USED_COMPONENTS = 0x00008000
+
+    """
+    public static final int GET_GIDS:
+    PackageInfo flag: return the
+    group ids that are associated with an
+    application.
+    This applies for any API returning a PackageInfo class, either
+    directly or nested inside of another.
+    """
+    GET_GIDS = 0x00000100
+
+    """
+    public static final int GET_INSTRUMENTATION:
+    PackageInfo flag: return information about
+    instrumentation in the package in
+    PackageInfo.instrumentation.
+    """
+    GET_INSTRUMENTATION = 0x00000010
+
+    """
+    public static final int GET_INTENT_FILTERS:
+    PackageInfo flag: return information about the
+    intent filters supported by the activity.
+    """
+    GET_INTENT_FILTERS = 0x00000020
+
+    """
+    public static final int GET_META_DATA:
+    ComponentInfo flag: return the PackageItemInfo.metaData
+    data Bundles that are associated with a component.
+    This applies for any API returning a ComponentInfo subclass.
+    """
+    GET_META_DATA = 0x00000080
+
+    """
+    public static final int GET_PERMISSIONS:
+    PackageInfo flag: return information about
+    permissions in the package in
+    PackageInfo.permissions.
+    """
+    GET_PERMISSIONS = 0x00001000
+
+    """
+    public static final int GET_PROVIDERS:
+    PackageInfo flag: return information about
+    content providers in the package in
+    PackageInfo.providers.
+    """
+    GET_PROVIDERS = 0x00000008
+
+    """
+    public static final int GET_RECEIVERS:
+    PackageInfo flag: return information about
+    intent receivers in the package in
+    PackageInfo.receivers.
+    """
+    GET_RECEIVERS = 0x00000002
+
+    """
+    public static final int GET_RESOLVED_FILTER:
+    ResolveInfo flag: return the IntentFilter that
+    was matched for a particular ResolveInfo in
+    ResolveInfo.filter.
+    """
+    GET_RESOLVED_FILTER = 0x00000040
+
+    """
+    public static final int GET_SERVICES:
+    PackageInfo flag: return information about
+    services in the package in PackageInfo.services.
+    """
+    GET_SERVICES = 0x00000004
+
+    """
+    public static final int GET_SHARED_LIBRARY_FILES:
+    ApplicationInfo flag: return the
+    paths to the shared libraries
+    that are associated with an application.
+    This applies for any API returning an ApplicationInfo class, either
+    directly or nested inside of another.
+    """
+    GET_SHARED_LIBRARY_FILES = 0x00000400
+
+    """
+    public static final int GET_SIGNATURES:
+
+    This constant was deprecated
+    in API level 28.
+    use GET_SIGNING_CERTIFICATES instead
+
+    PackageInfo flag: return information about the
+    signatures included in the package.
+    """
+    GET_SIGNATURES = 0x00000040
+
+    """
+    public static final int GET_SIGNING_CERTIFICATES:
+    PackageInfo flag: return the signing certificates associated with
+    this package.  Each entry is a signing certificate that the package
+    has proven it is authorized to use, usually a past signing certificate from
+    which it has rotated.
+    """
+    GET_SIGNING_CERTIFICATES = 0x08000000
+
+    """
+    public static final int GET_UNINSTALLED_PACKAGES:
+
+    This constant was deprecated
+    in API level 24.
+    replaced with MATCH_UNINSTALLED_PACKAGES
+    """
+    GET_UNINSTALLED_PACKAGES = 0x00002000
+
+    """
+    public static final int GET_URI_PERMISSION_PATTERNS:
+    ProviderInfo flag: return the
+    URI permission patterns
+    that are associated with a content provider.
+    This applies for any API returning a ProviderInfo class, either
+    directly or nested inside of another.
+    """
+    GET_URI_PERMISSION_PATTERNS = 0x00000800
+
+    """
+    public static final int INSTALL_REASON_DEVICE_RESTORE:
+    Code indicating that this package was installed as part of restoring from 
+    another device.
+    """
+    INSTALL_REASON_DEVICE_RESTORE = 0x00000002
+
+    """
+    public static final int INSTALL_REASON_DEVICE_SETUP:
+    Code indicating that this package was installed as part of device setup.
+    """
+    INSTALL_REASON_DEVICE_SETUP = 0x00000003
+
+    """
+    public static final int INSTALL_REASON_POLICY:
+    Code indicating that this package was installed due to enterprise policy.
+    """
+    INSTALL_REASON_POLICY = 0x00000001
+
+    """
+    public static final int INSTALL_REASON_UNKNOWN:
+    Code indicating that the reason for installing this package is unknown.
+    """
+    INSTALL_REASON_UNKNOWN = 0x00000000
+
+    """
+    public static final int INSTALL_REASON_USER:
+    Code indicating that the package installation was initiated by the user.
+    """
+    INSTALL_REASON_USER = 0x00000004
+
+    """
+    public static final int MATCH_ALL:
+    Querying flag: if set and if the platform is doing any filtering of the
+    results, then the filtering will not happen. This is a synonym for saying
+    that all results should be returned.
+    This flag should be used with extreme care.
+    """
+    MATCH_ALL = 0x00020000
+
+    """
+    public static final int MATCH_DEFAULT_ONLY:
+    Resolution and querying flag: if set, only filters that support the
+    Intent.CATEGORY_DEFAULT will be considered for
+    matching.  This is a synonym for including the CATEGORY_DEFAULT in your
+    supplied Intent.
+    """
+    MATCH_DEFAULT_ONLY = 0x00010000
+
+    """
+    public static final int MATCH_DIRECT_BOOT_AWARE:
+    Querying flag: match components which are direct boot aware in
+    the returned info, regardless of the current user state.
+
+    When neither MATCH_DIRECT_BOOT_AWARE:
+     nor
+    MATCH_DIRECT_BOOT_UNAWARE are specified, the default behavior is
+    to match only runnable components based on the user state. For example,
+    when a user is started but credentials have not been presented yet, the
+    user is running "locked" and only MATCH_DIRECT_BOOT_AWARE:
+
+    components are returned. Once the user credentials have been presented,
+    the user is running "unlocked" and both MATCH_DIRECT_BOOT_AWARE:
+
+    and MATCH_DIRECT_BOOT_UNAWARE components are returned.See 
+    also:UserManager.isUserUnlocked()
+    """
+    MATCH_DIRECT_BOOT_AWARE = 0x00080000
+
+    """
+    public static final int MATCH_DIRECT_BOOT_UNAWARE:
+    Querying flag: match components which are direct boot unaware in
+    the returned info, regardless of the current user state.
+
+    When neither MATCH_DIRECT_BOOT_AWARE nor
+    MATCH_DIRECT_BOOT_UNAWARE:
+     are specified, the default behavior is
+    to match only runnable components based on the user state. For example,
+    when a user is started but credentials have not been presented yet, the
+    user is running "locked" and only MATCH_DIRECT_BOOT_AWARE
+    components are returned. Once the user credentials have been presented,
+    the user is running "unlocked" and both MATCH_DIRECT_BOOT_AWARE
+    and MATCH_DIRECT_BOOT_UNAWARE:
+     components are returned.
+     See also:UserManager.isUserUnlocked()
+    """
+    MATCH_DIRECT_BOOT_UNAWARE = 0x00040000
+
+    """
+    public static final int MATCH_DISABLED_COMPONENTS:
+    PackageInfo flag: include disabled components in the returned info.
+    """
+    MATCH_DISABLED_COMPONENTS = 0x00000200
+
+    """
+    public static final int MATCH_DISABLED_UNTIL_USED_COMPONENTS:
+    PackageInfo flag: include disabled components which are in
+    that state only because of COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED
+    in the returned info.  Note that if you set this flag, applications
+    that are in this disabled state will be reported as enabled.
+    """
+    MATCH_DISABLED_UNTIL_USED_COMPONENTS = 0x00008000
+
+    """
+    public static final int MATCH_SYSTEM_ONLY:
+    Querying flag: include only components from applications that are marked
+    with ApplicationInfo.FLAG_SYSTEM.
+    """
+    MATCH_SYSTEM_ONLY = 0x00100000
+
+    """
+    public static final int MATCH_UNINSTALLED_PACKAGES:
+    Flag parameter to retrieve some information about all applications (even
+    uninstalled ones) which have data directories. This state could have
+    resulted if applications have been deleted with flag
+    DONT_DELETE_DATA with a possibility of being replaced or
+    reinstalled in future.
+
+    Note: this flag may cause less information about currently installed
+    applications to be returned.
+    """
+    MATCH_UNINSTALLED_PACKAGES = 0x00002000
+
+    """
+    public static final long MAXIMUM_VERIFICATION_TIMEOUT:
+    Can be used as the millisecondsToDelay argument for
+    extendVerificationTimeout(int, int, long). This is the
+    maximum time PackageManager waits for the verification
+    agent to return (in milliseconds).
+    """
+    MAXIMUM_VERIFICATION_TIMEOUT = 0x000000000036ee80
+
+    """
+    public static final int PERMISSION_DENIED:
+    Permission check result: this is returned by checkPermission(String, String)
+    if the permission has not been granted to the given package.
+    """
+    PERMISSION_DENIED = 0xffffffff
+
+    """
+    public static final int PERMISSION_GRANTED:
+    Permission check result: this is returned by checkPermission(String, String)
+    if the permission has been granted to the given package.
+    """
+    PERMISSION_GRANTED = 0x00000000
+
+    """
+    public static final int SIGNATURE_FIRST_NOT_SIGNED:
+    Signature check result: this is returned by checkSignatures(int, int)
+    if the first package is not signed but the second is.
+    """
+    SIGNATURE_FIRST_NOT_SIGNED = 0xffffffff
+
+    """
+    public static final int SIGNATURE_MATCH:
+    Signature check result: this is returned by checkSignatures(int, int)
+    if all signatures on the two packages match.
+    """
+    SIGNATURE_MATCH = 0x00000000
+
+    """
+    public static final int SIGNATURE_NEITHER_SIGNED:
+    Signature check result: this is returned by checkSignatures(int, int)
+    if neither of the two packages is signed.
+    """
+    SIGNATURE_NEITHER_SIGNED = 0x00000001
+
+    """
+    public static final int SIGNATURE_NO_MATCH:
+    Signature check result: this is returned by checkSignatures(int, int)
+    if not all signatures on both packages match.
+    """
+    SIGNATURE_NO_MATCH = 0xfffffffd
+
+    """
+    public static final int SIGNATURE_SECOND_NOT_SIGNED:
+    Signature check result: this is returned by checkSignatures(int, int)
+    if the second package is not signed but the first is.
+    """
+    SIGNATURE_SECOND_NOT_SIGNED = 0xfffffffe
+
+    """
+    public static final int SIGNATURE_UNKNOWN_PACKAGE:
+    Signature check result: this is returned by checkSignatures(int, int)
+    if either of the packages are not valid.
+    """
+    SIGNATURE_UNKNOWN_PACKAGE = 0xfffffffc
+
+    """
+    public static final int VERIFICATION_ALLOW:
+    Used as the verificationCode argument for
+    verifyPendingInstall(int, int) to indicate that the calling
+    package verifier allows the installation to proceed.
+    """
+    VERIFICATION_ALLOW = 0x00000001
+
+    """
+    public static final int VERIFICATION_REJECT:
+    Used as the verificationCode argument for
+    verifyPendingInstall(int, int) to indicate the calling
+    package verifier does not vote to allow the installation to proceed.
+    """
+    VERIFICATION_REJECT = 0xffffffff
+
+    """
+    public static final int VERSION_CODE_HIGHEST:
+    Constant for specifying the highest installed package version code.
+    """
+    VERSION_CODE_HIGHEST = 0xffffffff
 
     def addPackageToPreferred(self, packageName):
         """

@@ -5,534 +5,6 @@ from Android.content.pm.ComponentInfo import ComponentInfo
 from Android.interface.IParcelable import IParcelable
 from Android.Os.Parcel import Parcel
 
-"""
-public static final int COLOR_MODE_DEFAULT:
-Value for colorMode indicating that the activity should use the
-default color mode (sRGB, low dynamic range).See also:R.attr.colorMode
-"""
-COLOR_MODE_DEFAULT = 0x00000000
-
-"""
-public static final int COLOR_MODE_HDR:
-Value of colorMode indicating that the activity should use a
-high dynamic range if the presentation display supports it.See 
-also:R.attr.colorMode
-"""
-COLOR_MODE_HDR = 0x00000002
-
-"""
-public static final int COLOR_MODE_WIDE_COLOR_GAMUT:
-Value of colorMode indicating that the activity should use a
-wide color gamut if the presentation display supports it.See 
-also:R.attr.colorMode
-"""
-COLOR_MODE_WIDE_COLOR_GAMUT = 0x00000001
-
-"""
-public static final int CONFIG_COLOR_MODE:
-Bit in configChanges that indicates that the activity
-can itself handle the change to the display color gamut or dynamic
-range. Set from the R.attr.configChanges attribute.
-"""
-CONFIG_COLOR_MODE = 0x00004000
-
-"""
-public static final int CONFIG_DENSITY:
-Bit in configChanges that indicates that the activity
-can itself handle density changes. Set from the
-R.attr.configChanges attribute.
-"""
-CONFIG_DENSITY = 0x00001000
-
-"""
-public static final int CONFIG_FONT_SCALE:
-Bit in configChanges that indicates that the activity
-can itself handle changes to the font scaling factor.  Set from the
-R.attr.configChanges attribute.  This is
-not a core resource configuration, but a higher-level value, so its
-constant starts at the high bits.
-"""
-CONFIG_FONT_SCALE = 0x40000000
-
-"""
-public static final int CONFIG_KEYBOARD:
-Bit in configChanges that indicates that the activity
-can itself handle changes to the keyboard type.  Set from the
-R.attr.configChanges attribute.
-"""
-CONFIG_KEYBOARD = 0x00000010
-
-"""
-public static final int CONFIG_KEYBOARD_HIDDEN:
-Bit in configChanges that indicates that the activity
-can itself handle changes to the keyboard or navigation being hidden/exposed.
-Note that inspite of the name, this applies to the changes to any
-hidden states: keyboard or navigation.
-Set from the R.attr.configChanges attribute.
-"""
-CONFIG_KEYBOARD_HIDDEN = 0x00000020
-
-"""
-public static final int CONFIG_LAYOUT_DIRECTION:
-Bit in configChanges that indicates that the activity
-can itself handle the change to layout direction. Set from the
-R.attr.configChanges attribute.
-"""
-CONFIG_LAYOUT_DIRECTION = 0x00002000
-
-"""
-public static final int CONFIG_LOCALE:
-Bit in configChanges that indicates that the activity
-can itself handle changes to the locale.  Set from the
-R.attr.configChanges attribute.
-"""
-CONFIG_LOCALE = 0x00000004
-
-"""
-public static final int CONFIG_MCC:
-Bit in configChanges that indicates that the activity
-can itself handle changes to the IMSI MCC.  Set from the
-R.attr.configChanges attribute.
-"""
-CONFIG_MCC = 0x00000001
-
-"""
-public static final int CONFIG_MNC:
-Bit in configChanges that indicates that the activity
-can itself handle changes to the IMSI MNC.  Set from the
-R.attr.configChanges attribute.
-"""
-CONFIG_MNC = 0x00000002
-
-"""
-public static final int CONFIG_NAVIGATION:
-Bit in configChanges that indicates that the activity
-can itself handle changes to the navigation type.  Set from the
-R.attr.configChanges attribute.
-"""
-CONFIG_NAVIGATION = 0x00000040
-
-"""
-public static final int CONFIG_ORIENTATION:
-Bit in configChanges that indicates that the activity
-can itself handle changes to the screen orientation.  Set from the
-R.attr.configChanges attribute.
-"""
-CONFIG_ORIENTATION = 0x00000080
-
-"""
-public static final int CONFIG_SCREEN_LAYOUT:
-Bit in configChanges that indicates that the activity
-can itself handle changes to the screen layout.  Set from the
-R.attr.configChanges attribute.
-"""
-CONFIG_SCREEN_LAYOUT = 0x00000100
-
-"""
-public static final int CONFIG_SCREEN_SIZE:
-Bit in configChanges that indicates that the activity
-can itself handle the screen size. Set from the
-R.attr.configChanges attribute.  This will be
-set by default for applications that target an earlier version
-than Build.VERSION_CODES.HONEYCOMB_MR2...
-however, you will not see the bit set here becomes some
-applications incorrectly compare configChanges against
-an absolute value rather than correctly masking out the bits
-they are interested in.  Please don't do that, thanks.
-"""
-CONFIG_SCREEN_SIZE = 0x00000400
-
-"""
-public static final int CONFIG_SMALLEST_SCREEN_SIZE:
-Bit in configChanges that indicates that the activity
-can itself handle the smallest screen size. Set from the
-R.attr.configChanges attribute.  This will be
-set by default for applications that target an earlier version
-than Build.VERSION_CODES.HONEYCOMB_MR2...
-however, you will not see the bit set here becomes some
-applications incorrectly compare configChanges against
-an absolute value rather than correctly masking out the bits
-they are interested in.  Please don't do that, thanks.
-"""
-CONFIG_SMALLEST_SCREEN_SIZE = 0x00000800
-
-"""
-public static final int CONFIG_TOUCHSCREEN:
-Bit in configChanges that indicates that the activity
-can itself handle changes to the touchscreen type.  Set from the
-R.attr.configChanges attribute.
-"""
-CONFIG_TOUCHSCREEN = 0x00000008
-
-"""
-public static final int CONFIG_UI_MODE:
-Bit in configChanges that indicates that the activity
-can itself handle the ui mode. Set from the
-R.attr.configChanges attribute.
-"""
-CONFIG_UI_MODE = 0x00000200
-
-"""
-public static final int DOCUMENT_LAUNCH_ALWAYS:
-Constant corresponding to always in
-the R.attr.documentLaunchMode attribute.
-"""
-DOCUMENT_LAUNCH_ALWAYS = 0x00000002
-
-"""
-public static final int DOCUMENT_LAUNCH_INTO_EXISTING:
-Constant corresponding to intoExisting in
-the R.attr.documentLaunchMode attribute.
-"""
-DOCUMENT_LAUNCH_INTO_EXISTING = 0x00000001
-
-"""
-public static final int DOCUMENT_LAUNCH_NEVER:
-Constant corresponding to never in
-the R.attr.documentLaunchMode attribute.
-"""
-DOCUMENT_LAUNCH_NEVER = 0x00000003
-
-"""
-public static final int DOCUMENT_LAUNCH_NONE:
-Constant corresponding to none in
-the R.attr.documentLaunchMode attribute.
-"""
-DOCUMENT_LAUNCH_NONE = 0x00000000
-
-"""
-public static final int FLAG_ALLOW_TASK_REPARENTING:
-Bit in flags that indicates that the activity can be moved
-between tasks based on its task affinity.  Set from the
-R.attr.allowTaskReparenting attribute.
-"""
-FLAG_ALLOW_TASK_REPARENTING = 0x00000040
-
-"""
-public static final int FLAG_ALWAYS_RETAIN_TASK_STATE:
-Bit in flags indicating that, when the activity is the root
-of a task, that task's stack should never be cleared when it is
-relaunched from home.  Set from the
-R.attr.alwaysRetainTaskState attribute.
-"""
-FLAG_ALWAYS_RETAIN_TASK_STATE = 0x00000008
-
-"""
-public static final int FLAG_AUTO_REMOVE_FROM_RECENTS:
-Bit in flags indicating that tasks started with this activity are to be
-removed from the recent list of tasks when the last activity in the task is 
-finished.
-Corresponds to R.attr.autoRemoveFromRecents
-"""
-FLAG_AUTO_REMOVE_FROM_RECENTS = 0x00002000
-
-"""
-public static final int FLAG_CLEAR_TASK_ON_LAUNCH:
-Bit in flags indicating that, when the activity is the root
-of a task, that task's stack should be cleared each time the user
-re-launches it from home.  As a result, the user will always
-return to the original activity at the top of the task.
-This flag only applies to activities that
-are used to start the root of a new task.  Set from the
-R.attr.clearTaskOnLaunch attribute.
-"""
-FLAG_CLEAR_TASK_ON_LAUNCH = 0x00000004
-
-"""
-public static final int FLAG_ENABLE_VR_MODE:
-Bit in flags indicating that this activity should be run with VR mode enabled.
-
-.
-See also:ERROR(/android.app.Activity#setVrMode(boolean))
-"""
-FLAG_ENABLE_VR_MODE = 0x00008000
-
-"""
-public static final int FLAG_EXCLUDE_FROM_RECENTS:
-Bit in flags that indicates that the activity should not
-appear in the list of recently launched activities.  Set from the
-R.attr.excludeFromRecents attribute.
-"""
-FLAG_EXCLUDE_FROM_RECENTS = 0x00000020
-
-"""
-public static final int FLAG_FINISH_ON_CLOSE_SYSTEM_DIALOGS:
-Bit in flags indicating that, when a request to close system
-windows happens, this activity is finished.
-Set from the
-R.attr.finishOnCloseSystemDialogs attribute.
-"""
-FLAG_FINISH_ON_CLOSE_SYSTEM_DIALOGS = 0x00000100
-
-"""
-public static final int FLAG_FINISH_ON_TASK_LAUNCH:
-Bit in flags indicating that, when the activity's task is
-relaunched from home, this activity should be finished.
-Set from the
-R.attr.finishOnTaskLaunch attribute.
-"""
-FLAG_FINISH_ON_TASK_LAUNCH = 0x00000002
-
-"""
-public static final int FLAG_HARDWARE_ACCELERATED:
-Value for flags: true when the application's rendering should
-be hardware accelerated.
-"""
-FLAG_HARDWARE_ACCELERATED = 0x00000200
-
-"""
-public static final int FLAG_IMMERSIVE:
-Bit in flags corresponding to an immersive activity
-that wishes not to be interrupted by notifications.
-Applications that hide the system notification bar with
-WindowManager.LayoutParams.FLAG_FULLSCREEN
-may still be interrupted by high-priority notifications; for example, an
-incoming phone call may use
-fullScreenIntent
-to present a full-screen in-call activity to the user, pausing the
-current activity as a side-effect. An activity with
-FLAG_IMMERSIVE:
- set, however, will not be interrupted; the
-notification may be shown in some other way (such as a small floating
-"toast" window).
-
-Note that this flag will always reflect the Activity's
-android:immersive manifest definition, even if the Activity's
-immersive state is changed at runtime via
-Activity.setImmersive(boolean).See 
-also:Notification.FLAG_HIGH_PRIORITYActivity.setImmersive(boolean)
-"""
-FLAG_IMMERSIVE = 0x00000800
-
-"""
-public static final int FLAG_MULTIPROCESS:
-Bit in flags indicating whether this activity is able to
-run in multiple processes.  If
-true, the system may instantiate it in the some process as the
-process starting it in order to conserve resources.  If false, the
-default, it always runs in ComponentInfo.processName.  Set from the
-R.attr.multiprocess attribute.
-"""
-FLAG_MULTIPROCESS = 0x00000001
-
-"""
-public static final int FLAG_NO_HISTORY:
-Bit in flags indicating that, when the user navigates away
-from an activity, it should be finished.
-Set from the
-R.attr.noHistory attribute.
-"""
-FLAG_NO_HISTORY = 0x00000080
-
-"""
-public static final int FLAG_RELINQUISH_TASK_IDENTITY:
-Bit in flags: If set, a task rooted at this activity will have its
-baseIntent replaced by the activity immediately above this. Each activity may 
-further
-relinquish its identity to the activity above it using this flag. Set from the
-R.attr.relinquishTaskIdentity attribute.
-"""
-FLAG_RELINQUISH_TASK_IDENTITY = 0x00001000
-
-"""
-public static final int FLAG_RESUME_WHILE_PAUSING:
-Bit in flags indicating that this activity can start is creation/resume
-while the previous activity is still pausing.  Corresponds to
-R.attr.resumeWhilePausing
-"""
-FLAG_RESUME_WHILE_PAUSING = 0x00004000
-
-"""
-public static final int FLAG_SINGLE_USER:
-Bit in flags: If set, a single instance of the receiver will
-run for all users on the device.  Set from the
-R.attr.singleUser attribute.  Note that this flag is
-only relevant for ActivityInfo structures that are describing receiver
-components; it is not applied to activities.
-"""
-FLAG_SINGLE_USER = 0x40000000
-
-"""
-public static final int FLAG_STATE_NOT_NEEDED:
-Bit in flags indicating that the activity's state
-is not required to be saved, so that if there is a failure the
-activity will not be removed from the activity stack.  Set from the
-R.attr.stateNotNeeded attribute.
-"""
-FLAG_STATE_NOT_NEEDED = 0x00000010
-
-"""
-public static final int LAUNCH_MULTIPLE:
-Constant corresponding to standard in
-the R.attr.launchMode attribute.
-"""
-LAUNCH_MULTIPLE = 0x00000000
-
-"""
-public static final int LAUNCH_SINGLE_INSTANCE:
-Constant corresponding to singleInstance in
-the R.attr.launchMode attribute.
-"""
-LAUNCH_SINGLE_INSTANCE = 0x00000003
-
-"""
-public static final int LAUNCH_SINGLE_TASK:
-Constant corresponding to singleTask in
-the R.attr.launchMode attribute.
-"""
-LAUNCH_SINGLE_TASK = 0x00000002
-
-"""
-public static final int LAUNCH_SINGLE_TOP:
-Constant corresponding to singleTop in
-the R.attr.launchMode attribute.
-"""
-LAUNCH_SINGLE_TOP = 0x00000001
-
-"""
-public static final int PERSIST_ACROSS_REBOOTS:
-Constant corresponding to persistAcrossReboots in
-the R.attr.persistableMode attribute.
-"""
-PERSIST_ACROSS_REBOOTS = 0x00000002
-
-"""
-public static final int PERSIST_NEVER:
-Constant corresponding to doNotPersist in
-the R.attr.persistableMode attribute.
-"""
-PERSIST_NEVER = 0x00000001
-
-"""
-public static final int PERSIST_ROOT_ONLY:
-Constant corresponding to persistRootOnly in
-the R.attr.persistableMode attribute.
-"""
-PERSIST_ROOT_ONLY = 0x00000000
-
-"""
-public static final int SCREEN_ORIENTATION_BEHIND:
-Constant corresponding to behind in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_BEHIND = 0x00000003
-
-"""
-public static final int SCREEN_ORIENTATION_FULL_SENSOR:
-Constant corresponding to fullSensor in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_FULL_SENSOR = 0x0000000a
-
-"""
-public static final int SCREEN_ORIENTATION_FULL_USER:
-Constant corresponding to fullUser in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_FULL_USER = 0x0000000d
-
-"""
-public static final int SCREEN_ORIENTATION_LANDSCAPE:
-Constant corresponding to landscape in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_LANDSCAPE = 0x00000000
-
-"""
-public static final int SCREEN_ORIENTATION_LOCKED:
-Constant corresponding to locked in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_LOCKED = 0x0000000e
-
-"""
-public static final int SCREEN_ORIENTATION_NOSENSOR:
-Constant corresponding to nosensor in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_NOSENSOR = 0x00000005
-
-"""
-public static final int SCREEN_ORIENTATION_PORTRAIT:
-Constant corresponding to portrait in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_PORTRAIT = 0x00000001
-
-"""
-public static final int SCREEN_ORIENTATION_REVERSE_LANDSCAPE:
-Constant corresponding to reverseLandscape in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_REVERSE_LANDSCAPE = 0x00000008
-
-"""
-public static final int SCREEN_ORIENTATION_REVERSE_PORTRAIT:
-Constant corresponding to reversePortrait in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_REVERSE_PORTRAIT = 0x00000009
-
-"""
-public static final int SCREEN_ORIENTATION_SENSOR:
-Constant corresponding to sensor in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_SENSOR = 0x00000004
-
-"""
-public static final int SCREEN_ORIENTATION_SENSOR_LANDSCAPE:
-Constant corresponding to sensorLandscape in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_SENSOR_LANDSCAPE = 0x00000006
-
-"""
-public static final int SCREEN_ORIENTATION_SENSOR_PORTRAIT:
-Constant corresponding to sensorPortrait in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_SENSOR_PORTRAIT = 0x00000007
-
-"""
-public static final int SCREEN_ORIENTATION_UNSPECIFIED:
-Constant corresponding to unspecified in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_UNSPECIFIED = -1
-
-"""
-public static final int SCREEN_ORIENTATION_USER:
-Constant corresponding to user in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_USER = 0x00000002
-
-"""
-public static final int SCREEN_ORIENTATION_USER_LANDSCAPE:
-Constant corresponding to userLandscape in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_USER_LANDSCAPE = 0x0000000b
-
-"""
-public static final int SCREEN_ORIENTATION_USER_PORTRAIT:
-Constant corresponding to userPortrait in
-the R.attr.screenOrientation attribute.
-"""
-SCREEN_ORIENTATION_USER_PORTRAIT = 0x0000000c
-
-"""
-public static final int UIOPTION_SPLIT_ACTION_BAR_WHEN_NARROW:
-Flag for use with uiOptions.
-Indicates that the action bar should put all action items in a separate bar 
-when
-the screen is narrow.
-This value corresponds to "splitActionBarWhenNarrow" for the uiOptions XML
-attribute.
-"""
-UIOPTION_SPLIT_ACTION_BAR_WHEN_NARROW = 0x00000001
-
 
 class ActivityInfo(ComponentInfo, IParcelable):
     """
@@ -540,6 +12,534 @@ class ActivityInfo(ComponentInfo, IParcelable):
     receiver. This corresponds to information collected from the 
     AndroidManifest.xml's <activity> and <receiver> tags.
     """
+
+    """
+    public static final int COLOR_MODE_DEFAULT:
+    Value for colorMode indicating that the activity should use the
+    default color mode (sRGB, low dynamic range).See also:R.attr.colorMode
+    """
+    COLOR_MODE_DEFAULT = 0x00000000
+
+    """
+    public static final int COLOR_MODE_HDR:
+    Value of colorMode indicating that the activity should use a
+    high dynamic range if the presentation display supports it.See 
+    also:R.attr.colorMode
+    """
+    COLOR_MODE_HDR = 0x00000002
+
+    """
+    public static final int COLOR_MODE_WIDE_COLOR_GAMUT:
+    Value of colorMode indicating that the activity should use a
+    wide color gamut if the presentation display supports it.See 
+    also:R.attr.colorMode
+    """
+    COLOR_MODE_WIDE_COLOR_GAMUT = 0x00000001
+
+    """
+    public static final int CONFIG_COLOR_MODE:
+    Bit in configChanges that indicates that the activity
+    can itself handle the change to the display color gamut or dynamic
+    range. Set from the R.attr.configChanges attribute.
+    """
+    CONFIG_COLOR_MODE = 0x00004000
+
+    """
+    public static final int CONFIG_DENSITY:
+    Bit in configChanges that indicates that the activity
+    can itself handle density changes. Set from the
+    R.attr.configChanges attribute.
+    """
+    CONFIG_DENSITY = 0x00001000
+
+    """
+    public static final int CONFIG_FONT_SCALE:
+    Bit in configChanges that indicates that the activity
+    can itself handle changes to the font scaling factor.  Set from the
+    R.attr.configChanges attribute.  This is
+    not a core resource configuration, but a higher-level value, so its
+    constant starts at the high bits.
+    """
+    CONFIG_FONT_SCALE = 0x40000000
+
+    """
+    public static final int CONFIG_KEYBOARD:
+    Bit in configChanges that indicates that the activity
+    can itself handle changes to the keyboard type.  Set from the
+    R.attr.configChanges attribute.
+    """
+    CONFIG_KEYBOARD = 0x00000010
+
+    """
+    public static final int CONFIG_KEYBOARD_HIDDEN:
+    Bit in configChanges that indicates that the activity
+    can itself handle changes to the keyboard or navigation being hidden/exposed.
+    Note that inspite of the name, this applies to the changes to any
+    hidden states: keyboard or navigation.
+    Set from the R.attr.configChanges attribute.
+    """
+    CONFIG_KEYBOARD_HIDDEN = 0x00000020
+
+    """
+    public static final int CONFIG_LAYOUT_DIRECTION:
+    Bit in configChanges that indicates that the activity
+    can itself handle the change to layout direction. Set from the
+    R.attr.configChanges attribute.
+    """
+    CONFIG_LAYOUT_DIRECTION = 0x00002000
+
+    """
+    public static final int CONFIG_LOCALE:
+    Bit in configChanges that indicates that the activity
+    can itself handle changes to the locale.  Set from the
+    R.attr.configChanges attribute.
+    """
+    CONFIG_LOCALE = 0x00000004
+
+    """
+    public static final int CONFIG_MCC:
+    Bit in configChanges that indicates that the activity
+    can itself handle changes to the IMSI MCC.  Set from the
+    R.attr.configChanges attribute.
+    """
+    CONFIG_MCC = 0x00000001
+
+    """
+    public static final int CONFIG_MNC:
+    Bit in configChanges that indicates that the activity
+    can itself handle changes to the IMSI MNC.  Set from the
+    R.attr.configChanges attribute.
+    """
+    CONFIG_MNC = 0x00000002
+
+    """
+    public static final int CONFIG_NAVIGATION:
+    Bit in configChanges that indicates that the activity
+    can itself handle changes to the navigation type.  Set from the
+    R.attr.configChanges attribute.
+    """
+    CONFIG_NAVIGATION = 0x00000040
+
+    """
+    public static final int CONFIG_ORIENTATION:
+    Bit in configChanges that indicates that the activity
+    can itself handle changes to the screen orientation.  Set from the
+    R.attr.configChanges attribute.
+    """
+    CONFIG_ORIENTATION = 0x00000080
+
+    """
+    public static final int CONFIG_SCREEN_LAYOUT:
+    Bit in configChanges that indicates that the activity
+    can itself handle changes to the screen layout.  Set from the
+    R.attr.configChanges attribute.
+    """
+    CONFIG_SCREEN_LAYOUT = 0x00000100
+
+    """
+    public static final int CONFIG_SCREEN_SIZE:
+    Bit in configChanges that indicates that the activity
+    can itself handle the screen size. Set from the
+    R.attr.configChanges attribute.  This will be
+    set by default for applications that target an earlier version
+    than Build.VERSION_CODES.HONEYCOMB_MR2...
+    however, you will not see the bit set here becomes some
+    applications incorrectly compare configChanges against
+    an absolute value rather than correctly masking out the bits
+    they are interested in.  Please don't do that, thanks.
+    """
+    CONFIG_SCREEN_SIZE = 0x00000400
+
+    """
+    public static final int CONFIG_SMALLEST_SCREEN_SIZE:
+    Bit in configChanges that indicates that the activity
+    can itself handle the smallest screen size. Set from the
+    R.attr.configChanges attribute.  This will be
+    set by default for applications that target an earlier version
+    than Build.VERSION_CODES.HONEYCOMB_MR2...
+    however, you will not see the bit set here becomes some
+    applications incorrectly compare configChanges against
+    an absolute value rather than correctly masking out the bits
+    they are interested in.  Please don't do that, thanks.
+    """
+    CONFIG_SMALLEST_SCREEN_SIZE = 0x00000800
+
+    """
+    public static final int CONFIG_TOUCHSCREEN:
+    Bit in configChanges that indicates that the activity
+    can itself handle changes to the touchscreen type.  Set from the
+    R.attr.configChanges attribute.
+    """
+    CONFIG_TOUCHSCREEN = 0x00000008
+
+    """
+    public static final int CONFIG_UI_MODE:
+    Bit in configChanges that indicates that the activity
+    can itself handle the ui mode. Set from the
+    R.attr.configChanges attribute.
+    """
+    CONFIG_UI_MODE = 0x00000200
+
+    """
+    public static final int DOCUMENT_LAUNCH_ALWAYS:
+    Constant corresponding to always in
+    the R.attr.documentLaunchMode attribute.
+    """
+    DOCUMENT_LAUNCH_ALWAYS = 0x00000002
+
+    """
+    public static final int DOCUMENT_LAUNCH_INTO_EXISTING:
+    Constant corresponding to intoExisting in
+    the R.attr.documentLaunchMode attribute.
+    """
+    DOCUMENT_LAUNCH_INTO_EXISTING = 0x00000001
+
+    """
+    public static final int DOCUMENT_LAUNCH_NEVER:
+    Constant corresponding to never in
+    the R.attr.documentLaunchMode attribute.
+    """
+    DOCUMENT_LAUNCH_NEVER = 0x00000003
+
+    """
+    public static final int DOCUMENT_LAUNCH_NONE:
+    Constant corresponding to none in
+    the R.attr.documentLaunchMode attribute.
+    """
+    DOCUMENT_LAUNCH_NONE = 0x00000000
+
+    """
+    public static final int FLAG_ALLOW_TASK_REPARENTING:
+    Bit in flags that indicates that the activity can be moved
+    between tasks based on its task affinity.  Set from the
+    R.attr.allowTaskReparenting attribute.
+    """
+    FLAG_ALLOW_TASK_REPARENTING = 0x00000040
+
+    """
+    public static final int FLAG_ALWAYS_RETAIN_TASK_STATE:
+    Bit in flags indicating that, when the activity is the root
+    of a task, that task's stack should never be cleared when it is
+    relaunched from home.  Set from the
+    R.attr.alwaysRetainTaskState attribute.
+    """
+    FLAG_ALWAYS_RETAIN_TASK_STATE = 0x00000008
+
+    """
+    public static final int FLAG_AUTO_REMOVE_FROM_RECENTS:
+    Bit in flags indicating that tasks started with this activity are to be
+    removed from the recent list of tasks when the last activity in the task is 
+    finished.
+    Corresponds to R.attr.autoRemoveFromRecents
+    """
+    FLAG_AUTO_REMOVE_FROM_RECENTS = 0x00002000
+
+    """
+    public static final int FLAG_CLEAR_TASK_ON_LAUNCH:
+    Bit in flags indicating that, when the activity is the root
+    of a task, that task's stack should be cleared each time the user
+    re-launches it from home.  As a result, the user will always
+    return to the original activity at the top of the task.
+    This flag only applies to activities that
+    are used to start the root of a new task.  Set from the
+    R.attr.clearTaskOnLaunch attribute.
+    """
+    FLAG_CLEAR_TASK_ON_LAUNCH = 0x00000004
+
+    """
+    public static final int FLAG_ENABLE_VR_MODE:
+    Bit in flags indicating that this activity should be run with VR mode enabled.
+
+    .
+    See also:ERROR(/android.app.Activity#setVrMode(boolean))
+    """
+    FLAG_ENABLE_VR_MODE = 0x00008000
+
+    """
+    public static final int FLAG_EXCLUDE_FROM_RECENTS:
+    Bit in flags that indicates that the activity should not
+    appear in the list of recently launched activities.  Set from the
+    R.attr.excludeFromRecents attribute.
+    """
+    FLAG_EXCLUDE_FROM_RECENTS = 0x00000020
+
+    """
+    public static final int FLAG_FINISH_ON_CLOSE_SYSTEM_DIALOGS:
+    Bit in flags indicating that, when a request to close system
+    windows happens, this activity is finished.
+    Set from the
+    R.attr.finishOnCloseSystemDialogs attribute.
+    """
+    FLAG_FINISH_ON_CLOSE_SYSTEM_DIALOGS = 0x00000100
+
+    """
+    public static final int FLAG_FINISH_ON_TASK_LAUNCH:
+    Bit in flags indicating that, when the activity's task is
+    relaunched from home, this activity should be finished.
+    Set from the
+    R.attr.finishOnTaskLaunch attribute.
+    """
+    FLAG_FINISH_ON_TASK_LAUNCH = 0x00000002
+
+    """
+    public static final int FLAG_HARDWARE_ACCELERATED:
+    Value for flags: true when the application's rendering should
+    be hardware accelerated.
+    """
+    FLAG_HARDWARE_ACCELERATED = 0x00000200
+
+    """
+    public static final int FLAG_IMMERSIVE:
+    Bit in flags corresponding to an immersive activity
+    that wishes not to be interrupted by notifications.
+    Applications that hide the system notification bar with
+    WindowManager.LayoutParams.FLAG_FULLSCREEN
+    may still be interrupted by high-priority notifications; for example, an
+    incoming phone call may use
+    fullScreenIntent
+    to present a full-screen in-call activity to the user, pausing the
+    current activity as a side-effect. An activity with
+    FLAG_IMMERSIVE:
+     set, however, will not be interrupted; the
+    notification may be shown in some other way (such as a small floating
+    "toast" window).
+
+    Note that this flag will always reflect the Activity's
+    android:immersive manifest definition, even if the Activity's
+    immersive state is changed at runtime via
+    Activity.setImmersive(boolean).See 
+    also:Notification.FLAG_HIGH_PRIORITYActivity.setImmersive(boolean)
+    """
+    FLAG_IMMERSIVE = 0x00000800
+
+    """
+    public static final int FLAG_MULTIPROCESS:
+    Bit in flags indicating whether this activity is able to
+    run in multiple processes.  If
+    true, the system may instantiate it in the some process as the
+    process starting it in order to conserve resources.  If false, the
+    default, it always runs in ComponentInfo.processName.  Set from the
+    R.attr.multiprocess attribute.
+    """
+    FLAG_MULTIPROCESS = 0x00000001
+
+    """
+    public static final int FLAG_NO_HISTORY:
+    Bit in flags indicating that, when the user navigates away
+    from an activity, it should be finished.
+    Set from the
+    R.attr.noHistory attribute.
+    """
+    FLAG_NO_HISTORY = 0x00000080
+
+    """
+    public static final int FLAG_RELINQUISH_TASK_IDENTITY:
+    Bit in flags: If set, a task rooted at this activity will have its
+    baseIntent replaced by the activity immediately above this. Each activity may 
+    further
+    relinquish its identity to the activity above it using this flag. Set from the
+    R.attr.relinquishTaskIdentity attribute.
+    """
+    FLAG_RELINQUISH_TASK_IDENTITY = 0x00001000
+
+    """
+    public static final int FLAG_RESUME_WHILE_PAUSING:
+    Bit in flags indicating that this activity can start is creation/resume
+    while the previous activity is still pausing.  Corresponds to
+    R.attr.resumeWhilePausing
+    """
+    FLAG_RESUME_WHILE_PAUSING = 0x00004000
+
+    """
+    public static final int FLAG_SINGLE_USER:
+    Bit in flags: If set, a single instance of the receiver will
+    run for all users on the device.  Set from the
+    R.attr.singleUser attribute.  Note that this flag is
+    only relevant for ActivityInfo structures that are describing receiver
+    components; it is not applied to activities.
+    """
+    FLAG_SINGLE_USER = 0x40000000
+
+    """
+    public static final int FLAG_STATE_NOT_NEEDED:
+    Bit in flags indicating that the activity's state
+    is not required to be saved, so that if there is a failure the
+    activity will not be removed from the activity stack.  Set from the
+    R.attr.stateNotNeeded attribute.
+    """
+    FLAG_STATE_NOT_NEEDED = 0x00000010
+
+    """
+    public static final int LAUNCH_MULTIPLE:
+    Constant corresponding to standard in
+    the R.attr.launchMode attribute.
+    """
+    LAUNCH_MULTIPLE = 0x00000000
+
+    """
+    public static final int LAUNCH_SINGLE_INSTANCE:
+    Constant corresponding to singleInstance in
+    the R.attr.launchMode attribute.
+    """
+    LAUNCH_SINGLE_INSTANCE = 0x00000003
+
+    """
+    public static final int LAUNCH_SINGLE_TASK:
+    Constant corresponding to singleTask in
+    the R.attr.launchMode attribute.
+    """
+    LAUNCH_SINGLE_TASK = 0x00000002
+
+    """
+    public static final int LAUNCH_SINGLE_TOP:
+    Constant corresponding to singleTop in
+    the R.attr.launchMode attribute.
+    """
+    LAUNCH_SINGLE_TOP = 0x00000001
+
+    """
+    public static final int PERSIST_ACROSS_REBOOTS:
+    Constant corresponding to persistAcrossReboots in
+    the R.attr.persistableMode attribute.
+    """
+    PERSIST_ACROSS_REBOOTS = 0x00000002
+
+    """
+    public static final int PERSIST_NEVER:
+    Constant corresponding to doNotPersist in
+    the R.attr.persistableMode attribute.
+    """
+    PERSIST_NEVER = 0x00000001
+
+    """
+    public static final int PERSIST_ROOT_ONLY:
+    Constant corresponding to persistRootOnly in
+    the R.attr.persistableMode attribute.
+    """
+    PERSIST_ROOT_ONLY = 0x00000000
+
+    """
+    public static final int SCREEN_ORIENTATION_BEHIND:
+    Constant corresponding to behind in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_BEHIND = 0x00000003
+
+    """
+    public static final int SCREEN_ORIENTATION_FULL_SENSOR:
+    Constant corresponding to fullSensor in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_FULL_SENSOR = 0x0000000a
+
+    """
+    public static final int SCREEN_ORIENTATION_FULL_USER:
+    Constant corresponding to fullUser in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_FULL_USER = 0x0000000d
+
+    """
+    public static final int SCREEN_ORIENTATION_LANDSCAPE:
+    Constant corresponding to landscape in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_LANDSCAPE = 0x00000000
+
+    """
+    public static final int SCREEN_ORIENTATION_LOCKED:
+    Constant corresponding to locked in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_LOCKED = 0x0000000e
+
+    """
+    public static final int SCREEN_ORIENTATION_NOSENSOR:
+    Constant corresponding to nosensor in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_NOSENSOR = 0x00000005
+
+    """
+    public static final int SCREEN_ORIENTATION_PORTRAIT:
+    Constant corresponding to portrait in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_PORTRAIT = 0x00000001
+
+    """
+    public static final int SCREEN_ORIENTATION_REVERSE_LANDSCAPE:
+    Constant corresponding to reverseLandscape in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_REVERSE_LANDSCAPE = 0x00000008
+
+    """
+    public static final int SCREEN_ORIENTATION_REVERSE_PORTRAIT:
+    Constant corresponding to reversePortrait in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_REVERSE_PORTRAIT = 0x00000009
+
+    """
+    public static final int SCREEN_ORIENTATION_SENSOR:
+    Constant corresponding to sensor in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_SENSOR = 0x00000004
+
+    """
+    public static final int SCREEN_ORIENTATION_SENSOR_LANDSCAPE:
+    Constant corresponding to sensorLandscape in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_SENSOR_LANDSCAPE = 0x00000006
+
+    """
+    public static final int SCREEN_ORIENTATION_SENSOR_PORTRAIT:
+    Constant corresponding to sensorPortrait in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_SENSOR_PORTRAIT = 0x00000007
+
+    """
+    public static final int SCREEN_ORIENTATION_UNSPECIFIED:
+    Constant corresponding to unspecified in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_UNSPECIFIED = -1
+
+    """
+    public static final int SCREEN_ORIENTATION_USER:
+    Constant corresponding to user in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_USER = 0x00000002
+
+    """
+    public static final int SCREEN_ORIENTATION_USER_LANDSCAPE:
+    Constant corresponding to userLandscape in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_USER_LANDSCAPE = 0x0000000b
+
+    """
+    public static final int SCREEN_ORIENTATION_USER_PORTRAIT:
+    Constant corresponding to userPortrait in
+    the R.attr.screenOrientation attribute.
+    """
+    SCREEN_ORIENTATION_USER_PORTRAIT = 0x0000000c
+
+    """
+    public static final int UIOPTION_SPLIT_ACTION_BAR_WHEN_NARROW:
+    Flag for use with uiOptions.
+    Indicates that the action bar should put all action items in a separate bar 
+    when
+    the screen is narrow.
+    This value corresponds to "splitActionBarWhenNarrow" for the uiOptions XML
+    attribute.
+    """
+    UIOPTION_SPLIT_ACTION_BAR_WHEN_NARROW = 0x00000001
 
     """
     public static final Creator<ActivityInfo> CREATOR:
@@ -562,7 +562,7 @@ class ActivityInfo(ComponentInfo, IParcelable):
         able to honor the request.
         Value is COLOR_MODE_DEFAULT, COLOR_MODE_WIDE_COLOR_GAMUT or COLOR_MODE_HDR.
         """
-        self.colorMode = COLOR_MODE_DEFAULT
+        self.colorMode = self.COLOR_MODE_DEFAULT
 
         """
         public int configChanges:
@@ -676,7 +676,7 @@ class ActivityInfo(ComponentInfo, IParcelable):
         SCREEN_ORIENTATION_USER_LANDSCAPE, SCREEN_ORIENTATION_USER_PORTRAIT, 
         SCREEN_ORIENTATION_FULL_USER or SCREEN_ORIENTATION_LOCKED.
         """
-        self.screenOrientation = SCREEN_ORIENTATION_UNSPECIFIED
+        self.screenOrientation = self.SCREEN_ORIENTATION_UNSPECIFIED
 
         """
         public int softInputMode:

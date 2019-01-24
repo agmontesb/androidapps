@@ -1,3 +1,7 @@
 {
-  "test_bundle.py": true
+  "test_bundle.py": true, 
+  "test_contentsystem.py::test_packageinfo": true, 
+  "test_overload.py": true, 
+  "test_overload.py::test_overload_class_static_method": true, 
+  "test_parcelable.py": true
 }

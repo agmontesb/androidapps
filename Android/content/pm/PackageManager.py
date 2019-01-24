@@ -7,7 +7,6 @@ from SystemManager.SystemTablesProvider import SystemTablesProvider
 
 
 class PackageManager(IPackageManager):
-
     def __init__(self):
         super(PackageManager, self).__init__()
         self._sysprovider = SystemTablesProvider()

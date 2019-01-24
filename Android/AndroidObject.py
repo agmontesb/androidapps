@@ -1,13 +1,41 @@
 # -*- coding: utf-8 -*-
 """https://developer.android.com/reference/java/lang/Object"""
 import inspect
+import functools
+
+
+def AndroidEnum(cls):
+    enumMembers = filter(lambda x: x[0].isupper(), cls.__dict__.items())
+    map(lambda x: setattr(cls, x[0], cls(*x[1])), enumMembers)
+    enumNames = zip(*enumMembers)[0]
+    map(lambda x: setattr(getattr(cls, x), '_name_', x), enumNames)
+    cls.__str__ = lambda self: '<%s member of enum %s at %s>' % (self._name_, self.__class__.__name__, hex(id(self)))
+    cls.__repr__ = lambda self: '<member %s of enum %s at %s>' % (self._name_, self.__class__.__name__, hex(id(self)))
+    return cls
 
 
 class overload(object):
+    # TODO: Como implementar el uso de los @abc.abstractmethod
+    @property
+    def __name__(self):
+        return self._getfcnattr_(self._func[0], '__name__')
+
+    def _getfcnattr_(self, fcn, attrname):
+        if hasattr(fcn, '__func__'):
+            fcn = fcn.__func__
+        return getattr(fcn, attrname)
+
     @property
     def __doc__(self):
+        trf = self._getfcnattr_
         sep = 20*'-'
-        doc = sep.join(map(lambda x: x.__doc__, self._func))
+        doc = sep.join(
+            reduce(
+                lambda t, x: (t.append(trf(x, '__doc__')) if trf(x, '__doc__') else None) or t,
+                self._func,
+                []
+            )
+        )
         return doc
 
     def __new__(cls, *args, **kwargs):
@@ -33,7 +61,12 @@ class overload(object):
         :return NoneType: None.
         '''
         def wrapped(func):
-            fargs = inspect.getargspec(func).args[1:]
+            if isinstance(func, classmethod):
+                fargs = inspect.getargspec(func.__func__).args[1:]
+            elif isinstance(func, staticmethod):
+                fargs = inspect.getargspec(func.__func__).args
+            else:
+                fargs = inspect.getargspec(func).args[1:]
             errorstr = 'ERROR: Signature for %s args, but function with %s args'
             assert len(args) == len(fargs), errorstr % (len(args), len(fargs))
             if args not in self._signature:
@@ -45,23 +78,10 @@ class overload(object):
             return self
         return wrapped
 
-    def __get__(self, instance, klass=None):
-        if instance is None:
-            return self
-        def newfunction(*args):
-            func = self._getfunc(args)
-            return func(instance, *args)
-        return newfunction
-
     def _getfunc(self, args):
         argsclass = map(lambda x: inspect.getmro(x.__class__), args)
         argsclass = map(lambda x: map(lambda y: y.__name__, x), argsclass)
         mask = map(lambda x: len(x) == len(args) and zip(x, argsclass), self._signature)
-        # mask = map(
-        #     lambda x: isinstance(x, list) and
-        #               all(map(lambda m: m[0] in m[1],x)),
-        #     mask
-        # )
         mask = map(
             lambda x: isinstance(x, list) and
                       all(
@@ -82,6 +102,44 @@ class overload(object):
             argsclass = tuple(map(lambda x: x[0], argsclass))
             raise TypeError('%s%s, unknown function signature.' % (name, argsclass))
         return func
+
+    def __get__(self, instance, klass=None):
+        def newfunction(*args):
+            func = self._getfunc(args)
+            if isinstance(func, classmethod): return func.__func__(klass, *args)
+            if isinstance(func, staticmethod): return func.__func__(*args)
+            if not instance and klass:
+                fname = self._func[0].__name__
+                cname = klass.__name__
+                msg = 'unbound method %s must be called with %s instance as ' \
+                      'first argument (got nothing instead)' % (fname, cname)
+                raise TypeError(msg)
+            return func(instance, *args)
+        return newfunction
+
+    def __call__(self, *args, **kwargs):
+        instance = klass = None
+        if isinstance(args[0], type):
+            instance, args = args[0], args[1:]
+            klass = type(instance)
+        f = self.__get__(instance, klass)
+        return f(*args)
+
+    def __get__NEW(self, instance, klass=None):
+        instance = instance or klass
+        return functools.partial(self.__call__, instance)
+
+    def __call__NEW(self, *args, **kwargs):
+        # TODO: Habilitar luego de resolver como tratar el caso de los staticmethod
+        bFlag = not args or not hasattr(args[0], self.__name__)
+        n = int(not bFlag)
+        func = self._getfunc(args[n:])
+        n = 1*isinstance(func, staticmethod)
+        try:
+            func = func.__func__
+        except:
+            pass
+        return func(*args[n:])
 
 
 class Object(object):

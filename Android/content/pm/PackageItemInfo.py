@@ -84,7 +84,7 @@ class PackageItemInfo(Object):
         self._unclassifiedFields = None
 
     @__init__.adddef('PackageItemInfo')
-    def PackageItemInfo(self, orig):
+    def __init__(self, orig):
         """
         :param orig: PackageItemInfo.
         """
@@ -95,7 +95,7 @@ class PackageItemInfo(Object):
         self.PackageItemInfo(parcel)
 
     @__init__.adddef('Parcel')
-    def PackageItemInfo(self, source):
+    def __init__(self, source):
         """
         :param source: Parcel.
         """
