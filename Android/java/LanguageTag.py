@@ -5,8 +5,8 @@
 import re
 
 from Android import Object
-from Android.java.Locale import Locale
 
+LOCALE_SEP = '_'
 
 class LanguageTag(Object):
     entries = [
@@ -154,17 +154,20 @@ class LanguageTag(Object):
             tag.language = 'nn'
             vart = ''
         if vart:
-            vart, dmy = cls._parseComponent(vart, cls.isVariant, Locale.SEP)
-            tag.variants = dmy
-            if vart:
-                vart, dmy = cls._parseComponent(vart, cls.isPrivateUseSubtag, Locale.SEP)
-                privuseVar = cls.SEP.join(dmy)
+            remainder, vart = cls._parseComponent(vart, cls.isVariant, LOCALE_SEP)
+            if remainder:
+                remainder, privuseVar = cls._parseComponent(remainder, cls.isPrivateUseSubtag, LOCALE_SEP)
+                if remainder:
+                    privuseVar = vart
+                    vart = []
+                privuseVar = cls.SEP.join(privuseVar)
+            tag.variants = vart
         privateuse = None
         extensions = []
-        if locale.extensions:
-            locExtensions = locale.extensions
-            for key, ext in locExtensions.items():
-                if cls.isPrivateUseSubtag(key):
+        if locale.hasExtensions():
+            for key in locale.getExtensionKeys():
+                ext = locale.getExtension(key).replace(LOCALE_SEP, cls.SEP)
+                if key == cls.PRIVATEUSE:
                     privateuse = ext
                 else:
                     extensions.append(key + cls.SEP + ext)
@@ -172,11 +175,9 @@ class LanguageTag(Object):
             tag.extensions = extensions
             hassubtag = True
         if privuseVar:
-            if privateuse:
-                privateuse = cls.PRIVUSE_VARIANT_PREFIX + cls.SEP + privuseVar
-            else:
-                privateuse += cls.SEP + cls.PRIVUSE_VARIANT_PREFIX + cls.SEP
-                privateuse += privuseVar.replace(Locale.SEP, cls.SEP)
+            privuseVar = privuseVar.replace(LOCALE_SEP, cls.SEP)
+            lvariant = cls.PRIVUSE_VARIANT_PREFIX + cls.SEP + privuseVar
+            privateuse = (privateuse + cls.SEP + lvariant) if privateuse else lvariant
         if privateuse:
             tag.privateuse = privateuse
         if not tag.language and (hassubtag or privateuse is None):
@@ -216,30 +217,37 @@ class LanguageTag(Object):
 
     def getExtensions(self):
         extensions = self.extensions or []
-        return tuple(extensions)
+        return extensions
 
     def getPrivateuse(self):
         return self.privateuse
 
-    def canonicalizeLanguage(self, s):
+    @staticmethod
+    def canonicalizeLanguage(s):
         return s.lower()
 
-    def canonicalizeExtlangs(self, s):
+    @staticmethod
+    def canonicalizeExtlangs(s):
         return s.lower()
 
-    def canonicalizeScript(self, s):
+    @staticmethod
+    def canonicalizeScript(s):
         return s.title()
 
-    def canonicalizeRegion(self, s):
+    @staticmethod
+    def canonicalizeRegion(s):
         return s.upper()
 
-    def canonicalizeVariant(self, s):
+    @staticmethod
+    def canonicalizeVariant(s):
         return s.lower()
 
-    def canonicalizeExtension(self, s):
+    @staticmethod
+    def canonicalizeExtension(s):
         return s.lower()
 
-    def canonicalizePrivateuse(self, s):
+    @staticmethod
+    def canonicalizePrivateuse(s):
         return s.lower()
 
     def toString(self):

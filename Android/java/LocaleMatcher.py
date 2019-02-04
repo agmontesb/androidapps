@@ -5,11 +5,11 @@ from operator import methodcaller as mcall
 
 import LocaleEquivalentMaps
 from Android import Object
-from Android.java.LanguageTag import LanguageTag
 from Android.java.Locale import Locale
+from Android.java.LanguageTag import LanguageTag
 
-MIN_WEIGHT = MIN_WEIGHT
-MAX_WEIGHT = MAX_WEIGHT
+MIN_WEIGHT = Locale.LanguageRange.MIN_WEIGHT
+MAX_WEIGHT = Locale.LanguageRange.MAX_WEIGHT
 
 class LocaleMatcher(Object):
     _isExtendedRange = re.compile(r'(?:[a-z]{1,8}|\*)(?:-(?:[0-9a-z]{1,8}|\*))*$').match
@@ -99,7 +99,7 @@ class LocaleMatcher(Object):
     def lookupTag(cls, priorityList, tags):
         if not priorityList or not tags:
             return None
-        priorityList = map(mcall('getRange'), sorted(priorityList, key=mcall('getWeight')))
+        priorityList = map(mcall('getRange'), priorityList)
         for range in priorityList:
             if range == '*': continue
             rangeForRegex = range.replace('*', r'[0-9a-z]{1,8}')
@@ -111,10 +111,9 @@ class LocaleMatcher(Object):
                 except:
                     pass
                 if LanguageTag.SEP not in rangeForRegex:
-                    rangeForRegex = ''
                     break
                 rangeForRegex = rangeForRegex.rsplit(LanguageTag.SEP, 1)[0]
-                if rangeForRegex[-2] == LanguageTag.SEP:
+                if rangeForRegex[-2] == LanguageTag.SEP:  # Se descartan las extensiones
                     rangeForRegex = rangeForRegex[:-3]
         return None
 
@@ -126,8 +125,8 @@ class LocaleMatcher(Object):
                 lista.append(lr)
                 tempList.append(r)
 
-        ranges = ranges.replace(' ', '')
-        if ranges.startsWith("accept-language:"):
+        ranges = ranges.replace(' ', '').lower()
+        if ranges.startswith("accept-language:"):
             ranges = ranges.split('accept-language:')[-1]
         langRanges = ranges.split(',')
         lista = []
@@ -157,7 +156,7 @@ class LocaleMatcher(Object):
                            ), equivalents
                 )
 
-        return sorted(lista, key=lambda x: x.getWeight())
+        return sorted(lista, key=lambda x: -x.getWeight())
 
     @classmethod
     def getEquivalentsForLanguage(cls, range):
@@ -165,7 +164,7 @@ class LocaleMatcher(Object):
         while r:
             if LocaleEquivalentMaps.singleEquivMap.has_key(r):
                 equiv = LocaleEquivalentMaps.singleEquivMap.get(r)
-                return range.replace(r, equiv, 1)
+                return [range.replace(r, equiv, 1)]
             elif LocaleEquivalentMaps.multiEquivsMap.has_key(r):
                 equivs = LocaleEquivalentMaps.multiEquivsMap.get(r)
                 return map(lambda x: range.replace(r, x, 1), equivs)
@@ -178,7 +177,7 @@ class LocaleMatcher(Object):
     @classmethod
     def getEquivalentForRegionAndVariant(cls, range):
         try:
-            extensionKeyIndex = re.search(r'-[0-9a-zA-Z]-').start()
+            extensionKeyIndex = re.search(r'-[0-9a-zA-Z]-', range).start()
         except:
             extensionKeyIndex = None
 
@@ -215,7 +214,7 @@ class LocaleMatcher(Object):
                             lista.append(langRange)
                     break
                 try:
-                    r = r.rsplit(LanguageTag.SEP, 1)[0]
+                    r, suffix = r.rsplit(LanguageTag.SEP, 1)
                 except:
                     break
             if not hasEquivalent:

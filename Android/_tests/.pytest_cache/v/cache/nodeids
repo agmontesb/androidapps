@@ -1,1 +1,9 @@
-[]
+[
+  "test_locale.py::test_localekey", 
+  "test_locale.py::test_languagetag", 
+  "test_locale.py::test_localematcher", 
+  "test_locale.py::test_from_languagetag_to_locale", 
+  "test_locale.py::test_toLanguageTag", 
+  "test_locale.py::test_builder", 
+  "test_locale.py::test_getters"
+]

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import abc
+import copy
 import sys
 import Tkinter as tk
 import ttk
@@ -185,12 +186,17 @@ def setGUI():
 
 def AndroidEnum(cls):
     enumMembers = filter(lambda x: x[0].isupper(), cls.__dict__.items())
-    map(lambda x: setattr(cls, x[0], cls(*x[1])), enumMembers)
+    glb = copy.copy(globals())
+    glb[cls.__name__] = cls
+    glb['enumMembers'] = enumMembers
+    glb['cls'] = cls
+    exec('map(lambda x: setattr(cls, x[0], cls(*x[1])), enumMembers)', glb)
     enumNames = zip(*enumMembers)[0]
     map(lambda x: setattr(getattr(cls, x), '_name_', x), enumNames)
     cls.__str__ = lambda self: '<%s member of enum %s at %s>' % (self._name_, self.__class__.__name__, hex(id(self)))
     cls.__repr__ = lambda self: '<member %s of enum %s at %s>' % (self._name_, self.__class__.__name__, hex(id(self)))
     return cls
+
 
 @AndroidEnum
 class Category(object):
@@ -213,7 +219,7 @@ class Category(object):
     FORMAT = (2,)
 
     def __init__(self, value):
-        super(self.__class__, self).__init__()
+        super(Category, self).__init__()
         self._value = value
 
     @classmethod

@@ -5,9 +5,8 @@ import re
 import threading
 import locale as pylocale
 
-from LanguageTag import LanguageTag
-from LocaleMatcher import LocaleMatcher
 from Android import Object, overload, AndroidEnum
+from LanguageTag import LanguageTag
 
 
 class Locale(Object):
@@ -179,15 +178,15 @@ class Locale(Object):
     _defaultFormatLocale = None
 
     class LocaleKey(Object):
-        @overload('str', 'str', 'str', 'str', 'bool')
+        @overload('str', '@str', '@str', '@str', '@dict', 'bool')
         def __init__(self, language, script, region, variant, extensions, normalized):
             super(Locale.LocaleKey, self).__init__()
             self.lang = language or ''
             self.scrt = script or ''
-            self.regn = region
-            self.vart = variant
+            self.regn = region or ''
+            self.vart = variant or ''
             self.normalized = normalized
-            self.extensions = extensions or []
+            self.extensions = extensions or {}
             hash = reduce(
                 lambda t, x: t + (x.__hash__() if x is not None else 0),
                 (language, script, region, variant),
@@ -200,7 +199,7 @@ class Locale(Object):
             )
             self.hash = hash
 
-        @__init__.adddef('str', 'str', 'str', 'str')
+        @__init__.adddef('str', '@str', '@str', '@str')
         def __init__(self, language, script, region, variant):
             return self.__init__(language, script, region, variant, None, False)
 
@@ -285,18 +284,25 @@ class Locale(Object):
             (Grandfathered tags are handled in setLanguageTag(String).)
             :return: Locale. A Locale.
             """
-            language = self.language
-            script = self.script
-            region = self.region
-            variants = self.variants
+            ltag = LanguageTag
+            language = ltag.canonicalizeLanguage(self.language)
+            script = ltag.canonicalizeScript(self.script or '')
+            region = ltag.canonicalizeRegion(self.region or '')
+            variants = (self.variants or '').replace(LanguageTag.SEP, Locale.SEP)
+            variants = ltag.canonicalizeVariant(variants)
             if self.extensions and self.extensions.has_key(LanguageTag.PRIVATEUSE):
-                privuse = self.extensions.get(LanguageTag.PRIVATEUSE)
+                privuse = self.extensions.pop(LanguageTag.PRIVATEUSE)
                 pattern = r'\b%s\b' % LanguageTag.PRIVUSE_VARIANT_PREFIX
-                prefix, suffix = re.split(pattern, privuse)
-                if suffix:
-                    variants += Locale.SEP + LanguageTag.PRIVUSE_VARIANT_PREFIX
-                    variants += suffix.replcae(LanguageTag.SEP, Locale.Tag)
-                self.extensions[LanguageTag.PRIVATEUSE] = prefix.rstrip(LanguageTag.SEP + Locale.Tag)
+                try:
+                    privuse, lvariant = re.split(pattern, privuse, 1)
+                    if lvariant:
+                        variants += lvariant
+                        variants = variants.strip(LanguageTag.SEP).replace(LanguageTag.SEP, Locale.SEP)
+                except:
+                    pass
+                if privuse:
+                    privuse = privuse.lower()
+                    self.extensions[LanguageTag.PRIVATEUSE] = privuse.strip(LanguageTag.SEP)
             ule = ''
             if self.uattributes:
                 uattributes = sorted(self.uattributes)
@@ -306,7 +312,7 @@ class Locale(Object):
                 ule += Locale.SEP.join(ukeywords)
             if ule:
                 self.extensions['u'] = ule
-            extensions = self.extensions
+            extensions = {key:value.replace(LanguageTag.SEP, Locale.SEP) for key, value in self.extensions.items()}
             instance = Locale(language, script, region, variants, extensions)
             instance.normalized = True
             return instance
@@ -375,7 +381,7 @@ class Locale(Object):
             setUnicodeLocaleKeyword(String, String)
             """
             isPrivateUse = key == LanguageTag.PRIVATEUSE
-            if not isPrivateUse and not LanguageTag.isExtension():
+            if not isPrivateUse and not LanguageTag.isExtension(key):
                 raise Exception('LocaleSyntaxException: "Ill-formed extension key: %s"' % key)
             if not value:
                 if key == 'u':
@@ -413,8 +419,7 @@ class Locale(Object):
                             k += 1
                 else:
                     key = key.lower()
-                    value = value.lower()
-                    self.extensions[key] = value
+                    self.extensions[key] = value if isPrivateUse else value.lower()
             return self
 
         def setLanguage(self, language):
@@ -434,7 +439,6 @@ class Locale(Object):
             self.language = language
             return self
 
-        @overload('@str')
         def setLanguageTag(self, languageTag):
             """
             Resets the Builder to match the provided IETF BCP 47 language tag.
@@ -456,11 +460,6 @@ class Locale(Object):
             tag, status = LanguageTag.parse(languageTag)
             if status != 'OK':
                 raise Exception('IllformedLocaleException: "%s"' % status)
-            self.setLanguageTag(tag)
-
-        @setLanguageTag.adddef('LanguageTag')
-        def setLanguageTag(self, languageTag):
-            tag = languageTag
             self.clear()
             extLangs = tag.getExtlangs()
             if extLangs:
@@ -491,15 +490,19 @@ class Locale(Object):
             "th-TH-u-nu-thai" Locale("no", "NO", "NY") is treated as "nn-NO"
             :param locale: Locale: the locale
             :return: Locale.Builder. This builder.
-            :raises: IllformedLocaleExceptionif locale has any ill-formed
-            fields.NullPointerExceptionif locale is null.
+            :raises:
+            NullPointerException: if locale is null.
+            IllformedLocaleException: if locale has any ill-formed fields.
             """
             if not locale:
                 raise Exception('NullPointerException: "locale is None"')
-            tag, state = LanguageTag.parseLocale(locale)
-            if state != 'OK':
-                raise Exception('IllformedLocaleException: "%s"' % state)
-            return self.setLanguageTag(tag)
+            self.setLanguage(locale.getLanguage())
+            self.setScript(locale.getScript())
+            self.setRegion(locale.getCountry())
+            self.setVariant(locale.getVariant())
+            self.clearExtensions()
+            map(lambda x: self.setExtension(x, locale.getExtension(x)), locale.getExtensionKeys())
+            return self
 
         def setRegion(self, region):
             """
@@ -569,7 +572,7 @@ class Locale(Object):
                 self.ukeywords[key] = utype.lower()
             return self
 
-        def setVariant(self, variant):
+        def setVariant(self, variants):
             """
             Sets the variant.  If variant is null or the empty string, the variant
             in this Builder is removed.  Otherwise, it must consist of one or more
@@ -583,13 +586,13 @@ class Locale(Object):
             :return: Locale.Builder. This builder.
             :raises: IllformedLocaleExceptionif variant is ill-formed
             """
-            if not variant:
+            if not variants:
                 variants = ''
             else:
-                variants, status = LanguageTag.__parseComponent(variant, LanguageTag.isVariant, LanguageTag.SEP)
-                if status != 'OK':
-                    raise Exception('LocaleSyntaxException: "Ill-formed script: %s"' % variant)
-            self.variant = variants
+                residual, dmy = LanguageTag._parseComponent(variants, LanguageTag.isVariant, Locale.SEP)
+                if residual:
+                    raise Exception('LocaleSyntaxException: "Ill-formed variant: %s"' % residual)
+            self.variants = variants
             return self
 
     @AndroidEnum
@@ -603,14 +606,14 @@ class Locale(Object):
         public static final Locale.Category DISPLAY
         Category used to represent the default locale for displaying user interfaces.
         """
-        DISPLAY = 1
+        DISPLAY = (1,)
 
         """
         public static final Locale.Category FORMAT
         Category used to represent the default locale for formatting dates, 
         numbers, and/or currencies.
         """
-        FORMAT = 2
+        FORMAT = (2,)
 
         def __init__(self, value):
             super(self.__class__, self).__init__()
@@ -622,14 +625,15 @@ class Locale(Object):
             :param name: String
             :return: Locale.Category.
             """
-            pass
+            return getattr(self, name.upper(), None)
 
         @classmethod
         def values(self):
             """
             :return: Category[].
             """
-            pass
+            names = sorted(filter(lambda x: x.isupper(), vars(self)))
+            return map(self.valueOf, names)
 
     @AndroidEnum
     class FilteringMode(Object):
@@ -639,20 +643,20 @@ class Locale(Object):
         List consisting of language ranges. If all of the ranges are basic,
         basic filtering is selected. Otherwise, extended filtering is selected.
         """
-        AUTOSELECT_FILTERING = 1
+        AUTOSELECT_FILTERING = (1,)
 
         """
         public static final Locale.FilteringMode EXTENDED_FILTERING
         Specifies extended filtering.
         """
-        EXTENDED_FILTERING = 2
+        EXTENDED_FILTERING = (2,)
 
         """
         public static final Locale.FilteringMode IGNORE_EXTENDED_RANGES
         Specifies basic filtering: Note that any extended language ranges included 
         in the given Language Priority List are ignored.
         """
-        IGNORE_EXTENDED_RANGES = 3
+        IGNORE_EXTENDED_RANGES = (3,)
 
         """
         public static final Locale.FilteringMode MAP_EXTENDED_RANGES
@@ -663,7 +667,7 @@ class Locale(Object):
         treated as "*". If "*" is not the first subtag, "*" and extra "-" are 
         removed. For example, "ja-*-JP" is mapped to "ja-JP".
         """
-        MAP_EXTENDED_RANGES = 4
+        MAP_EXTENDED_RANGES = (4,)
 
         """
         public static final Locale.FilteringMode REJECT_EXTENDED_RANGES
@@ -671,7 +675,7 @@ class Locale(Object):
         in the given Language Priority List, the list is rejected and the 
         filtering method throws IllegalArgumentException.
         """
-        REJECT_EXTENDED_RANGES = 5
+        REJECT_EXTENDED_RANGES = (5,)
 
         def __init__(self, value):
             super(self.__class__, self).__init__()
@@ -681,16 +685,17 @@ class Locale(Object):
         def valueOf(self, name):
             """
             :param name: String
-            :return: Locale.FilteringMode.
+            :return: Locale.Category.
             """
-            pass
+            return getattr(self, name.upper(), None)
 
         @classmethod
         def values(self):
             """
-            :return: FilteringMode[].
+            :return: Category[].
             """
-            pass
+            names = sorted(filter(lambda x: x.isupper(), vars(self)))
+            return map(self.valueOf, names)
 
     class LanguageRange(Object):
         """
@@ -738,7 +743,7 @@ class Locale(Object):
                 raise Exception('IllegalArgumentException: "range=%s"' % range)
             self.range = range
             self.weight = weight
-            self.hash
+            self.hash = None
 
         def equals(self, obj):
             """
@@ -749,7 +754,15 @@ class Locale(Object):
             :return: boolean. true if this object's range and weight are the same
             as the obj's; false otherwise.
             """
-            pass
+            if id(self) == id(obj): return True
+            if not isinstance(obj, self.__class__): return False
+            bFlag =  self.hash == obj.hash and \
+                     self.getRange() == obj.getRange() and \
+                     abs(self.getWeight() - obj.getWeight()) < 0.01
+            return bFlag
+
+        def __eq__(self, other):
+            return self.equals(other)
 
         def getRange(self):
             """
@@ -808,9 +821,10 @@ class Locale(Object):
             containing information to customize language ranges
             :return: List<Locale.LanguageRange>. a new Language Priority List with
             customization. The list is modifiable.
-            :raises: NullPointerExceptionif priorityList is null
+            :raises: NullPointerException: if priorityList is null
             See also: parse(String, Map)
             """
+            from LocaleMatcher import LocaleMatcher
             return LocaleMatcher.mapEquivalents(priorityList, map)
 
         @overload('str')
@@ -821,28 +835,33 @@ class Locale(Object):
             method performs a syntactic check for each language range in the given
             ranges but doesn't do validation using the IANA Language Subtag
             Registry.  The ranges to be given can take one of the following forms:
-              "Accept-Language: ja,en;q=0.4"  (weighted list with Accept-Language
-            prefix) "ja,en;q=0.4"                   (weighted list) "ja,en"
-                             (prioritized list)   In a weighted list, each
-            language range is given a weight value. The weight value is identical
-            to the "quality value" in RFC 2616, and it expresses how much the user
-            prefers  the language. A weight value is specified after a
-            corresponding language range followed by ";q=", and the default weight
-            value is MAX_WEIGHT when it is omitted.  Unlike a weighted list,
-            language ranges in a prioritized list are sorted in the descending
-            order based on its priority. The first language range has the highest
-            priority and meets the user's preference most.  In either case,
-            language ranges are sorted in descending order in the Language
-            Priority List based on priority or weight. If a language range appears
-            in the given ranges more than once, only the first one is included on
-            the Language Priority List.  The returned list consists of language
-            ranges from the given ranges and their equivalents found in the IANA
-            Language Subtag Registry. For example, if the given ranges is
+              "Accept-Language: ja,en;q=0.4"  (weighted list with Accept-Language prefix)
+              "ja,en;q=0.4"                   (weighted list)
+              "ja,en"                         (prioritized list)
+            In a weighted list, each language range is given a weight value. The
+            weight value is identical to the "quality value" in RFC 2616, and it
+            expresses how much the user prefers  the language.
+            A weight value is specified after a corresponding language range
+            followed by ";q=", and the default weight value is MAX_WEIGHT when it
+            is omitted.
+            Unlike a weighted list, language ranges in a prioritized list are
+            sorted in the descending order based on its priority. The first
+            language range has the highest priority and meets the user's preference
+            most.
+            In either case, language ranges are sorted in descending order in the
+            Language Priority List based on priority or weight. If a language range
+            appears in the given ranges more than once, only the first one is
+            included on the Language Priority List.  The returned list consists of
+            language ranges from the given ranges and their equivalents found in
+            the IANA Language Subtag Registry. For example, if the given ranges is
             "Accept-Language: iw,en-us;q=0.7,en;q=0.3", the elements in the list
-            to be returned are:  RangeWeight "iw" (older tag for Hebrew)
-              1.0 "he" (new preferred code for Hebrew)    1.0 "en-us" (English,
-            United States)        0.7 "en" (English)                          0.3
-             Two language ranges, "iw" and "he", have the same highest priority in
+            to be returned are:
+                Range                                  Weight
+                "iw" (older tag for Hebrew)             1.0
+                "he" (new preferred code for Hebrew)    1.0
+                "en-us" (English, United States)        0.7
+                "en" (English)                          0.3
+            Two language ranges, "iw" and "he", have the same highest priority in
             the list. By adding "he" to the user's Language Priority List,
             locale-matching method can find Hebrew as a matching locale (or
             language tag) even if the application or system offers only "he" as a
@@ -857,6 +876,7 @@ class Locale(Object):
             nullIllegalArgumentExceptionif a language range or a weight found in
             the given ranges is ill-formed
             """
+            from LocaleMatcher import LocaleMatcher
             return LocaleMatcher.parse(ranges)
 
         @parse.adddef('str', 'dict')
@@ -866,23 +886,41 @@ class Locale(Object):
             Parses the given ranges to generate a Language Priority List, and then
             customizes the list using the given map. This method is equivalent to
             mapEquivalents(parse(ranges), map).
-            rangesString: a list of comma-separated language ranges or a list of
+            :param ranges: String: a list of comma-separated language ranges or a list of
             language ranges in the form of the "Accept-Language" header defined in
-            RFC 2616mapMap: a map containing information to customize language
+            RFC 2616.
+            :param map: Map: a map containing information to customize language
             ranges
             :return: List<Locale.LanguageRange>. a Language Priority List with
             customization. The list is modifiable.
-            :raises: NullPointerExceptionif ranges is
-            nullIllegalArgumentExceptionif a language range or a weight found in
+            :raises:
+            NullPointerException: if ranges is None.
+            IllegalArgumentException: if a language range or a weight found in
             the given ranges is ill-formed
-            See also: parse(String)mapEquivalents(List, Map>)
+            See also:
+            parse(String)
+            mapEquivalents(List, Map)
             """
             return cls.mapEquivalents(cls.parse(ranges), map)
 
     def __new__(cls, *args, **kwargs):
         LocaleKey = Locale.LocaleKey
-        language, country, variant = (args + ('', ''))[:3]
-        key = LocaleKey.normalize(LocaleKey(language, '', country, variant))
+        if len(args) <= 3:
+            script = ''
+            extensions = None
+            language, country, variant  = (args + ('', ''))[:3]
+        else:
+            language, script, country, variant, extensions  = args
+        # Casos especiales
+        if not extensions and language.lower() == 'ja' and \
+                not script and country.upper() == 'JP' and variant == 'JP':
+            variant = ''
+            extensions = {'u': 'ca_japanese'}
+        elif not extensions and language.lower() == 'th' and \
+                not script and country.upper() == 'TH' and variant == 'TH':
+            variant = ''
+            extensions = {'u': 'nu_thai'}
+        key = LocaleKey.normalize(LocaleKey(language, script, country, variant, extensions, False))
         if cls._instances.has_key(key):
             self = cls._instances[key]
         else:
@@ -920,7 +958,7 @@ class Locale(Object):
         """
         self.__init__(language, '', '', '', None)
 
-    @__init__.adddef('str', 'str', 'str', 'str', '@dict')
+    @__init__.adddef('str', '@str', '@str', '@str', '@dict')
     def __init__(self, language, script, country, variant, extensions):
         super(Locale, self).__init__()
         pass
@@ -958,9 +996,10 @@ class Locale(Object):
         or an empty list if nothing matches. The list is modifiable.
         :raises NullPointerException: if priorityList or locales is null
         """
+        from LocaleMatcher import LocaleMatcher
         return LocaleMatcher.filter(priorityList, locales, Locale.FilteringMode.AUTOSELECT_FILTERING)
 
-    @filter.adddef('list', 'set', 'Locale.FilteringMode')
+    @filter.adddef('list', 'set', 'FilteringMode')
     @classmethod
     def filter(cls, priorityList, locales, mode):
         """
@@ -978,9 +1017,10 @@ class Locale(Object):
         are included in the given list when
         Locale.FilteringMode.REJECT_EXTENDED_RANGES is specified
         """
+        from LocaleMatcher import LocaleMatcher
         return LocaleMatcher.filter(priorityList, locales, mode)
 
-    @overload('list', 'set', 'Locale.FilteringMode')
+    @overload('list', 'set', 'FilteringMode')
     @classmethod
     def filterTags(cls, priorityList, tags, mode):
         """
@@ -998,6 +1038,7 @@ class Locale(Object):
         are included in the given list when
         Locale.FilteringMode.REJECT_EXTENDED_RANGES is specified
         """
+        from LocaleMatcher import LocaleMatcher
         return LocaleMatcher.filterTags(priorityList, tags, mode)
 
     @filterTags.adddef('List', 'set')
@@ -1016,6 +1057,7 @@ class Locale(Object):
         nothing matches. The list is modifiable.
         :raises: NullPointerExceptionif priorityList or tags is null
         """
+        from LocaleMatcher import LocaleMatcher
         return LocaleMatcher.filterTags(priorityList, tags, Locale.FilteringMode.AUTOSELECT_FILTERING)
 
     @classmethod
@@ -1065,9 +1107,8 @@ class Locale(Object):
         :raises NullPointerException: if languageTag is null
         See also: toLanguageTag()Locale.Builder.setLanguageTag(String)
         """
-        tag = LanguageTag.parse(languageTag)
         builder = Locale.Builder()
-        builder.setLanguageTag(tag)
+        builder.setLanguageTag(languageTag)
         return builder.build()
 
     @classmethod
@@ -1090,7 +1131,7 @@ class Locale(Object):
         """
         return self._regn
 
-    @overload('Locale.Category')
+    @overload('Category')
     @classmethod
     def getDefault(cls, category):
         """
@@ -1138,7 +1179,7 @@ class Locale(Object):
         if not cls._defaultLocale:
             with cls.sLock:
                 if not cls._defaultLocale:
-                    cls.defaultLocale = cls._initDefault()
+                    cls._defaultLocale = cls._initDefault()
         return cls._defaultLocale
 
     @overload('Locale')
@@ -1310,7 +1351,7 @@ class Locale(Object):
         :raises: IllegalArgumentExceptionif key is not well-formed
         See also: PRIVATE_USE_EXTENSIONUNICODE_LOCALE_EXTENSION
         """
-        if not LanguageTag.isExtension(key):
+        if not LanguageTag.isExtension(key) and key != LanguageTag.PRIVATEUSE:
             raise Exception('IllegalArgumentException: "Ill-formed extension key: %s"' % key)
         if self.hasExtensions():
             return self._extensions.get(key, '')
@@ -1506,6 +1547,7 @@ class Locale(Object):
         priority or weight, or null if nothing matches.
         :raises: NullPointerExceptionif priorityList or tags is null
         """
+        from LocaleMatcher import LocaleMatcher
         return LocaleMatcher.lookup(priorityList, locales)
 
     @classmethod
@@ -1520,6 +1562,7 @@ class Locale(Object):
         priority or weight, or null if nothing matches.
         :raises: NullPointerExceptionif priorityList or tags is null
         """
+        from LocaleMatcher import LocaleMatcher
         return LocaleMatcher.lookupTag(priorityList, tags)
 
     @overload('Locale')
@@ -1550,7 +1593,7 @@ class Locale(Object):
         cls.defaultLocale = newLocale
         pass
 
-    @setDefault.adddef('Locale.Category', 'Locale')
+    @setDefault.adddef('Category', 'Locale')
     @classmethod
     def setDefault(cls, category, newLocale):
         """
@@ -1606,33 +1649,36 @@ class Locale(Object):
         Returns a well-formed IETF BCP 47 language tag representing this
         locale.  If this Locale has a language, country, or variant that does
         not satisfy the IETF BCP 47 language tag syntax requirements, this
-        method handles these fields as described below:  Language: If language
-        is empty, or not well-formed (for example "a" or "e2"), it will be
-        emitted as "und" (Undetermined).  Country: If country is not
-        well-formed (for example "12" or "USA"), it will be omitted.  Variant:
-        If variant iswell-formed, each sub-segment (delimited by '-' or '_')
-        is emitted as a subtag.  Otherwise: if all sub-segments match
-        [0-9a-zA-Z]{1,8} (for example "WIN" or "Oracle_JDK_Standard_Edition"),
-        the first ill-formed sub-segment and all following will be appended to
-        the private use subtag.  The first appended subtag will be "lvariant",
-        followed by the sub-segments in order, separated by hyphen. For
-        example, "x-lvariant-WIN", "Oracle-x-lvariant-JDK-Standard-Edition".
+        method handles these fields as described below:
+        Language: If language is empty, or not well-formed (for example "a" or
+        "e2"), it will be emitted as "und" (Undetermined).
+        Country: If country is not well-formed (for example "12" or "USA"),
+        it will be omitted.
+        Variant: If variant iswell-formed, each sub-segment (delimited by '-'
+        or '_') is emitted as a subtag.
+        Otherwise: if all sub-segments match [0-9a-zA-Z]{1,8} (for example "WIN"
+        or "Oracle_JDK_Standard_Edition"), the first ill-formed sub-segment and
+        all following will be appended to the private use subtag.
+        The first appended subtag will be "lvariant", followed by the sub-segments
+        in order, separated by hyphen.
+        For example, "x-lvariant-WIN", "Oracle-x-lvariant-JDK-Standard-Edition".
         if any sub-segment does not match [0-9a-zA-Z]{1,8}, the variant will
         be truncated and the problematic sub-segment and all following
         sub-segments will be omitted.  If the remainder is non-empty, it will
         be emitted as a private use subtag as above (even if the remainder
         turns out to be well-formed).  For example,
         "Solaris_isjustthecoolestthing" is emitted as "x-lvariant-Solaris",
-        not as "solaris".Special Conversions: Java supports some old locale
-        representations, including deprecated ISO language codes, for
-        compatibility. This method performs the following conversions:
+        not as "solaris".
+        Special Conversions: Java supports some old locale representations,
+        including deprecated ISO language codes, for compatibility. This method
+        performs the following conversions:
         Deprecated ISO language codes "iw", "ji", and "in" are converted to
-        "he", "yi", and "id", respectively.  A locale with language "no",
-        country "NO", and variant "NY", representing Norwegian Nynorsk
-        (Norway), is converted to a language tag "nn-NO".Note: Although the
-        language tag created by this method is well-formed (satisfies the
-        syntax requirements defined by the IETF BCP 47 specification), it is
-        not necessarily a valid BCP 47 language tag.  For example,  new
+        "he", "yi", and "id", respectively.
+        A locale with language "no", country "NO", and variant "NY", representing
+        Norwegian Nynorsk (Norway), is converted to a language tag "nn-NO".
+        Note: Although the language tag created by this method is well-formed
+        (satisfies the syntax requirements defined by the IETF BCP 47 specification),
+        it is not necessarily a valid BCP 47 language tag.  For example,  new
         Locale("xx", "YY").toLanguageTag();  will return "xx-YY", but the
         language subtag "xx" and the region subtag "YY" are invalid because
         they are not registered in the IANA Language Subtag Registry.
@@ -1642,10 +1688,13 @@ class Locale(Object):
         if self._languageTag:
             return self._languageTag
         tag = LanguageTag.parseLocale(self)
-        buf = [tag.canonicalizeLanguage(tag.getLanguage()),
-               tag.canonicalizeScript(tag.getScript()),
-               tag.canonicalizeRegion(tag.getRegion()),
-        ]
+        buf = [tag.canonicalizeLanguage(tag.getLanguage())]
+        if tag.getScript():
+            buf.append(tag.canonicalizeScript(tag.getScript()))
+        if tag.getRegion():
+            buf.append(tag.canonicalizeRegion(tag.getRegion()))
+        if tag.getVariants():
+            buf.extend(map(LanguageTag.canonicalizeVariant, tag.getVariants()))
         extensions = tag.getExtensions()
         if extensions:
             buf.extend(map(tag.canonicalizeExtension, extensions))
