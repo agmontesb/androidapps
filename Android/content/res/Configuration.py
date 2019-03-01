@@ -623,11 +623,8 @@ class Configuration(IParcelable):
 
         """
         public int densityDpi:
-        The target screen density being rendered to,
-        corresponding to
-        density
-        resource qualifier.  Set to
-        DENSITY_DPI_UNDEFINED if no density is specified.
+        The target screen density being rendered to, corresponding to density
+        resource qualifier.  Set to DENSITY_DPI_UNDEFINED if no density is specified.
         """
         self.densityDpi = None
 
@@ -650,8 +647,7 @@ class Configuration(IParcelable):
         """
         public int keyboard:
         The kind of keyboard attached to the device.
-        One of: KEYBOARD_NOKEYS, KEYBOARD_QWERTY,
-        KEYBOARD_12KEY.
+        One of: KEYBOARD_NOKEYS, KEYBOARD_QWERTY, KEYBOARD_12KEY.
         """
         self.keyboard = None
 
@@ -753,23 +749,19 @@ class Configuration(IParcelable):
 
         """
         public int screenWidthDp:
-        The current width of the available screen space, in dp units,
-        corresponding to
-        screen
-        width resource qualifier.  Set to
-        SCREEN_WIDTH_DP_UNDEFINED if no width is specified.
+        The current width of the available screen space, in dp units, corresponding 
+        to screen width resource qualifier.  Set to SCREEN_WIDTH_DP_UNDEFINED if no 
+        width is specified.
         """
         self.screenWidthDp = None
 
         """
         public int smallestScreenWidthDp:
         The smallest screen size an application will see in normal operation,
-        corresponding to
-        smallest
-        screen width resource qualifier.
+        corresponding to smallest screen width resource qualifier.
         This is the smallest value of both screenWidthDp and screenHeightDp
-        in both portrait and landscape.  Set to
-        SMALLEST_SCREEN_WIDTH_DP_UNDEFINED if no width is specified.
+        in both portrait and landscape.  Set to SMALLEST_SCREEN_WIDTH_DP_UNDEFINED 
+        if no width is specified.
         """
         self.smallestScreenWidthDp = None
 
@@ -995,7 +987,7 @@ class Configuration(IParcelable):
         """
         this = self
         if that == None: return False
-        if that == this: return True
+        if id(that) == id(this): return True
         return this.compareTo(that)== 0
 
     @equals.adddef('Object')

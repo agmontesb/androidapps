@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
-"""https://developer.android.com/reference/android/content/res/Configuration"""
+"""
+https://developer.android.com/reference/android/content/res/Configuration
+ported from:
+https://android.googlesource.com/platform/frameworks/base/+/master/core/java/android/util/DisplayMetrics.java
+"""
 from Android import Object, overload
 
 
@@ -229,6 +233,13 @@ class DisplayMetrics(Object):
         """
         self.ydpi = None
 
+        self.noncompatWidthPixels = None
+        self.noncompatHeightPixels = None
+        self.noncompatDensity = None
+        self.noncompatDensityDpi = None
+        self.noncompatScaledDensity = None
+        self.noncompatXdpi = None
+        self.noncompatYdpi = None
         pass
 
     @overload('Object')
@@ -258,7 +269,7 @@ class DisplayMetrics(Object):
         :return: boolean. true if this object is the same as the obj argument; 
         false otherwise.
         """
-        pass
+        return isinstance(o, DisplayMetrics) and self.equals(o)
 
     @equals.adddef('DisplayMetrics')
     def equals(self, other):
@@ -268,7 +279,21 @@ class DisplayMetrics(Object):
         compare.
         :return: boolean. True if the display metrics are equal.
         """
-        pass
+        return other != None \
+        and self.widthPixels == other.widthPixels \
+        and self.heightPixels == other.heightPixels \
+        and self.density == other.density \
+        and self.densityDpi == other.densityDpi \
+        and self.xdpi == other.xdpi \
+        and self.ydpi == other.ydpi \
+        and self.noncompatWidthPixels == other.noncompatWidthPixels \
+        and self.noncompatHeightPixels == other.noncompatHeightPixels \
+        and self.noncompatDensity == other.noncompatDensity \
+        and self.noncompatDensityDpi == other.noncompatDensityDpi \
+        and self.noncompatXdpi == other.noncompatXdpi \
+        and self.noncompatYdpi == other.noncompatYdpi \
+        and self.scaledDensity == other.scaledDensity \
+        and self.noncompatScaledDensity == other.noncompatScaledDensity
 
     def hashCode(self):
         """
@@ -295,16 +320,45 @@ class DisplayMetrics(Object):
         programming language.)
         :return: int. a hash code value for this object.
         """
-        pass
+        return self.widthPixels * self.heightPixels * self.densityDpi
 
     def setTo(self, o):
         """
         :param o: DisplayMetrics
         """
-        pass
+        if id(self) == id(o):
+            return
+        self.density = o.density
+        self.densityDpi = o.densityDpi
+        self.heightPixels = o.heightPixels
+        self.scaledDensity = o.scaledDensity
+        self.widthPixels = o.widthPixels
+        self.xdpi = o.xdpi
+        self.ydpi = o.ydpi
+        self.noncompatWidthPixels = o.noncompatWidthPixels
+        self.noncompatHeightPixels = o.noncompatHeightPixels
+        self.noncompatDensity = o.noncompatDensity
+        self.noncompatDensityDpi = o.noncompatDensityDpi
+        self.noncompatScaledDensity = o.noncompatScaledDensity
+        self.noncompatXdpi = o.noncompatXdpi
+        self.noncompatYdpi = o.noncompatYdpi
 
     def setToDefaults(self):
-        pass
+        DENSITY_DEVICE = 450   # TODO: Ajustar este valor al del display que se esta utilizando
+        self.widthPixels = 0
+        self.heightPixels = 0
+        self.density = DENSITY_DEVICE / self.DENSITY_DEFAULT
+        self.densityDpi = DENSITY_DEVICE
+        self.scaledDensity = self.density
+        self.xdpi = DENSITY_DEVICE
+        self.ydpi = DENSITY_DEVICE
+        self.noncompatWidthPixels = self.widthPixels
+        self.noncompatHeightPixels = self.heightPixels
+        self.noncompatDensity = self.density
+        self.noncompatDensityDpi = self.densityDpi
+        self.noncompatScaledDensity = self.scaledDensity
+        self.noncompatXdpi = self.xdpi
+        self.noncompatYdpi = self.ydpi
 
     def toString(self):
         """
@@ -320,4 +374,7 @@ class DisplayMetrics(Object):
         getClass().getName() + '@' + Integer.toHexString(hashCode())
         :return: String. a string representation of the object.
         """
-        pass
+        toStr = 'DisplayMetrics{density=%s, width=%s, height=%s'
+        toStr += ', scaledDensity=%s, xdpi=%s, ydpi=%s}'
+        return toStr % (self.density, self.widthPixels, self.heightPixels,
+                        self.scaledDensity, self.xdpi, self.ydpi)

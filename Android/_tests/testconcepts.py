@@ -6,6 +6,8 @@ import Tkinter as tk
 import ttk
 import itertools
 import locale
+import xml.etree.ElementTree
+import xml.parsers.expat
 
 
 class Context(object):
