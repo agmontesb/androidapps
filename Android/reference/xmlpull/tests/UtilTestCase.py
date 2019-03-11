@@ -61,8 +61,8 @@ def checkParserState(xpp, depth, type, name, text, isEmpty, attribCount):
 def checkParserStateNs(xpp, depth, type, prefix, nsCount, namespace, name, text, isEmpty, attribCount):
     # this methid can be used with enabled and not enabled namespaces
     # assertEquals("PROCESS_NAMESPACES", True, xpp.getFeature(xpp.FEATURE_PROCESS_NAMESPACES))
-    assertEquals("TYPES[getType()]", xpp.TYPES[type], xpp.TYPES[xpp.getEventType()])
     assertEquals("getType()", type, xpp.getEventType())
+    assertEquals("TYPES[getType()]", xpp.TYPES[type], xpp.TYPES[xpp.getEventType()])
     assertEquals("getName()", name, xpp.getName())
 
     assertEquals("getDepth()", depth, xpp.getDepth())

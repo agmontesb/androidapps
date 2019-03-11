@@ -94,7 +94,8 @@ class XmlPullParser(object):
     Please note: If the document type declaration
     was ignored, entity references may cause exceptions
     later in the parsing process.
-    The default value of this feature is false. It cannot be changed
+    The default value of this feature is false. 
+    This feature cannot be changed during parsing.
     """
     FEATURE_PROCESS_DOCDECL = 'http://xmlpull.org/v1/doc/features.html#process-docdecl'
 
@@ -102,7 +103,8 @@ class XmlPullParser(object):
     public static final String FEATURE_PROCESS_NAMESPACES:
     This feature determines whether the parser processes
     namespaces. As for all features, the default value is false.
-    NOTE: The value can not be changed during
+    NOTE: The value can not be changed during parsing an must be 
+    set before parsing.
     """
     FEATURE_PROCESS_NAMESPACES = 'http://xmlpull.org/v1/doc/features.html#process-namespaces'
 
@@ -110,7 +112,8 @@ class XmlPullParser(object):
     public static final String FEATURE_REPORT_NAMESPACE_ATTRIBUTES:
     This feature determines whether namespace attributes are
     exposed via the attribute access methods. Like all features,
-    the default value is false. This feature cannot be changed
+    the default value is false. 
+    This feature cannot be changed during parsing.
     """
     FEATURE_REPORT_NAMESPACE_ATTRIBUTES = 'http://xmlpull.org/v1/doc/features.html#report-namespace-prefixes'
 
@@ -772,7 +775,7 @@ class XmlPullParser(object):
         if FEATURE_XML_ROUNDTRIP is true return exact PI content ex: 'pi foo'
         from <?pi foo?> otherwise it may be exact PI content or concatenation
         of PI target, space and data so for example for <?target    data?>
-        string &quot;target data&quot; may be returned if
+        string "target data" may be returned if
         FEATURE_XML_ROUNDTRIP is false.
         COMMENT
         return comment content ex. 'foo bar' from <!--foo bar-->
@@ -780,7 +783,7 @@ class XmlPullParser(object):
         getText() MUST return entity replacement text if PROCESS_DOCDECL is
         false otherwise getText() MAY
         return null, additionally getTextCharacters() MUST return entity name
-        (for example 'entity_name' for &amp;entity_name;).
+        (for example 'entity_name' for &entity_name;).
         NOTE: this is the only place where value returned from getText() and
         getTextCharacters() are different
         NOTE: it is user responsibility to resolve entity reference if
@@ -794,19 +797,23 @@ class XmlPullParser(object):
         DOCDECL
         if FEATURE_XML_ROUNDTRIP is true
         or PROCESS_DOCDECL is false then return what is inside of DOCDECL for
-        example it returns:&quot; titlepage SYSTEM
-        "http://www.foo.bar/dtds/typo.dtd" [<!ENTITY % active.links
-        "INCLUDE">]&quot;for input document that contained:<!DOCTYPE titlepage
-        SYSTEM "http://www.foo.bar/dtds/typo.dtd" [<!ENTITY % active.links
-        "INCLUDE">]> otherwise if FEATURE_XML_ROUNDTRIP is false and
+        example it returns:
+        ' titlepage SYSTEM "http://www.foo.bar/dtds/typo.dtd" [<!ENTITY % active.links
+        "INCLUDE">]'
+        for input document that contained:
+        <!DOCTYPE titlepage SYSTEM "http://www.foo.bar/dtds/typo.dtd" [<!ENTITY % active.links
+        "INCLUDE">]>
+        otherwise if FEATURE_XML_ROUNDTRIP is false and
         PROCESS_DOCDECL is true then what is returned is undefined (it may be
-        even null) NOTE: there is no guarantee that there will only one TEXT
+        even null)
+        NOTE: there is no guarantee that there will only one TEXT
         or IGNORABLE_WHITESPACE event from nextToken() as parser may chose to
         deliver element content in multiple tokens (dividing element content
-        into chunks)  NOTE: whether returned text of token is end-of-line
-        normalized is depending on FEATURE_XML_ROUNDTRIP.  NOTE: XMLDecl
-        (<?xml ...?>) is not reported but its content is available through
-        optional properties (see class description above).
+        into chunks)
+        NOTE: whether returned text of token is end-of-line
+        normalized is depending on FEATURE_XML_ROUNDTRIP.
+        NOTE: XMLDecl(<?xml ...?>) is not reported but its content is available
+        through optional properties (see class description above).
         :return: int.
         :raises: XmlPullParserExceptionIOException
         See also:
