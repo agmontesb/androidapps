@@ -80,6 +80,9 @@ class XmlPullParserImpl(XmlPullParser):
             # underscored names are provided for compatibility only
             self.parser = self._parser = parser
             self.doctype_parser = None
+            self._lineoffset = 0
+            self._coloffset = 0
+            self._byteoffset = 0
             self._exception_error = expat.error
             self._names = {}  # name memo cache
             self._textbuffer = ''
@@ -90,19 +93,25 @@ class XmlPullParserImpl(XmlPullParser):
             except AttributeError:
                 pass  # unknown
             # let expat do the buffering, if supported
-            append = lambda x, y=self: y._events.append(
-                self._StateClass(y.parser.CurrentByteIndex,
-                                 y.parser.CurrentLineNumber,
-                                 y.parser.CurrentColumnNumber,
-                                 y._depth,
-                                 x[0],
-                                 x[1])
-            )
+            def append(x):
+                event_type, event_data = x
+                if event_type == cbase.IGNORABLE_WHITESPACE and \
+                        self._events and \
+                        self._events[-1].event_type == cbase.IGNORABLE_WHITESPACE:
+                    event_data = self._events[-1].event_data + event_data
+                    self._events[-1] = self._events[-1]._replace(event_data=event_data)
+                else:
+                    self._events.append(
+                        self._StateClass(self.parser.CurrentByteIndex + self._byteoffset,
+                                         self.parser.CurrentLineNumber + self._lineoffset,
+                                         self.parser.CurrentColumnNumber + self._coloffset,
+                                         self._depth,
+                                         event_type,
+                                         event_data)
+                    )
             cbase = XmlPullParser
-            try:
-                self._parser.buffer_text = 0
-            except AttributeError:
-                pass
+            parser.returns_unicode = False
+            parser.buffer_text = 0
             parser.UseForeignDTD(True)
             parser.SetParamEntityParsing(expat.XML_PARAM_ENTITY_PARSING_NEVER)
 
@@ -157,12 +166,12 @@ class XmlPullParserImpl(XmlPullParser):
                                 tag_in, attrib_in = answ
                                 tag_in = tfcn(tag_in, tag)
                                 if attrib_in:
-                                    reducefcn = lambda t, x: t.extend(x.split(' ')) or t
+                                    reducefcn = lambda t, x: t.extend(x.rsplit(x[0] + ' ', 1)) or t
                                     prefixtag = reduce(reducefcn, context.strip().split('='), [])
                                     it = []
                                     m = 0
                                     for k in range(0,len(prefixtag),2):
-                                        key, value = prefixtag[k], prefixtag[k + 1].strip('"\'')
+                                        key, value = prefixtag[k].strip(' '), prefixtag[k + 1].strip('"\'')
                                         if not key.startswith('xmlns'):
                                             key = tfcn(attrib_in[m][0], key)
                                             value = attrib_in[m][1]
@@ -222,6 +231,11 @@ class XmlPullParserImpl(XmlPullParser):
                             else:
                                 if not text.strip(' \n\t\r'):
                                     event = cbase.IGNORABLE_WHITESPACE
+                                    if len(text) == 1:
+                                        if context[:2] == '\r\n':
+                                            text = context[:2]
+                                        else:
+                                            text = context[0]
                                 append((event, targetfcn(text)))
 
                     parser.CharacterDataHandler = handler
@@ -254,40 +268,22 @@ class XmlPullParserImpl(XmlPullParser):
                     parser.CommentHandler = handler
                 elif event == 'DOCDECL':
                     if not features[1]: continue
-                    doctype_parser = parser
-                    # doctype_parser = expat.ParserCreate(encoding, None)
+                    # doctype_parser = parser
+                    self.doctype_parser = doctype_parser = expat.ParserCreate(encoding, None)
                     doctype_parser.SetParamEntityParsing(expat.XML_PARAM_ENTITY_PARSING_ALWAYS)
 
                     # Aca se deben redefinir los handlers para implementar el validador
-                    def handler(doctypeName, systemId, publicId, has_internal_subset):
-                        text = '<!DOCTYPE %s' % doctypeName
-                        if systemId:
-                            text += ' SYSTEM "%s"' % systemId
-                        if publicId:
-                            text += ' PUBLIC "%s"' % publicId
-                        if has_internal_subset:
-                            context = self._parser.GetInputContext()
-                            internal_subset = context[1:].split(']', 1)[0]
-                            text += ' [%s]' % internal_subset
-                        text += '>'
-                        self._textbuffer = text
-
-                    doctype_parser.StartDoctypeDeclHandler = handler
-
-                    def handler(*args):
-                        data = self._textbuffer[9:-1]
-                        self._textbuffer = None
-                        parser.CommentHandler(data, event=XmlPullParser.DOCDECL)
-
-                    doctype_parser.EndDoctypeDeclHandler = handler
-
-                    def handler(*args):
+                    def handler(entityName, is_parameter_entity, value, base, systemId, publicId, notationName):
+                        if not is_parameter_entity:
+                            self.entity[entityName] = value
                         pass
-
                     doctype_parser.EntityDeclHandler = handler
-                    doctype_parser.ElementDeclHandler = handler
-                    doctype_parser.AttlistDeclHandler = handler
-                    doctype_parser.NotationDeclHandler = handler
+
+                    # doctype_parser.StartDoctypeDeclHandler = handler
+                    # doctype_parser.EndDoctypeDeclHandler = handler
+                    # doctype_parser.ElementDeclHandler = handler
+                    # doctype_parser.AttlistDeclHandler = handler
+                    # doctype_parser.NotationDeclHandler = handler
                     pass
                 elif event == "start-ns":
                     def handler(prefix, uri, event=event, append=append):
@@ -371,25 +367,26 @@ class XmlPullParserImpl(XmlPullParser):
 
         def _default(self, text):
             prefix = text[:1]
-            if prefix == "<" and text[:9] == "<!DOCTYPE":
-                pattern = r'(<!DOCTYPE[^\[]+(\[[^\]]+\])*\s*>)'
-                context = self._parser.GetInputContext()
-                self._textbuffer = re.search(pattern, context).group()
-                self._doctype = text
-            elif self._doctype is not None:
-                self._doctype += text
-                if self._doctype == self._textbuffer:
-                    data = self._doctype
-                    if self.doctype_parser:
-                        try:
-                            self.doctype_parser.Parse(data, 0)
-                        except self._exception_error, v:
-                            self._raiseerror(v)
-                    data = data[10:-1]
-                    self._parser.CommentHandler(data, event=XmlPullParser.DOCDECL)
-                    self._textbuffer = ''
-                    self._doctype = None
-            elif prefix == "&":
+            # if prefix == "<" and text[:9] == "<!DOCTYPE":
+            #     pattern = r'(<!DOCTYPE[^\[]+(\[[^\]]+\])*\s*>)'
+            #     context = self._parser.GetInputContext()
+            #     self._textbuffer = re.search(pattern, context).group()
+            #     self._doctype = text
+            # elif self._doctype is not None:
+            #     self._doctype += text
+            #     if self._doctype == self._textbuffer:
+            #         data = self._doctype
+            #         if self.doctype_parser:
+            #             try:
+            #                 self.doctype_parser.Parse(data, 0)
+            #             except self._exception_error, v:
+            #                 self._raiseerror(v)
+            #         data = data[10:-1]
+            #         self._parser.CommentHandler(data, event=XmlPullParser.DOCDECL)
+            #         self._textbuffer = ''
+            #         self._doctype = None
+            # elif prefix == "&":
+            if prefix == "&":
                 # deal with undefined entities
                 try:
                     key = text[1:-1]
@@ -440,9 +437,13 @@ class XmlPullParserImpl(XmlPullParser):
                 while True:
                     try:
                         nextEvent = self._peekEvents()
-                        if self._text and nextEvent and nextEvent not in [XmlPullParser.TEXT, XmlPullParser.ENTITY_REF]:
+                        if self._text and nextEvent in [XmlPullParser.START_TAG,
+                                                        XmlPullParser.END_TAG,
+                                                        XmlPullParser.END_DOCUMENT]:
                             item, self._text = self._text, None
-                            return item
+                            texto = item.event_data
+                            texto = texto.replace('\r\n', '\n').replace('\r', '\n')
+                            return item._replace(event_data=texto)
                         item = self._events[self._index]
                         self._index += 1
                         if item.event_type == XmlPullParser.START_TAG and self._ns > 0:
@@ -453,16 +454,22 @@ class XmlPullParserImpl(XmlPullParser):
                         if item.event_type not in ["start-ns", "end-ns"]:
                             if not isCoarse:
                                 return item
-                            if item.event_type not in [
+                            baseindx = 0 if item.depth else 1
+                            coarseEvents = [
+                                XmlPullParser.IGNORABLE_WHITESPACE,
                                 XmlPullParser.START_DOCUMENT,
                                 XmlPullParser.START_TAG,
                                 XmlPullParser.TEXT,
                                 XmlPullParser.ENTITY_REF,
                                 XmlPullParser.END_TAG,
-                                XmlPullParser.END_DOCUMENT]:
+                                XmlPullParser.END_DOCUMENT][baseindx:]
+                            if item.event_type not in coarseEvents:
                                 continue
-                            if item.event_type == XmlPullParser.ENTITY_REF:
-                                texto = item.event_data[1]
+                            case = item.event_type
+                            if case in [XmlPullParser.IGNORABLE_WHITESPACE, XmlPullParser.ENTITY_REF]:
+                                texto = item.event_data
+                                if case == XmlPullParser.ENTITY_REF:
+                                    texto = texto[1]
                                 item = item._replace(event_type=XmlPullParser.TEXT, event_data=texto)
                             if item.event_type == XmlPullParser.TEXT:
                                 if self._text:
@@ -502,8 +509,31 @@ class XmlPullParserImpl(XmlPullParser):
                     self._index = 0
                     data = self._file.read(16384)
                     if data:
+                        pattern = r'(<!DOCTYPE[^\[]+(?:\[[^\]]+\])*\s*>)'
+                        data = re.split(pattern, data)
                         try:
-                            self.feed(data)
+                            self.feed(data[0])
+                            if len(data) == 3:
+                                if self.doctype_parser:
+                                    try:
+                                        self.doctype_parser.Parse(data[1], 0)
+                                    except self._exception_error, v:
+                                        self._raiseerror(v)
+                                # norm_docdecl = data[0].replace('\r\n', '\n').replace('\r', '\n')
+                                # self._lineoffset = norm_docdecl.count('\n')
+                                # self._coloffset = (len(norm_docdecl) - 1 - norm_docdecl.rfind('\n'))
+                                # self._byteoffset = len(data[0])
+                                self._parser.CommentHandler(data[1][10:-1], event=XmlPullParser.DOCDECL)
+                                norm_docdecl = data[1]
+                                self._lineoffset = norm_docdecl.count('\n')
+                                self._coloffset = (len(norm_docdecl) - 1 - norm_docdecl.rfind('\n'))
+                                self._byteoffset = len(data[1])
+                                self.feed(data[2])
+                            elif len(data) > 3:
+                                err = SyntaxError(
+                                    'Syntax error: More than one <!DOCTYPE> found'
+                                )
+                                raise err
                         except SyntaxError as exc:
                             self._error = exc
                     else:
