@@ -1,3 +1,4 @@
 {
-  "TestEntityReplacement.py::TestEntityReplacement::()::testEntityReplacement": true
+  "TestEntityReplacement.py::TestEntityReplacement::()::testEntityReplacement": true, 
+  "test_Misc.py::TestMisc::()::testRequire": true
 }

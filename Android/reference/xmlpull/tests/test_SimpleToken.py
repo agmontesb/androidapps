@@ -120,6 +120,7 @@ class TestSimpleToken:
             xpp.isWhitespace()
 
         xpp.nextToken()
+        xpp.nextToken()
         checkParserStateNs(xpp, 0, xpp.COMMENT, None, 0, None, None, "c", False, -1)
         with pytest.raises(Exception, message="whitespace function must fail for START_DOCUMENT"):
             xpp.isWhitespace()

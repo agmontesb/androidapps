@@ -8,567 +8,24 @@ from collections import namedtuple
 
 from Android import overload
 from XmlPullParser import XmlPullParser
-
-
-class ParseError(SyntaxError):
-    pass
+from XmlTokenIterator import XmlTokenIterator
 
 
 class XmlPullParserImpl(XmlPullParser):
-    class TokenIterator(object):
 
-        _StateClass = namedtuple(
-            '_StateClass', 'byte_index, line_number, column_number, depth, event_type, event_data'
-        )
-
-        def __init__(self,):
-            super(XmlPullParserImpl.TokenIterator, self).__init__()
-            self._init_events()
-
-        def _setInput(self, source, encoding=None, features=None):
-            self._init_events()
-            self.features = features or [False, False, False]
-            close_source = False
-            if not hasattr(source, "read"):
-                source = open(source, "rb")
-                close_source = True
-
-            # fields
-            self._file = source
-            self._close_file = close_source
-            self._version = None
-            self._encoding = None
-            self._standalone = None
-
-            # temporal states
-            self._depth = 0
-            self._isEmptyTag = ''  # Usado para distinguir <a .... /> de <a ..></a>
-            self._cdsect = False
-
-            # manejo namespace
-            self._ns = 0
-            self._ns_index = [0]
-            self._ns_stack = [0]
-            self._ns_prefix = []
-            self._ns_namespace = []
-            self._init_parser_(encoding)
-
-        def _init_events(self):
-            self._close_file = False
-            self._parser = None
-            self._error = None
-            self.root = self._root = None
-            self._events = []
-            self._index = 0
-            self._text = None
-            dmy = self._StateClass(0, 1, 0, 0, XmlPullParser.START_DOCUMENT, None)
-            self._events.append(dmy)
-
-        def _init_parser_(self, encoding):
-            features = self.features
-            try:
-                from xml.parsers import expat
-            except ImportError:
-                try:
-                    import pyexpat as expat
-                except ImportError:
-                    raise ImportError(
-                        "No module named expat; use SimpleXMLTreeBuilder instead"
-                    )
-            namespace_separator = '}' if features[0] else None
-            parser = expat.ParserCreate(encoding, namespace_separator)
-            # underscored names are provided for compatibility only
-            self.parser = self._parser = parser
-            self.doctype_parser = None
-            self._lineoffset = 0
-            self._coloffset = 0
-            self._byteoffset = 0
-            self._exception_error = expat.error
-            self._names = {}  # name memo cache
-            self._textbuffer = ''
-            self._doctype = None
-            self.entity = {'quot': '"', 'amp': '&', 'apos': "'", 'lt': '<', 'gt': '>'}
-            try:
-                self.version = "Expat %d.%d.%d" % expat.version_info
-            except AttributeError:
-                pass  # unknown
-            # let expat do the buffering, if supported
-            def append(x):
-                event_type, event_data = x
-                if event_type == cbase.IGNORABLE_WHITESPACE and \
-                        self._events and \
-                        self._events[-1].event_type == cbase.IGNORABLE_WHITESPACE:
-                    event_data = self._events[-1].event_data + event_data
-                    self._events[-1] = self._events[-1]._replace(event_data=event_data)
-                else:
-                    self._events.append(
-                        self._StateClass(self.parser.CurrentByteIndex + self._byteoffset,
-                                         self.parser.CurrentLineNumber + self._lineoffset,
-                                         self.parser.CurrentColumnNumber + self._coloffset,
-                                         self._depth,
-                                         event_type,
-                                         event_data)
-                    )
-            cbase = XmlPullParser
-            parser.returns_unicode = False
-            parser.buffer_text = 0
-            parser.UseForeignDTD(True)
-            parser.SetParamEntityParsing(expat.XML_PARAM_ENTITY_PARSING_NEVER)
-
-            # callbacks
-            parser.DefaultHandler = self._default
-            parser.DefaultHandlerExpand = self._default
-            parser.XmlDeclHandler = self._decl
-
-            def handler(entityName, is_parameter_entity, event=cbase.ENTITY_REF, append=append,
-                        targetfcn=self._skipped_entity):
-                try:
-                    value = self.entity[entityName]
-                    append((event, targetfcn(entityName, value)))
-                except KeyError:
-                    from xml.parsers import expat
-                    err = expat.error(
-                        "undefined entity %s: line %d, column %d" %
-                        (entityName, self._parser.ErrorLineNumber,
-                         self._parser.ErrorColumnNumber)
-                    )
-                    err.code = 11  # XML_ERROR_UNDEFINED_ENTITY
-                    err.lineno = self._parser.ErrorLineNumber
-                    err.offset = self._parser.ErrorColumnNumber
-                    raise err
-
-            parser.SkippedEntityHandler = handler
-            parser.NotStandaloneHandler = lambda: 1
-
-            # wire up the parser for event reporting
-            events = cbase.TYPES + ["start-ns", "end-ns"]
-            for event in events:
-                if event in ["START_DOCUMENT", "END_DOCUMENT"]:
-                    pass
-                elif event == "START_TAG":
-                    try:
-                        parser.ordered_attributes = 1
-                        parser.specified_attributes = 1
-                        targetfcn = self._start_list
-                    except:
-                        targetfcn = self._start
-
-                    def startTagDecorator(targetfcn):
-                        def wrapper(*args, **kwargs):
-                            answ = targetfcn(*args)
-                            self._depth += 1
-                            context = parser.GetInputContext()[1:].split('>', 1)[0].rstrip('> \n\r\t')
-                            _isEmptyTag = context.endswith('/')
-                            tag, context = (context.rstrip('/') + ' ').split(' ', 1)
-                            self._isEmptyTag = tag if _isEmptyTag else ''
-                            if features[0]:
-                                tfcn = lambda x, y: (x.split('}')[0] + '}' + y) if '}' in x else y
-                                tag_in, attrib_in = answ
-                                tag_in = tfcn(tag_in, tag)
-                                if attrib_in:
-                                    reducefcn = lambda t, x: t.extend(x.rsplit(x[0] + ' ', 1)) or t
-                                    prefixtag = reduce(reducefcn, context.strip().split('='), [])
-                                    it = []
-                                    m = 0
-                                    for k in range(0,len(prefixtag),2):
-                                        key, value = prefixtag[k].strip(' '), prefixtag[k + 1].strip('"\'')
-                                        if not key.startswith('xmlns'):
-                                            key = tfcn(attrib_in[m][0], key)
-                                            value = attrib_in[m][1]
-                                            m += 1
-                                        elif not features[2]:
-                                            continue
-                                        it.append((key, value))
-                                    attrib_in = it
-                                    # attrib_in = self._start_list(tagin)
-                                    # it = list(itertools.izip(*(2*[iter(prefixtag)])))
-                                    # if not features[2]:
-                                    #     it = map(lambda)
-                                    # prefixtag = map(lambda y: y.rsplit(' ', 1)[-1], context.split('=')[:-1])
-                                    #
-                                    # prefixtag = filter(lambda x: not x.startswith('xmlns'), prefixtag)
-                                    # key, value = zip(*attrib_in)
-                                    # key = itertools.imap(tfcn, key, prefixtag)
-                                    # attrib_in = zip(key, value)
-                                answ = (tag_in, attrib_in)
-                            append((cbase.START_TAG, (answ, bool(self._isEmptyTag))))
-
-                        return wrapper
-
-                    parser.StartElementHandler = startTagDecorator(targetfcn)
-                elif event == "END_TAG":
-                    def endTagDecorator(targetfcn):
-                        def wrapper(*args, **kwargs):
-                            tag_in = targetfcn(*args)
-                            if features[0] and '}' in tag_in:
-                                if self._isEmptyTag:
-                                    tag = self._isEmptyTag
-                                else:
-                                    context = parser.GetInputContext().split('>', 1)[0] + '>'
-                                    tag = context.strip('</> \n\r\t')
-                                tfcn = lambda x, y: (x.split('}')[0] + '}' + y)
-                                tag_in = tfcn(tag_in, tag)
-                            self._depth -= 1
-                            append((cbase.END_TAG, (tag_in, bool(self._isEmptyTag))))
-                            self._isEmptyTag = ''
-
-                        return wrapper
-
-                    parser.EndElementHandler = endTagDecorator(self._end)
-                elif event == 'TEXT':
-                    def handler(text, event=cbase.TEXT, append=append,
-                                targetfcn=self._data):
-                        if self._cdsect:
-                            event = cbase.CDSECT
-                            append((event, targetfcn(text)))
-                        else:
-                            context = parser.GetInputContext()
-                            if context.startswith('&'):
-                                event = cbase.ENTITY_REF
-                                key = context[1:].split(';', 1)[0]
-                                targetfcn = self._skipped_entity
-                                append((event, targetfcn(key, text)))
-                            else:
-                                if not text.strip(' \n\t\r'):
-                                    event = cbase.IGNORABLE_WHITESPACE
-                                    if len(text) == 1:
-                                        if context[:2] == '\r\n':
-                                            text = context[:2]
-                                        else:
-                                            text = context[0]
-                                append((event, targetfcn(text)))
-
-                    parser.CharacterDataHandler = handler
-                elif event == 'CDSECT':
-                    def handler():
-                        self._cdsect = True
-
-                    parser.StartCdataSectionHandler = handler
-
-                    def handler():
-                        self._cdsect = False
-
-                    parser.EndCdataSectionHandler = handler
-                elif event == 'ENTITY_REF':
-                    pass
-                elif event == 'IGNORABLE_WHITESPACE':
-                    pass
-                elif event == 'PROCESSING_INSTRUCTION':
-                    def handler(target, data, event=cbase.PROCESSING_INSTRUCTION, append=append,
-                                targetfcn=self._data):
-                        data = '%s %s' % (target, data)
-                        append((event, targetfcn(data)))
-
-                    parser.ProcessingInstructionHandler = handler
-                elif event == 'COMMENT':
-                    def handler(data, event=cbase.COMMENT, append=append,
-                                targetfcn=self._data):
-                        append((event, targetfcn(data)))
-
-                    parser.CommentHandler = handler
-                elif event == 'DOCDECL':
-                    if not features[1]: continue
-                    # doctype_parser = parser
-                    self.doctype_parser = doctype_parser = expat.ParserCreate(encoding, None)
-                    doctype_parser.SetParamEntityParsing(expat.XML_PARAM_ENTITY_PARSING_ALWAYS)
-
-                    # Aca se deben redefinir los handlers para implementar el validador
-                    def handler(entityName, is_parameter_entity, value, base, systemId, publicId, notationName):
-                        if not is_parameter_entity:
-                            self.entity[entityName] = value
-                        pass
-                    doctype_parser.EntityDeclHandler = handler
-
-                    # doctype_parser.StartDoctypeDeclHandler = handler
-                    # doctype_parser.EndDoctypeDeclHandler = handler
-                    # doctype_parser.ElementDeclHandler = handler
-                    # doctype_parser.AttlistDeclHandler = handler
-                    # doctype_parser.NotationDeclHandler = handler
-                    pass
-                elif event == "start-ns":
-                    def handler(prefix, uri, event=event, append=append):
-                        try:
-                            uri = (uri or "").encode("ascii")
-                        except UnicodeError:
-                            pass
-                        append((event, (prefix or "xmlns", uri or "")))
-
-                    parser.StartNamespaceDeclHandler = handler
-                elif event == "end-ns":
-                    def handler(prefix, event=event, append=append):
-                        append((event, prefix))
-
-                    parser.EndNamespaceDeclHandler = handler
-                else:
-                    raise ValueError("unknown event %r" % event)
-
-        def _raiseerror(self, value):
-            err = ParseError(value)
-            err.code = value.code
-            err.position = value.lineno, value.offset
-            raise err
-
-        def _fixtext(self, text):
-            # convert text string to ascii, if possible
-            try:
-                return text.encode("ascii")
-            except UnicodeError:
-                return text
-
-        def _fixname(self, key):
-            # expand qname, and convert name string to ascii, if possible
-            try:
-                name = self._names[key]
-            except KeyError:
-                name = key
-                if "}" in name:
-                    name = "{" + name
-                self._names[key] = name = self._fixtext(name)
-            return name
-
-        def _decl(self, version, encoding, standalone):
-            self._version = version
-            self._encoding = encoding
-            self._standalone = standalone
-
-        def _start(self, tag, attrib_in):
-            fixname = self._fixname
-            fixtext = self._fixtext
-            tag = fixname(tag)
-            attrib = []
-            for key, value in attrib_in.items():
-                attrib.append((fixname(key), fixtext(value)))
-            return (tag, attrib)
-
-        def _start_list(self, tag, attrib_in):
-            fixname = self._fixname
-            fixtext = self._fixtext
-            tag = fixname(tag)
-            attrib = []
-            while attrib_in:
-                key, value, attrib_in = attrib_in[0], attrib_in[1], attrib_in[2:]
-                attrib.append((fixname(key), fixtext(value)))
-            return (tag, attrib)
-
-        def _data(self, text):
-            return self._fixtext(text)
-
-        def _end(self, tag):
-            return self._fixname(tag)
-
-        def _comment(self, data):
-            return self._fixtext(data)
-
-        def _skipped_entity(self, target, data):
-            return (self._fixtext(target), self._fixtext(data))
-
-        def _docdecl(self, doctypeName, systemId, publicId, has_internal_subset):
-            return (doctypeName, systemId, publicId, has_internal_subset)
-
-        def _default(self, text):
-            prefix = text[:1]
-            # if prefix == "<" and text[:9] == "<!DOCTYPE":
-            #     pattern = r'(<!DOCTYPE[^\[]+(\[[^\]]+\])*\s*>)'
-            #     context = self._parser.GetInputContext()
-            #     self._textbuffer = re.search(pattern, context).group()
-            #     self._doctype = text
-            # elif self._doctype is not None:
-            #     self._doctype += text
-            #     if self._doctype == self._textbuffer:
-            #         data = self._doctype
-            #         if self.doctype_parser:
-            #             try:
-            #                 self.doctype_parser.Parse(data, 0)
-            #             except self._exception_error, v:
-            #                 self._raiseerror(v)
-            #         data = data[10:-1]
-            #         self._parser.CommentHandler(data, event=XmlPullParser.DOCDECL)
-            #         self._textbuffer = ''
-            #         self._doctype = None
-            # elif prefix == "&":
-            if prefix == "&":
-                # deal with undefined entities
-                try:
-                    key = text[1:-1]
-                    if key.startswith('#x'):
-                        value = chr(int(key, 16))
-                    elif key.startswith('#'):
-                        value = chr(int(key))
-                    else:
-                        value = self.entity[key]
-                    return self._parser.CharacterDataHandler(text + ' ' + value, event=XmlPullParser.ENTITY_REF)
-                except KeyError:
-                    from xml.parsers import expat
-                    err = expat.error(
-                        "undefined entity %s: line %d, column %d" %
-                        (text, self._parser.ErrorLineNumber,
-                         self._parser.ErrorColumnNumber)
-                    )
-                    err.code = 11  # XML_ERROR_UNDEFINED_ENTITY
-                    err.lineno = self._parser.ErrorLineNumber
-                    err.offset = self._parser.ErrorColumnNumber
-                    raise err
-            elif not self._textbuffer:
-                self._parser.CommentHandler(text, event=XmlPullParser.IGNORABLE_WHITESPACE)
-
-        ##
-        # Feeds data to the parser.
-        #
-        # @param data Encoded data.
-
-        def feed(self, data, isEnd=0):
-            try:
-                self._parser.Parse(data, isEnd)
-            except self._exception_error, v:
-                self._raiseerror(v)
-
-        ##
-        # Finishes feeding data to the parser.
-        #
-        # @return An element structure.
-        # @defreturn Element
-
-        def close(self):
-            self.feed('', 1)
-            del self._parser  # get rid of circular references
-
-        def next(self, isCoarse=False):
-            try:
-                while True:
-                    try:
-                        nextEvent = self._peekEvents()
-                        if self._text and nextEvent in [XmlPullParser.START_TAG,
-                                                        XmlPullParser.END_TAG,
-                                                        XmlPullParser.END_DOCUMENT]:
-                            item, self._text = self._text, None
-                            texto = item.event_data
-                            texto = texto.replace('\r\n', '\n').replace('\r', '\n')
-                            return item._replace(event_data=texto)
-                        item = self._events[self._index]
-                        self._index += 1
-                        if item.event_type == XmlPullParser.START_TAG and self._ns > 0:
-                            ndx = bisect.bisect(self._ns_index, item.depth)
-                            self._ns_index.insert(ndx, item.depth)
-                            self._ns_stack.insert(ndx, len(self._ns_prefix))
-                            self._ns = 0
-                        if item.event_type not in ["start-ns", "end-ns"]:
-                            if not isCoarse:
-                                return item
-                            baseindx = 0 if item.depth else 1
-                            coarseEvents = [
-                                XmlPullParser.IGNORABLE_WHITESPACE,
-                                XmlPullParser.START_DOCUMENT,
-                                XmlPullParser.START_TAG,
-                                XmlPullParser.TEXT,
-                                XmlPullParser.ENTITY_REF,
-                                XmlPullParser.END_TAG,
-                                XmlPullParser.END_DOCUMENT][baseindx:]
-                            if item.event_type not in coarseEvents:
-                                continue
-                            case = item.event_type
-                            if case in [XmlPullParser.IGNORABLE_WHITESPACE, XmlPullParser.ENTITY_REF]:
-                                texto = item.event_data
-                                if case == XmlPullParser.ENTITY_REF:
-                                    texto = texto[1]
-                                item = item._replace(event_type=XmlPullParser.TEXT, event_data=texto)
-                            if item.event_type == XmlPullParser.TEXT:
-                                if self._text:
-                                    texto = self._text.event_data + item.event_data
-                                    self._text = self._text._replace(event_data=texto)
-                                else:
-                                    self._text = item
-                                continue
-                            return item
-                        elif item.event_type == "start-ns":
-                            prefix, uri = item.event_data
-                            self._ns_prefix.append(prefix)
-                            self._ns_namespace.append(uri)
-                            self._ns += 1
-                            continue
-                        elif item.event_type == "end-ns":
-                            self._ns += 1
-                            linf = self._ns_stack[-2]
-                            if len(self._ns_prefix) - self._ns == linf:
-                                self._ns_index.pop()
-                                self._ns_stack.pop()
-                                self._ns_prefix = self._ns_prefix[:linf]
-                                self._ns_namespace = self._ns_namespace[:linf]
-                                self._ns = 0
-                            continue
-                    except IndexError:
-                        pass
-                    if self._error:
-                        e = self._error
-                        self._error = None
-                        raise e
-                    if self._parser is None:
-                        self.root = self._root
-                        break
-                    # load event buffer
-                    del self._events[:]
-                    self._index = 0
-                    data = self._file.read(16384)
-                    if data:
-                        pattern = r'(<!DOCTYPE[^\[]+(?:\[[^\]]+\])*\s*>)'
-                        data = re.split(pattern, data)
-                        try:
-                            self.feed(data[0])
-                            if len(data) == 3:
-                                if self.doctype_parser:
-                                    try:
-                                        self.doctype_parser.Parse(data[1], 0)
-                                    except self._exception_error, v:
-                                        self._raiseerror(v)
-                                # norm_docdecl = data[0].replace('\r\n', '\n').replace('\r', '\n')
-                                # self._lineoffset = norm_docdecl.count('\n')
-                                # self._coloffset = (len(norm_docdecl) - 1 - norm_docdecl.rfind('\n'))
-                                # self._byteoffset = len(data[0])
-                                self._parser.CommentHandler(data[1][10:-1], event=XmlPullParser.DOCDECL)
-                                norm_docdecl = data[1]
-                                self._lineoffset = norm_docdecl.count('\n')
-                                self._coloffset = (len(norm_docdecl) - 1 - norm_docdecl.rfind('\n'))
-                                self._byteoffset = len(data[1])
-                                self.feed(data[2])
-                            elif len(data) > 3:
-                                err = SyntaxError(
-                                    'Syntax error: More than one <!DOCTYPE> found'
-                                )
-                                raise err
-                        except SyntaxError as exc:
-                            self._error = exc
-                    else:
-                        parser = self._parser
-                        dmy = self._StateClass(parser.CurrentByteIndex,
-                                               parser.CurrentLineNumber,
-                                               parser.CurrentColumnNumber,
-                                               self._depth,
-                                               XmlPullParser.END_DOCUMENT,
-                                               None)
-                        self._events.append(dmy)
-                        self._root = self.close()
-                        self._parser = None
-            except:
-                if self._close_file:
-                    self._file.close()
-                raise
-            if self._close_file:
-                self._file.close()
-            raise StopIteration
-
-        def __iter__(self):
-            return self
-
-        def _peekEvents(self):
-            index = self._index
-            if index < len(self._events):
-                return self._events[index].event_type
-
-    def __init__(self):
+    def __init__(self, tokenIterator=None):
         super(XmlPullParserImpl, self).__init__()
-        self.setInput(None)
+        # self.setInput(None)
+        self._validator = None
+        self.setTokenIterator(tokenIterator)
+
+    def setTokenIterator(self, tokenIterator):
+        self._state = None
+        self._tokenizer = tokenIterator or XmlTokenIterator()
+        self.nextToken()
 
     def defineEntityReplacementText(self, entityName, replacementText):
-        if self.getFeature(self.FEATURE_PROCESS_DOCDECL):
+        if any(map(self.getFeature, (self.FEATURE_PROCESS_DOCDECL, self.FEATURE_VALIDATION))):
             raise Exception('IllegalStateException: "Entity replacement text may not be defined with DOCTYPE processing enabled."')
         if not hasattr(self, '_tokenizer'):
             raise Exception('IllegalStateException: "Entity replacement text must be defined after setInput()"')
@@ -820,7 +277,8 @@ class XmlPullParserImpl(XmlPullParser):
             raise Exception('IllegalArgumentException: "Feature name is None"')
         if name not in [self.FEATURE_PROCESS_NAMESPACES,
                         self.FEATURE_PROCESS_DOCDECL,
-                        self.FEATURE_REPORT_NAMESPACE_ATTRIBUTES]:
+                        self.FEATURE_REPORT_NAMESPACE_ATTRIBUTES,
+                        self.FEATURE_VALIDATION]:
             raise Exception('XmlPullParserException:"unsupported feature: %s"' % name)
         if hasattr(self, '_parser'):
             raise Exception('XmlPullParserException:"feature: %s can be set after calling setInput"' % name)
@@ -831,16 +289,22 @@ class XmlPullParserImpl(XmlPullParser):
     @overload('@str')
     def setInput(self, reader_in):
         if reader_in is None:
-            self._state = None
-            self._tokenizer = XmlPullParserImpl.TokenIterator()
-            self.nextToken()
+            self.setTokenIterator(None)
+            # self._state = None
+            # self._tokenizer = XmlPullParserImpl.TokenIterator()
+            # self.nextToken()
         else:
             source = StringIO.StringIO(reader_in)
             self._setInput(source, None)
 
     @setInput.adddef('str', '@str')
     def setInput(self, source, encoding):
-        self._setInput(source, encoding)
+        self._setInput(source, encoding, None)
+
+    @setInput.adddef('str', '@str', '@XmlPullParserValidator')
+    def setInput(self, source, encoding, validator):
+        source = StringIO.StringIO(source)
+        self._setInput(source, encoding, validator)
 
     def setProperty(self, name, value):
         if name == "http://xmlpull.org/v1/doc/properties.html#location":
@@ -912,10 +376,13 @@ class XmlPullParserImpl(XmlPullParser):
         bflag = self.getFeature(self.FEATURE_REPORT_NAMESPACE_ATTRIBUTES)
         return self._decomposeRawData(attrib, bflag)
 
-    def _setInput(self, source, encoding):
+    def _setInput(self, source, encoding, validator=None):
         features = [self.getFeature(self.FEATURE_PROCESS_NAMESPACES),
                     self.getFeature(self.FEATURE_PROCESS_DOCDECL),
-                    self.getFeature(self.FEATURE_REPORT_NAMESPACE_ATTRIBUTES)]
+                    self.getFeature(self.FEATURE_REPORT_NAMESPACE_ATTRIBUTES),
+                    self.getFeature(self.FEATURE_VALIDATION) or bool(validator)]
         self._tokenizer._setInput(source, encoding, features)
+        if validator:
+            self._tokenizer.setValidator(validator)
         self.nextToken()
 

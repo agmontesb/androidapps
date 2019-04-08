@@ -1,4 +1,6 @@
 [
-  "Test_Attributes.py::TestAttributes::()::test_attribs", 
-  "Test_Attributes.py::TestAttributes::()::test_attribuniq"
+  "test_Validator.py::testElementEmpty", 
+  "test_Validator.py::testElementMixed", 
+  "test_Validator.py::testElementSequence", 
+  "test_Validator.py::testElementOption"
 ]
