@@ -168,7 +168,7 @@ class XmlTokenIterator(object):
                                         m += 1
                                     elif not features[2]:
                                         continue
-                                    it.append(key, value)
+                                    it.append((key, value))
                                 attrib_in = it
                             answ = (tag_in, attrib_in)
                         append(cbase.START_TAG, (answ, bool(self._isEmptyTag)))
