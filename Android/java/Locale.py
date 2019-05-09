@@ -1491,7 +1491,8 @@ class Locale(Object):
         """
         if not key:
             raise Exception('NullPointerException')
-        if not LanguageTag.isExtension(key):
+        # if not LanguageTag.isExtension(key):
+        if not key.isalnum() or len(key) != 2:
             raise Exception('IllegalArgumentException: "key is not well-formed"')
         if not self.hasExtensions(): return set()
         ule = self.getExtension('u')

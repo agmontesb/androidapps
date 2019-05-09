@@ -1,6 +1,5 @@
 [
-  "test_Validator.py::testElementEmpty", 
-  "test_Validator.py::testElementMixed", 
-  "test_Validator.py::testElementSequence", 
-  "test_Validator.py::testElementOption"
+  "test_Misc.py::TestMisc::()::testReadText", 
+  "test_Misc.py::TestMisc::()::testRequire", 
+  "test_Misc.py::TestMisc::()::testReportNamespaceAttributes"
 ]

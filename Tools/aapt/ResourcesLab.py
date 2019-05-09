@@ -822,7 +822,7 @@ if __name__ == '__main__':
             # list ->           -a -v
             # dump ->           --values, --include-meta-data WHAT [asset [asset ...]
             what='resources',
-            assets=['AndroidManifest.xml',],
+            assets=['AndroidManifest.xml', 'res/layout/activity_main.xml',],
         )
         aapt(**kwargs)
         pass

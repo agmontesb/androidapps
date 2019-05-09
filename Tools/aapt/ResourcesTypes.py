@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Ported from:
-# https:# github.com/aosp-mirror/platform_frameworks_base/blob/master/libs/androidfw/include/androidfw/ResourceTypes.h
+# https://github.com/aosp-mirror/platform_frameworks_base/blob/master/libs/androidfw/include/androidfw/ResourceTypes.h
 
 import io
 from ctypes import *
@@ -243,7 +243,7 @@ class ResTable_config(Structure):
     UI_MODE_NIGHT_ANY = ACONFIGURATION_UI_MODE_NIGHT_ANY << SHIFT_UI_MODE_NIGHT
     UI_MODE_NIGHT_NO = ACONFIGURATION_UI_MODE_NIGHT_NO << SHIFT_UI_MODE_NIGHT
     UI_MODE_NIGHT_YES = ACONFIGURATION_UI_MODE_NIGHT_YES << SHIFT_UI_MODE_NIGHT
-    #  screenLayout2 bits for round/notround.
+    #  screenLayout 2 bits for round/notround.
     MASK_SCREENROUND = 0x03
     SCREENROUND_ANY = ACONFIGURATION_SCREENROUND_ANY
     SCREENROUND_NO = ACONFIGURATION_SCREENROUND_NO
@@ -919,15 +919,12 @@ class ResStringPool(object):
         self.strData = strData = []
         offsets = ((rsph.stringCount + rsph.styleCount)*c_uint32)()
         assert sizeof(offsets) == data.readinto(offsets)
-        cint16 = c_uint16()
         if rsph.stringCount:
             encoding = 'UTF-8' if rsph.flags & rsph.UTF8_FLAG else 'UTF-16'
             stroffset = headeroffset + rsph.stringsStart
             data.seek(stroffset)
             for indx in range(rsph.stringCount):
                 data.seek(stroffset + offsets[indx])
-                # if indx == 1158:
-                #     pass
                 if encoding == 'UTF-8':
                     hbyte = readResHeader(data, c_uint8).value
                     strlen = readResHeader(data, c_uint8).value
@@ -961,14 +958,18 @@ class ResStringPool(object):
         assert data.tell() <= headeroffset + rsph.header.size
         self.styleSpans = []
         if rsph.styleCount:
-            dataSize = rsph.styleCount * sizeof(ResStringPool_span)
-            dataReaded = 0
-            data.seek(headeroffset + rsph.stylesStart)
-            while dataReaded < dataSize:
-                x = ResStringPool_span()
-                dataReaded += data.readinto(x)
-                self.styleSpans.append(x)
-        assert data.tell() <= headeroffset + rsph.header.size
+            styleoffset = headeroffset + rsph.stylesStart
+            for indx in range(rsph.styleCount):
+                offset = offsets[rsph.stringCount + indx]
+                offset += styleoffset
+                data.seek(offset)
+                spans = []
+                while True:
+                    x = readResHeader(data, ResStringPool_span)
+                    spans.append(x)
+                    if x.name.index == ResStringPool_span.END: break
+                self.styleSpans.append(spans)
+            assert x.firstChar == ResStringPool_span.END and x.lastChar == ResStringPool_span.END
 
     def stringCount(self):
         return self.resStringPoolheader.stringCount
