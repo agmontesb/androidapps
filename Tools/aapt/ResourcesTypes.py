@@ -3,10 +3,12 @@
 # https://github.com/aosp-mirror/platform_frameworks_base/blob/master/libs/androidfw/include/androidfw/ResourceTypes.h
 
 import io
+import itertools
 from ctypes import *
 
 from AconfigurationConst import *
-from Android import AndroidEnum, Object, overload
+from Tools.aapt import LocaleDataTables
+
 
 def readResHeader(stream, headerClass, offset=None):
     if offset is not None:
@@ -157,110 +159,112 @@ class ResTable_config(Structure):
        Describes a particular resource configuration.
     '''
 
-    ORIENTATION_ANY  = ACONFIGURATION_ORIENTATION_ANY
-    ORIENTATION_PORT = ACONFIGURATION_ORIENTATION_PORT
-    ORIENTATION_LAND = ACONFIGURATION_ORIENTATION_LAND
-    ORIENTATION_SQUARE = ACONFIGURATION_ORIENTATION_SQUARE
+    class BaseEnum(object):
+        _strTag = '%s=%s'
+        _instances = {}
 
-    TOUCHSCREEN_ANY  = ACONFIGURATION_TOUCHSCREEN_ANY
-    TOUCHSCREEN_NOTOUCH  = ACONFIGURATION_TOUCHSCREEN_NOTOUCH
-    TOUCHSCREEN_STYLUS  = ACONFIGURATION_TOUCHSCREEN_STYLUS
-    TOUCHSCREEN_FINGER  = ACONFIGURATION_TOUCHSCREEN_FINGER
+        def __new__(cls, name, value):
+            if name is None: return super(ResTable_config.BaseEnum, cls).__new__(cls)
+            key = (name, value)
+            instances = cls._instances.setdefault(cls.__name__, {})
+            if key not in instances:
+                inst = super(ResTable_config.BaseEnum, cls).__new__(cls)
+                instances[key] = inst
+            return instances[key]
 
-    DENSITY_DEFAULT = ACONFIGURATION_DENSITY_DEFAULT
-    DENSITY_LOW = ACONFIGURATION_DENSITY_LOW
-    DENSITY_MEDIUM = ACONFIGURATION_DENSITY_MEDIUM
-    DENSITY_TV = ACONFIGURATION_DENSITY_TV
-    DENSITY_HIGH = ACONFIGURATION_DENSITY_HIGH
-    DENSITY_XHIGH = ACONFIGURATION_DENSITY_XHIGH
-    DENSITY_XXHIGH = ACONFIGURATION_DENSITY_XXHIGH
-    DENSITY_XXXHIGH = ACONFIGURATION_DENSITY_XXXHIGH
-    DENSITY_ANY = ACONFIGURATION_DENSITY_ANY
-    DENSITY_NONE = ACONFIGURATION_DENSITY_NONE
+        def __init__(self, name, value):
+            super(ResTable_config.BaseEnum, self).__init__()
+            self.key = (name, value)
 
-    KEYBOARD_ANY  = ACONFIGURATION_KEYBOARD_ANY
-    KEYBOARD_NOKEYS  = ACONFIGURATION_KEYBOARD_NOKEYS
-    KEYBOARD_QWERTY  = ACONFIGURATION_KEYBOARD_QWERTY
-    KEYBOARD_12KEY  = ACONFIGURATION_KEYBOARD_12KEY
+        @classmethod
+        def hasEnum(cls, className):
+            className += 'Enum'
+            return cls._instances.has_key(className)
 
-    NAVIGATION_ANY  = ACONFIGURATION_NAVIGATION_ANY
-    NAVIGATION_NONAV  = ACONFIGURATION_NAVIGATION_NONAV
-    NAVIGATION_DPAD  = ACONFIGURATION_NAVIGATION_DPAD
-    NAVIGATION_TRACKBALL  = ACONFIGURATION_NAVIGATION_TRACKBALL
-    NAVIGATION_WHEEL  = ACONFIGURATION_NAVIGATION_WHEEL
+        @classmethod
+        def getInstance(cls, item, field=''):
+            if isinstance(item, basestring):
+                n = 0
+            elif isinstance(item, int):
+                n = 1
+            else:
+                raise LookupError()
+            className = cls.__name__ if not field else (field[0].upper() + field[1:] + 'Enum')
+            try:
+                instances = cls._instances[className]
+                keys = instances.keys()
+                ndx = zip(*keys)[n].index(item)
+            except KeyError:
+                raise KeyError('The field "%s" has no enumeration class associated' % field)
+            except ValueError:
+                if n == 0:
+                    raise ValueError('The "%s" is not a valid member of the %s enumeration' % (item, className))
+                return cls(None, item)
+            return instances[keys[ndx]]
 
-    MASK_KEYSHIDDEN = 0x0003
-    KEYSHIDDEN_ANY = ACONFIGURATION_KEYSHIDDEN_ANY
-    KEYSHIDDEN_NO = ACONFIGURATION_KEYSHIDDEN_NO
-    KEYSHIDDEN_YES = ACONFIGURATION_KEYSHIDDEN_YES
-    KEYSHIDDEN_SOFT = ACONFIGURATION_KEYSHIDDEN_SOFT
+        @classmethod
+        def keys(cls):
+            instances = cls._instances[cls.__name__]
+            return zip(*instances.keys())[0]
 
-    MASK_NAVHIDDEN = 0x000c
-    SHIFT_NAVHIDDEN = 2
-    NAVHIDDEN_ANY = ACONFIGURATION_NAVHIDDEN_ANY << SHIFT_NAVHIDDEN
-    NAVHIDDEN_NO = ACONFIGURATION_NAVHIDDEN_NO << SHIFT_NAVHIDDEN
-    NAVHIDDEN_YES = ACONFIGURATION_NAVHIDDEN_YES << SHIFT_NAVHIDDEN
+        @property
+        def tag(self):
+            return self.key[0] or self._strTag % (self.field, self.id)
+
+        @property
+        def id(self):
+            return self.key[1]
+
+        @property
+        def field(self):
+            field = self.__class__.__name__[:-4]
+            return field[0].lower() + field[1:]
+
+        def __eq__(self, other):
+            return self.id == other.id
+
+        def __ne__(self, other):
+            return self.id != other.id
+
+        def __lt__(self, other):
+            return self.id < other.id
+
+        def __gt__(self, other):
+            return self.id > other.id
 
     SCREENWIDTH_ANY = 0
     SCREENHEIGHT_ANY = 0
     SDKVERSION_ANY = 0
     MINORVERSION_ANY = 0
 
+    MASK_KEYSHIDDEN = 0x0003
+    MASK_NAVHIDDEN = 0x000c
+    SHIFT_NAVHIDDEN = 2
+
     MASK_SCREENSIZE = 0x0f
-    SCREENSIZE_ANY = ACONFIGURATION_SCREENSIZE_ANY
-    SCREENSIZE_SMALL = ACONFIGURATION_SCREENSIZE_SMALL
-    SCREENSIZE_NORMAL = ACONFIGURATION_SCREENSIZE_NORMAL
-    SCREENSIZE_LARGE = ACONFIGURATION_SCREENSIZE_LARGE
-    SCREENSIZE_XLARGE = ACONFIGURATION_SCREENSIZE_XLARGE
-    
+
     #  screenLayout bits for wide/long screen variation.
     MASK_SCREENLONG = 0x30
     SHIFT_SCREENLONG = 4
-    SCREENLONG_ANY = ACONFIGURATION_SCREENLONG_ANY << SHIFT_SCREENLONG
-    SCREENLONG_NO = ACONFIGURATION_SCREENLONG_NO << SHIFT_SCREENLONG
-    SCREENLONG_YES = ACONFIGURATION_SCREENLONG_YES << SHIFT_SCREENLONG
 
     #  screenLayout bits for layout direction.
     MASK_LAYOUTDIR = 0xC0
     SHIFT_LAYOUTDIR = 6
-    LAYOUTDIR_ANY = ACONFIGURATION_LAYOUTDIR_ANY << SHIFT_LAYOUTDIR
-    LAYOUTDIR_LTR = ACONFIGURATION_LAYOUTDIR_LTR << SHIFT_LAYOUTDIR
-    LAYOUTDIR_RTL = ACONFIGURATION_LAYOUTDIR_RTL << SHIFT_LAYOUTDIR
     #  uiMode bits for the mode type.
     MASK_UI_MODE_TYPE = 0x0f
-    UI_MODE_TYPE_ANY = ACONFIGURATION_UI_MODE_TYPE_ANY
-    UI_MODE_TYPE_NORMAL = ACONFIGURATION_UI_MODE_TYPE_NORMAL
-    UI_MODE_TYPE_DESK = ACONFIGURATION_UI_MODE_TYPE_DESK
-    UI_MODE_TYPE_CAR = ACONFIGURATION_UI_MODE_TYPE_CAR
-    UI_MODE_TYPE_TELEVISION = ACONFIGURATION_UI_MODE_TYPE_TELEVISION
-    UI_MODE_TYPE_APPLIANCE = ACONFIGURATION_UI_MODE_TYPE_APPLIANCE
-    UI_MODE_TYPE_WATCH = ACONFIGURATION_UI_MODE_TYPE_WATCH
-    UI_MODE_TYPE_VR_HEADSET = ACONFIGURATION_UI_MODE_TYPE_VR_HEADSET
 
     #  uiMode bits for the night switch.
     MASK_UI_MODE_NIGHT = 0x30
     SHIFT_UI_MODE_NIGHT = 4
-    UI_MODE_NIGHT_ANY = ACONFIGURATION_UI_MODE_NIGHT_ANY << SHIFT_UI_MODE_NIGHT
-    UI_MODE_NIGHT_NO = ACONFIGURATION_UI_MODE_NIGHT_NO << SHIFT_UI_MODE_NIGHT
-    UI_MODE_NIGHT_YES = ACONFIGURATION_UI_MODE_NIGHT_YES << SHIFT_UI_MODE_NIGHT
     #  screenLayout 2 bits for round/notround.
     MASK_SCREENROUND = 0x03
-    SCREENROUND_ANY = ACONFIGURATION_SCREENROUND_ANY
-    SCREENROUND_NO = ACONFIGURATION_SCREENROUND_NO
-    SCREENROUND_YES = ACONFIGURATION_SCREENROUND_YES
     #  colorMode bits for wide-color gamut/narrow-color gamut.
     MASK_WIDE_COLOR_GAMUT = 0x03
-    WIDE_COLOR_GAMUT_ANY = ACONFIGURATION_WIDE_COLOR_GAMUT_ANY
-    WIDE_COLOR_GAMUT_NO = ACONFIGURATION_WIDE_COLOR_GAMUT_NO
-    WIDE_COLOR_GAMUT_YES = ACONFIGURATION_WIDE_COLOR_GAMUT_YES
 
     #  colorMode bits for HDR/LDR.
     MASK_HDR = 0x0c
-    SHIFT_COLOR_MODE_HDR = 2
-    HDR_ANY = ACONFIGURATION_HDR_ANY << SHIFT_COLOR_MODE_HDR
-    HDR_NO = ACONFIGURATION_HDR_NO << SHIFT_COLOR_MODE_HDR
-    HDR_YES = ACONFIGURATION_HDR_YES << SHIFT_COLOR_MODE_HDR
-    
+    SHIFT_COLOR_MODE_HDR = SHIFT_HDR = 2
+
     #  Flags indicating a set of config values.  These flag constants must
     #  match the corresponding ones in android.content.pm.ActivityInfo and
     #  attrs_manifest.xml.
@@ -400,23 +404,892 @@ class ResTable_config(Structure):
         ('localeNumberingSystem', (8*c_char)),
     ]
 
-    def __getattr__(self, name):
-        fieldMap = {
+    def __init__(self, *args, **kwargs):
+        super(ResTable_config, self).__init__(*args, **kwargs)
+        super(ResTable_config, self).__setattr__('_fieldMap_', {
             'mcc': self.union1.field1, 'mnc': self.union1.field1, 'imsi': self.union1,
             'language': self.union2.field1, 'country': self.union2.field1, 'locale': self.union2,
-            'orientation': self.union3.field1, 'touchscreen': self.union3.field1, 'density': self.union3.field1, 'screenType': self.union3,
-            'keyboard': self.union4.field1, 'navigation': self.union4.field1, 'inputFlags': self.union4.field1, 'inputPad0': self.union4.field1, 'input': self.union4,
+            'orientation': self.union3.field1, 'touchscreen': self.union3.field1, 'density': self.union3.field1,
+            'screenType': self.union3,
+            'keyboard': self.union4.field1, 'navigation': self.union4.field1, 'inputFlags': self.union4.field1,
+            'inputPad0': self.union4.field1, 'input': self.union4,
             'screenWidth': self.union5.field1, 'screenHeight': self.union5.field1, 'screenSize': self.union5,
             'sdkVersion': self.union6.field1, 'minorVersion': self.union6.field1, 'version': self.union6,
-            'screenLayout': self.union7.field1, 'uiMode': self.union7.field1, 'smallestScreenWidthDp': self.union7.field1, 'screenConfig': self.union7,
+            'screenLayout': self.union7.field1, 'uiMode': self.union7.field1, 'smallestScreenWidthDp': self.union7.field1,
+            'screenConfig': self.union7,
             'screenWidthDp': self.union8.field1, 'screenHeightDp': self.union8.field1, 'screenSizeDp': self.union8,
-            'screenLayout2': self.union9.field1, 'colorMode': self.union9.field1, 'screenConfigPad2': self.union9.field1, 'screenConfig2': self.union9,
-        }
-        obj = fieldMap.get(name)
-        if not obj:
-            errMsg = "'%s' object has no attribute '%s'"  % ('ResTable_config', name)
-            raise AttributeError(errMsg)
-        return getattr(obj, name)
+            'screenLayout2': self.union9.field1, 'colorMode': self.union9.field1, 'screenConfigPad2': self.union9.field1,
+            'screenConfig2': self.union9,
+        })
+        super(ResTable_config, self).__setattr__('_fieldMap2_', dict(
+            [
+                ('layoutDir', ('screenLayout', self.MASK_LAYOUTDIR)),
+                ('screenLayoutSize', ('screenLayout', self.MASK_SCREENSIZE)),
+                ('screenLayoutLong', ('screenLayout', self.MASK_SCREENLONG)),
+                ('screenLayoutRound', ('screenLayout2', self.MASK_SCREENROUND)),
+                ('uiModeType', ('uiMode', self.MASK_UI_MODE_TYPE)),
+                ('uiModeNight', ('uiMode', self.MASK_UI_MODE_NIGHT)),
+                ('hdr', ('colorMode', self.MASK_HDR)),
+                ('wideColorGamut', ('colorMode', self.MASK_WIDE_COLOR_GAMUT)),
+                ('keysHidden', ('inputFlags', self.MASK_KEYSHIDDEN)),  # ojo con esto
+                ('navHidden', ('inputFlags', self.MASK_NAVHIDDEN)),
+            ]
+        ))
+
+
+    def __getattr__(self, name):
+        fieldMap = self._fieldMap_
+        if name in fieldMap:
+            obj = fieldMap.get(name)
+            value = getattr(obj, name)
+            try:
+                value = ResTable_config.BaseEnum.getInstance(value, field=name)
+            except:
+                pass
+            return value
+        fieldMap2 = self._fieldMap2_
+        if name in fieldMap2:
+            field, mask = fieldMap2.get(name)
+            obj = fieldMap.get(field)
+            value = getattr(obj, field) & mask
+            return ResTable_config.BaseEnum.getInstance(value, field=name)
+        errMsg = "'%s' object has no attribute '%s'"  % ('ResTable_config', name)
+        raise AttributeError(errMsg)
+
+    def __setattr__(self, key, value):
+        fieldMap = self._fieldMap_
+        if key in fieldMap:
+            if isinstance(value, ResTable_config.BaseEnum):
+                value = value.id
+            obj = fieldMap.get(key)
+            return setattr(obj, key, value)
+        fieldMap2 = self._fieldMap2_
+        if key in fieldMap2:
+            if isinstance(value, ResTable_config.BaseEnum):
+                value = value.id
+            field, mask = fieldMap2[key]
+            obj = fieldMap.get(field)
+            value = (getattr(obj, field) & (0xFFFF ^ mask)) | value
+            return setattr(obj, field, value)
+        super(ResTable_config, self).__setattr__(key, value)
+
+    def toString(self):
+        res = ''
+        if self.mcc != 0:
+            res += "-mcc%s" % self.mcc
+        
+        if self.mnc != 0:
+            res += "-mnc%s" % self.mnc
+    
+        # appendDirLocale(res)
+        if self.language:
+            scriptWasProvided = self.localeScript and not self.localeScriptWasComputed
+            if not scriptWasProvided and not self.localeVariant and not self.localeNumberingSystem:
+                strLoc = self.language
+                if self.country:
+                    strLoc += '-r' + self.country
+            else:
+                strLoc = 'b+' + self.language
+                if scriptWasProvided:
+                    strLoc += '+' + self.localeScript
+                if self.country:
+                    strLoc += '+' + self.country
+                if self.localeVariant:
+                    strLoc += '+' + self.localeVariant
+                if self.localeNumberingSystem:
+                    strLoc += '+u+nu+' + self.localeNumberingSystem
+            res += '-' + strLoc
+
+        case = self.layoutDir
+        if case.id:
+            res += '-' + case.tag
+
+        if self.smallestScreenWidthDp != 0:
+            res += "-sw%sdp" % self.smallestScreenWidthDp
+        
+        if self.screenWidthDp != 0:
+            res += "-w%sdp" % self.screenWidthDp
+        
+        if self.screenHeightDp != 0:
+            res += "-h%sdp" % self.screenHeightDp
+
+        case = self.screenLayoutSize
+        if case.id:
+            res += '-' + case.tag
+
+        case = self.screenLayoutLong
+        if case.id:
+            res += '-' + case.tag
+
+        case = self.screenLayoutRound
+        if case.id:
+            res += '-' + case.tag
+
+        case = self.hdr
+        if case.id:
+            res += '-' + case.tag
+
+        case = self.wideColorGamut
+        if case.id:
+            res += '-' + case.tag
+
+        case = self.orientation
+        if case.id:
+            res += '-' + case.tag
+
+        case = self.uiModeType
+        if case.id:
+            res += '-' + case.tag
+
+        case = self.uiModeNight
+        if case.id:
+            res += '-' + case.tag
+
+        case = self.density
+        if case.id:
+            res += '-' + case.tag
+
+        case = self.touchscreen
+        if case.id:
+            res += '-' + case.tag
+
+        case = self.keysHidden
+        if case.id:
+            res += '-' + case.tag
+
+        case = self.keyboard
+        if case.id:
+            res += '-' + case.tag
+
+        case = self.navHidden
+        if case.id:
+            res += '-' + case.tag
+
+        case = self.navigation
+        if case.id:
+            res += '-' + case.tag
+
+        if self.screenSize != 0:
+            res += "-%sx%s" % (self.screenWidth, self.screenHeight)
+        
+        if self.sdkVersion != 0 or self.minorVersion != 0:
+            strVersion = "-v%s" % self.sdkVersion
+            if self.minorVersion != 0:
+                strVersion += ".%s" % self.minorVersion
+            res += strVersion
+        return res[1:]
+
+    def diff(self, o):
+        diffs = 0
+        if self.mcc != o.mcc: diffs |= self.CONFIG_MCC
+        if self.mnc != o.mnc: diffs |= self.CONFIG_MNC
+        if self.orientation != o.orientation: diffs |= self.CONFIG_ORIENTATION
+        if self.touchscreen != o.touchscreen: diffs |= self.CONFIG_TOUCHSCREEN
+        if self.density != o.density: diffs |= self.CONFIG_DENSITY
+        if self.keyboard != o.keyboard: diffs |= self.CONFIG_KEYBOARD
+        if self.navigation != o.navigation: diffs |= self.CONFIG_NAVIGATION
+        if ((self.inputFlags ^ o.inputFlags) & (self.MASK_KEYSHIDDEN | self.MASK_NAVHIDDEN)) != 0:
+            diffs |= self.CONFIG_KEYBOARD_HIDDEN
+        if self.screenSize != o.screenSize: diffs |= self.CONFIG_SCREEN_SIZE
+        if self.version != o.version: diffs |= self.CONFIG_VERSION
+        # if (self.screenLayout & self.MASK_LAYOUTDIR) != (o.screenLayout & self.MASK_LAYOUTDIR):
+        if self.layoutDir != o.layoutDir:
+            diffs |= self.CONFIG_LAYOUTDIR
+        if (self.screenLayout & (0xFFFF ^ self.MASK_LAYOUTDIR)) != (o.screenLayout & (0xFFFF ^ self.MASK_LAYOUTDIR)):
+            diffs |= self.CONFIG_SCREEN_LAYOUT
+        # if (self.screenLayout2 & self.MASK_SCREENROUND) != (o.screenLayout2 & self.MASK_SCREENROUND):
+        if self.screenLayoutRoud != o.screenLayoutRoud:
+            diffs |= self.CONFIG_SCREEN_ROUND
+        # if (self.colorMode & self.MASK_WIDE_COLOR_GAMUT) != (o.colorMode & self.MASK_WIDE_COLOR_GAMUT):
+        if self.wideColorGamut != o.wideColorGamut:
+            diffs |= self.CONFIG_COLOR_MODE
+        # if (self.colorMode & self.MASK_HDR) != (o.colorMode & self.MASK_HDR):
+        if self.hdr != o.hdr:
+            diffs |= self.CONFIG_COLOR_MODE
+        if self.uiMode != o.uiMode: diffs |= self.CONFIG_UI_MODE
+        if self.smallestScreenWidthDp != o.smallestScreenWidthDp:
+            diffs |= self.CONFIG_SMALLEST_SCREEN_SIZE
+        if self.screenSizeDp != o.screenSizeDp:
+            diffs |= self.CONFIG_SCREEN_SIZE
+
+        # diff = compareLocales(self, o)
+        # if diff: diffs |= self.CONFIG_LOCALE
+
+        return diffs
+
+    def compare(self, o):
+        if self.imsi != o.imsi:
+            return cmp(self.imsi, o.imsi)
+
+        # diff = compareLocales(*this, o)
+        # if self.diff:
+        #     return diff/abs(diff)
+
+        if self.screenType != o.screenType:
+            return cmp(self.screenType, o.screenType)
+
+        if self.input != o.input:
+            return cmp(self.input, o.input)
+
+        if self.screenSize != o.screenSize:
+            return cmp(self.screenSize, o.screenSize)
+
+        if self.version != o.version:
+            return cmp(self.version, o.version)
+
+        if self.screenLayout != o.screenLayout:
+            return cmp(self.screenLayout, o.screenLayout)
+
+        if self.screenLayout2 != o.screenLayout2:
+            return cmp(self.screenLayout2, o.screenLayout2)
+
+        if self.colorMode != o.colorMode:
+            return cmp(self.colorMode, o.colorMode)
+
+        if self.uiMode != o.uiMode:
+            return cmp(self.uiMode, o.uiMode)
+
+        if self.smallestScreenWidthDp != o.smallestScreenWidthDp:
+            return cmp(self.smallestScreenWidthDp, o.smallestScreenWidthDp)
+
+        if self.screenSizeDp != o.screenSizeDp:
+            return cmp(self.screenSizeDp, o.screenSizeDp)
+
+        return 0
+
+    def compareLogical(self, o):
+        if self.mcc != o.mcc:
+            return cmp(self.mcc, o.mcc)
+
+        if self.mnc != o.mnc:
+            return cmp(self.mnc, o.mnc)
+
+        # diff = compareLocales(*this, o)
+        # if self.diff:
+        #     return diff/abs(diff)
+
+        if self.layoutDir != o.layoutDir:
+            return cmp(self.layoutDir, o.layoutDir)
+
+        if self.smallestScreenWidthDp != o.smallestScreenWidthDp:
+            return cmp(self.smallestScreenWidthDp, o.smallestScreenWidthDp)
+        
+        if self.screenWidthDp != o.screenWidthDp:
+            return cmp(self.screenWidthDp, o.screenWidthDp)
+        
+        if self.screenHeightDp != o.screenHeightDp:
+            return cmp(self.screenHeightDp, o.screenHeightDp)
+        
+        if self.screenWidth != o.screenWidth:
+            return cmp(self.screenWidth, o.screenWidth)
+        
+        if self.screenHeight != o.screenHeight:
+            return cmp(self.screenHeight, o.screenHeight)
+        
+        if self.density != o.density:
+            return cmp(self.density, o.density)
+        
+        if self.orientation != o.orientation:
+            return cmp(self.orientation, o.orientation)
+        
+        if self.touchscreen != o.touchscreen:
+            return cmp(self.touchscreen, o.touchscreen)
+        
+        if self.input != o.input:
+            return cmp(self.input, o.input)
+        
+        if self.screenLayout != o.screenLayout:
+            return cmp(self.screenLayout, o.screenLayout)
+
+        if self.screenLayout2 != o.screenLayout2:
+            return cmp(self.screenLayout2, o.screenLayout2)
+
+        if self.colorMode != o.colorMode:
+            return cmp(self.colorMode, o.colorMode)
+
+        if self.uiMode != o.uiMode:
+            return cmp(self.uiMode, o.uiMode)
+        
+        if self.version != o.version:
+            return cmp(self.version, o.version)
+
+        return 0
+
+    def match(self, settings):
+
+        def myIter(dmy):
+            for name, values in dmy:
+                if not getattr(self, name): continue
+                for value in values:
+                    op, field = value
+                    op1 = getattr(self, field)
+                    if not op1: continue
+                    op2 = getattr(settings, field)
+                    # bFlag = eval('op1 %s op2' % op)
+                    bFlag = op1 != op2 if op == '!=' else op1 > op2
+                    if bFlag: return True
+            return False
+
+        fields = [
+            ('imsi', (
+                ('!=','mcc'),
+                ('!=','mnc'),
+             )),
+            ('screenConfig', (
+                ('!=', 'layoutDir'),
+                ('>', 'screenLayoutSize'),
+                ('!=', 'screenLayoutLong'),
+                ('!=', 'uiModeType'),
+                ('!=', 'uiModeNight'),
+                ('>','smallestScreenWidthDp'),
+             )),
+            ('screenConfig2', (
+                ('!=', 'screenLayoutRound'),
+                ('!=', 'hdr'),
+                ('!=', 'wideColorGamut'),
+             )),
+            ('screenSizeDp', (
+                ('>','screenWidthDp'),
+                ('>','screenHeightDp'),
+             )),
+            ('screenType', (
+                ('!=','orientation'),
+                ('!=','touchscreen'),
+             )),
+            ('input', (
+                ('!=', 'keyshidden'),  # ojo con esto
+             )),
+            ('input', (
+                ('!=', 'navHidden'),
+                ('!=','keyboard'),
+                ('!=','navigation'),
+             )),
+            ('screenSize', (
+                ('>','screenWidth'),
+                ('>','screenHeight'),
+             )),
+            ('version', (
+                ('>', 'sdkVersion'),
+                ('!=','minorVersion'),
+             )),
+        ]
+        if any(myIter(fields[:1])): return False
+        if self.locale:
+            if not self.langsAreEquivalent(self.language, settings.language):
+                return False
+            countriesMustMatch = False
+            computed_script = ''
+            script = ''
+            if not settings.localeScript:
+                countriesMustMatch = True
+            else:
+                if self.localeScript and not self.localeScriptWasComputed:
+
+                    computed_script = self.computeScript(self.language, self.country)
+                    if computed_script:
+                        countriesMustMatch = True
+                    else:
+                        script = computed_script
+                else:
+                    script = self.localeScript
+            if countriesMustMatch:
+                if self.country and self.country != settings.country:
+                    return False
+            else:
+                n = len(settings.localeScript)
+                if script[:n] != settings.localeScript:
+                    return False
+        if any(myIter(fields[1:5])): return False
+        if any(myIter(fields[5:6])):
+            op1 = self.keysHidden != self.KEYSHIDDEN_NO
+            op2 = settings.keysHidden != self.KEYSHIDDEN_NO
+            if op1 and op2: return False
+        if any(myIter(fields[6:])): return False
+
+    def __lt__(self, other):
+        return self.compare(other) < 0
+
+    def isMoreSpecificThan(self, o):
+        if self.imsi or o.imsi:
+            if self.mcc != o.mcc:
+                if not self.mcc: return False
+                if not o.mcc: return True
+            if self.mnc != o.mnc:
+                if not self.mnc: return False
+                if not o.mnc: return True
+
+        if self.locale or o.locale:
+            diff = self.isLocaleMoreSpecificThan(o)
+            if diff != 0:
+                return cmp(diff, 0)
+
+        if self.screenLayout or o.screenLayout:
+            if (self.screenLayout^o.screenLayout) & self.MASK_LAYOUTDIR != 0:
+                if not self.layoutDir: return False
+                if not o.layoutDir: return True
+
+        if self.smallestScreenWidthDp or o.smallestScreenWidthDp:
+            if self.smallestScreenWidthDp != o.smallestScreenWidthDp:
+                if not self.smallestScreenWidthDp: return False
+                if not o.smallestScreenWidthDp: return True
+
+        if self.screenSizeDp or o.screenSizeDp:
+            if self.screenWidthDp != o.screenWidthDp:
+                if not self.screenWidthDp: return False
+                if not o.screenWidthDp: return True
+            
+            if self.screenHeightDp != o.screenHeightDp:
+                if not self.screenHeightDp: return False
+                if not o.screenHeightDp: return True
+
+        if self.screenLayout or o.screenLayout:
+            if (self.screenLayout^o.screenLayout) & self.MASK_SCREENSIZE != 0:
+                if not self.screenLayoutSize: return False
+                if not o.screenLayoutSize: return True
+            
+            if (self.screenLayout^o.screenLayout) & self.MASK_SCREENLONG != 0:
+                if not self.screenLayoutLong: return False
+                if not o.screenLayoutLong: return True
+
+        if self.screenLayout2 or o.screenLayout2:
+            if (self.screenLayout2^o.screenLayout2) & self.MASK_SCREENROUND != 0:
+                if not self.screenLayoutRound: return False
+                if not o.screenLayoutRound: return True
+
+        if self.colorMode or o.colorMode:
+            if (self.colorMode^o.colorMode) & self.MASK_HDR != 0:
+                if not self.hdr: return False
+                if not o.hdr: return True
+            
+            if (self.colorMode^o.colorMode) & self.MASK_WIDE_COLOR_GAMUT != 0:
+                if not self.wideColorGamut: return False
+                if not o.wideColorGamut: return True
+
+        if self.orientation != o.orientation:
+            if not self.orientation: return False
+            if not o.orientation: return True
+        
+        if self.uiMode or o.uiMode:
+            if (self.uiMode^o.uiMode) & self.MASK_UI_MODE_TYPE != 0:
+                if not self.uiModeType: return False
+                if not o.uiModeType: return True
+            
+            if (self.uiMode^o.uiMode) & self.MASK_UI_MODE_NIGHT != 0:
+                if not self.uiModeNight: return False
+                if not o.uiModeNight: return True
+
+        # density is never 'more specific'
+        # as the default just equals 160
+    
+        if self.touchscreen != o.touchscreen:
+            if not self.touchscreen: return False
+            if not o.touchscreen: return True
+        
+        if self.input or o.input:
+            if (self.inputFlags^o.inputFlags) & self.MASK_KEYSHIDDEN != 0:
+                if not self.keysHidden: return False
+                if not o.keysHidden: return True
+
+            if (self.inputFlags^o.inputFlags) & self.MASK_NAVHIDDEN != 0:
+                if not self.navHidden: return False
+                if not o.navHidden: return True
+            
+            if self.keyboard != o.keyboard:
+                if not self.keyboard: return False
+                if not o.keyboard: return True
+
+            if self.navigation != o.navigation:
+                if not self.navigation: return False
+                if not o.navigation: return True
+
+        if self.screenSize or o.screenSize:
+            if self.screenWidth != o.screenWidth:
+                if not self.screenWidth: return False
+                if not o.screenWidth: return True
+
+            if self.screenHeight != o.screenHeight:
+                if not self.screenHeight: return False
+                if not o.screenHeight: return True
+
+        if self.version or o.version:
+            if self.sdkVersion != o.sdkVersion:
+                if not self.sdkVersion: return False
+                if not o.sdkVersion: return True
+
+            if self.minorVersion != o.minorVersion:
+                if not self.minorVersion: return False
+                if not o.minorVersion: return True
+
+        return False
+
+    def isBetterThan(self, o, requested):
+        if not requested: return self.isMoreSpecificThan(o)
+        
+        if self.imsi or o.imsi:
+            if self.mcc != o.mcc and requested.mcc:
+                return bool(self.mcc)
+            if self.mnc != o.mnc and requested.mnc:
+                return bool(self.mnc)
+                
+        # if self.isLocaleBetterThan(o, requested):
+        #     return True
+        
+
+        if self.screenLayout or o.screenLayout:
+            if self.layoutDir != o.layoutDir and requested.layoutDir:
+                return self.layoutDir > o.layoutDir
+
+        if self.smallestScreenWidthDp or o.smallestScreenWidthDp:
+            #  The configuration closest to the actual size is best.
+            #  We assume that larger configs have already been filtered
+            #  out at this point.  That means we just want the largest one.
+            if self.smallestScreenWidthDp != o.smallestScreenWidthDp:
+                return self.smallestScreenWidthDp > o.smallestScreenWidthDp
+            
+        
+
+        if self.screenSizeDp or o.screenSizeDp:
+            #  "Better" is based on the sum of the difference between both
+            #  width and height from the requested dimensions.  We are
+            #  assuming the invalid configs (with smaller dimens) have
+            #  already been filtered.  Note that if a particular dimension
+            #  is unspecified, we will end up with a large value (the
+            #  difference between 0 and the requested dimension), which is
+            #  good since we will prefer a config that has specified a
+            #  dimension value.
+            myDelta = otherDelta = 0
+            if self.requested.screenWidthDp:
+                myDelta += requested.screenWidthDp - self.screenWidthDp
+                otherDelta += requested.screenWidthDp - o.screenWidthDp
+            
+            if self.requested.screenHeightDp:
+                myDelta += requested.screenHeightDp - self.screenHeightDp
+                otherDelta += requested.screenHeightDp - o.screenHeightDp
+            
+            if self.myDelta != otherDelta:
+                return myDelta < otherDelta
+
+        if self.screenLayout or o.screenLayout:
+            if self.screenLayoutSize != o.screenLayoutSize and requested.screenLayoutSize:
+                #  A little backwards compatibility here: undefined is
+                #  considered equivalent to normal.  But only if the
+                #  requested size is at least normal otherwise, small
+                #  is better than the default.
+                fixedMySL = self.screenLayoutSize
+                fixedOSL = o.screenLayoutSize
+                if requested.screenLayoutSize >= self.SCREENSIZE_NORMAL:
+                    if fixedMySL == 0: fixedMySL = self.SCREENSIZE_NORMAL
+                    if fixedOSL == 0: fixedOSL = self.SCREENSIZE_NORMAL
+                
+                #  For screen size, the best match is the one that is
+                #  closest to the requested screen size, but not over
+                #  (the not over part is dealt with in match() below).
+                if fixedMySL == fixedOSL:
+                    #  If the two are the same, but 'this' is actually
+                    #  undefined, then the other is really a better match.
+                    if self.screenLayoutSize == 0: return False
+                    return True
+                
+                if fixedMySL != fixedOSL:
+                    return fixedMySL > fixedOSL
+                
+            
+            if (self.screenLayoutLong and o.screenLayoutLong) != 0 and requested.screenLayoutLong:
+                return bool(self.screenLayoutLong)
+            
+        if self.screenLayout2 or o.screenLayout2:
+            if (self.screenLayout2^o.screenLayout2) & self.MASK_SCREENROUND != 0 and requested.screenLayoutRound:
+                return bool(self.screenLayoutRound)
+
+        if self.colorMode or o.colorMode:
+            if (self.colorMode^o.colorMode) & self.MASK_WIDE_COLOR_GAMUT != 0 and requested.wideColorGamut:
+                return bool(self.wideColorGamut)
+            
+            if (self.colorMode^o.colorMode) & self.MASK_HDR != 0 and requested.hdr:
+                return bool(self.hdr)
+        
+
+        if self.orientation != o.orientation and requested.orientation:
+            return bool(self.orientation)
+        
+
+        if self.uiMode or o.uiMode:
+            if (self.uiMode^o.uiMode) & self.MASK_UI_MODE_TYPE != 0 and requested.uiModeType:
+                return bool(self.uiModeType)
+            
+            if (self.uiMode^o.uiMode) & self.MASK_UI_MODE_NIGHT != 0 and requested.uiModeNight:
+                return bool(self.uiModeNight)
+        
+
+        if self.screenType or o.screenType:
+            if self.density != o.density:
+                #  Use the system default density (DENSITY_MEDIUM, 160dpi) if none specified.
+                thisDensity = self.density if self.density else ResTable_config.DENSITY_MEDIUM
+                otherDensity = o.density if o.density else ResTable_config.DENSITY_MEDIUM
+
+                #  We always prefer DENSITY_ANY over scaling a density bucket.
+                if thisDensity == ResTable_config.DENSITY_ANY:
+                    return True
+                elif otherDensity == ResTable_config.DENSITY_ANY:
+                    return False
+                
+
+                requestedDensity = requested.density
+                if self.requested.density == 0 or requested.density == ResTable_config.DENSITY_ANY:
+                    requestedDensity = ResTable_config.DENSITY_MEDIUM
+                
+
+                #  DENSITY_ANY is now dealt with. We should look to
+                #  pick a density bucket and potentially scale it.
+                #  Any density is potentially useful
+                #  because the system will scale it.  Scaling down
+                #  is generally better than scaling up.
+                h = thisDensity
+                l = otherDensity
+                bImBigger = True
+                if l > h:
+                    t = h
+                    h = l
+                    l = t
+                    bImBigger = False
+                
+
+                if requestedDensity >= h:
+                    #  requested value higher than both l and h, give h
+                    return bImBigger
+                
+                if l >= requestedDensity:
+                    #  requested value lower than both l and h, give l
+                    return not bImBigger
+                
+                #  saying that scaling down is 2x better than up
+                if (((2 * l) - requestedDensity)) * h > requestedDensity * requestedDensity:
+                    return not bImBigger
+                else:
+                    return bImBigger
+                
+            if self.touchscreen != o.touchscreen and requested.touchscreen:
+                return bool(self.touchscreen)
+            
+        
+
+        if self.input or o.input:
+            keysHidden = self.keysHidden
+            oKeysHidden = o.keysHidden
+            if keysHidden != oKeysHidden:
+                reqKeysHidden = requested.keysHidden
+                if reqKeysHidden:
+                    if not keysHidden: return False
+                    if not oKeysHidden: return True
+                    #  For compatibility, we count KEYSHIDDEN_NO as being
+                    #  the same as KEYSHIDDEN_SOFT.  Here we disambiguate
+                    #  these by making an exact match more specific.
+                    if reqKeysHidden == keysHidden: return True
+                    if reqKeysHidden == oKeysHidden: return False
+                
+            
+
+            navHidden = self.navHidden
+            oNavHidden = o.navHidden
+            if navHidden != oNavHidden:
+                reqNavHidden = requested.navHidden
+                if reqNavHidden:
+                    if not navHidden: return False
+                    if not oNavHidden: return True
+
+            if self.keyboard != o.keyboard and requested.keyboard:
+                return bool(self.keyboard)
+            
+
+            if self.navigation != o.navigation and requested.navigation:
+                return bool(self.navigation)
+
+        if self.screenSize or o.screenSize:
+            #  "Better" is based on the sum of the difference between both
+            #  width and height from the requested dimensions.  We are
+            #  assuming the invalid configs (with smaller sizes) have
+            #  already been filtered.  Note that if a particular dimension
+            #  is unspecified, we will end up with a large value (the
+            #  difference between 0 and the requested dimension), which is
+            #  good since we will prefer a config that has specified a
+            #  size value.
+            myDelta = otherDelta = 0
+            if requested.screenWidth:
+                myDelta += requested.screenWidth - self.screenWidth
+                otherDelta += requested.screenWidth - o.screenWidth
+            
+            if requested.screenHeight:
+                myDelta += requested.screenHeight - self.screenHeight
+                otherDelta += requested.screenHeight - o.screenHeight
+            
+            if myDelta != otherDelta:
+                return myDelta < otherDelta
+            
+        if self.version or o.version:
+            if self.sdkVersion != o.sdkVersion and requested.sdkVersion:
+                return self.sdkVersion > o.sdkVersion
+            
+            if self.minorVersion != o.minorVersion and requested.minorVersion:
+                return bool(self.minorVersion)
+
+        return False
+
+    def getImportanceScoreOfLocale(self):
+        return  ( 4 if self.localeVariant else 0) + \
+                ( 2 if self.localeScript and not self.localeScriptWasComputed else 0) + \
+                (1 if self.localeNumberingSystem else 0)
+
+    def isLocaleBetterThan(self, o, requested):
+        def localeDataIsCloseToUsEnglish(region):
+            packed_locale = ord('e') << 24 | ord('n') << 16
+            packed_locale |= ord(region[0]) << 8 | ord(region[1])
+            stop_list_index = 0
+            stop_list = [
+                0x656E0000, #  en
+                0x656E8400, # en - 001
+            ]
+            maps = filter(lambda x: x[0].startswith('Latn'), LocaleDataTables.SCRIPT_PARENTS.items())
+            ancestor = packed_locale
+            count = 0
+            while True:
+                count += 1
+                for i, lookup_result in enumerate(stop_list):
+                    if lookup_result == ancestor:
+                        stop_list_index = i
+                        break
+                else:
+                    # ancestor = findParent(ancestor, script)
+                    if ancestor & 0x0000FFFF:
+                        for key, map in maps:
+                            lookup_result = map.get(ancestor)
+                            if lookup_result:
+                                ancestor = lookup_result
+                            break
+                        else:
+                            ancestor = ancestor & 0xFFFF0000
+                    else:
+                        ancestor = 0
+                if stop_list_index > 0: break
+                if ancestor == 0:
+                    stop_list_index = -1
+                    break
+            return stop_list_index == 0
+
+
+        if not requested.locale: return False
+        if not self.locale and not o.locale: return False
+        if not self.langsAreEquivalent(self.language, o.language):
+            if requested.language == 'en':
+                if requested.country == 'US':
+                    bFlag = not self.country or self.country == 'US'
+                    return bFlag if self.language else not bFlag
+            elif localeDataIsCloseToUsEnglish(requested.country):
+                bFlag = localeDataIsCloseToUsEnglish(self.country)
+                return bFlag if self.language else not bFlag
+            return bool(self.language)
+
+
+
+    @staticmethod
+    def langsAreEquivalent(x, y):
+        # Filipino = '\xAD\x05'
+        # Tagalog = 'tl'
+        return (x == y) \
+               or (x == 'tl' and y == '\xAD\x05') \
+               or (y == 'tl' and x == '\xAD\x05')
+
+
+
+    def isLocaleMoreSpecificThan(self, o):
+        if self.locale or o.locale:
+            if self.language != o.language:
+                if not self.language: return -1
+                if not o.language: return 1
+            if self.country != o.country:
+                if not self.country: return -1
+                if not o.country: return 1
+        return self.getImportanceScoreOfLocale() - o.self.getImportanceScoreOfLocale()
+
+    def clearLocale(self):
+        self.locale = 0
+        self.localeScriptWasComputed = False
+        self.localeScriptWasComputed = ''
+        self.localeVariant = ''
+        self.localeNumberingSystem = ''
+
+    @staticmethod
+    def computeScript(language, region):
+        if not language: return ''
+        lookup_key = ord(language[0]) << 24 | ord(language[1]) << 16
+        lookup_key |= ord(region[0]) << 8 | ord(region[1])
+        lookup_result = LocaleDataTables.LIKELY_SCRIPTS.get(lookup_key)
+        if not lookup_result:
+            lookup_key &= 0xFFFF0000
+            lookup_result = LocaleDataTables.LIKELY_SCRIPTS.get(lookup_key)
+            if lookup_result:
+                return LocaleDataTables.SCRIPT_CODES[lookup_result]
+            return ''
+        return LocaleDataTables.SCRIPT_CODES[lookup_result]
+
+    @staticmethod
+    def _getAttrGroup():
+        import AconfigurationConst as acc
+        NO_YES = ['NO', 'YES']
+        grpMap = dict([
+            ('layoutDir', ('LAYOUTDIR', ["ldltr", "ldrtl"], ['LTR', 'RTL']),),
+            ('screenLayoutSize', ('SCREENSIZE', ["small", "normal", "large", "xlarge"], None)),
+            ('screenLayoutLong', ('SCREENLONG', ["notlong", "long"], NO_YES)),
+            ('screenLayoutRound', ('SCREENROUND', ["notround", "round"], NO_YES)),
+            ('hdr', ('HDR', ["lowdr", "highdr"], NO_YES)),
+            ('wideColorGamut', ('WIDE_COLOR_GAMUT', ["nowidecg", "widecg"], NO_YES)),
+            ('orientation', ('ORIENTATION', ["port", "land", 'square'], None)),
+            ('uiModeType', ('UI_MODE_TYPE', ["desk", "car", 'television', 'appliance', 'watch', 'vr_headset'], None)),
+            ('uiModeNight', ('UI_MODE_NIGHT', ["notnight", "night"], NO_YES)),
+            ('density', ('DENSITY', ["ldpi", "mdpi", 'tvdpi', 'hdpi',
+                                      'xhdpi', 'xxhdpi', 'xxxhdpi',
+                                      'nodpi', 'anydpi'], ['LOW', 'MEDIUM', 'TV', 'HIGH',
+                                                           'XHIGH', 'XXHIGH', 'XXXHIGH',
+                                                           'NONE', 'ANY'])),
+            ('touchscreen', ('TOUCHSCREEN', ["notouch", "finger", 'stylus'], None)),
+            ('keysHidden', ('KEYSHIDDEN', ["keysexposed", "keyshidden", 'keyssoft'], ['NO', 'YES', 'SOFT'])),
+            ('keyboard', ('KEYBOARD', ["nokeys", "qwerty", '12key'], None)),
+            ('navHidden', ('NAVHIDDEN', ["navexposed", "navhidden"], NO_YES)),
+            ('navigation', ('NAVIGATION', ["nonav", "dpad", 'trackball', 'wheel'], None)),
+        ])
+
+        for field, value in grpMap.items():
+            prefix, tags, suffixes = value
+            suffixes = suffixes or map(lambda x: x.upper(), tags)
+            tags = [tag.replace('_', '') for tag in tags]
+            attrNames = map(lambda x: prefix + '_' + x, suffixes)
+            valNames = ['ACONFIGURATION_' + x for x in attrNames]
+            tags.append('any')
+            attrNames.append(prefix+ '_' + ('ANY' if field != 'density' else 'DEFAULT'))
+            valNames.append('ACONFIGURATION_' + attrNames[-1])
+            field = field[0].upper() + field[1:] + 'Enum'
+            setattr(ResTable_config, field, type(field, (ResTable_config.BaseEnum,), {}))
+
+            clase = getattr(ResTable_config, field)
+
+            valNames = [getattr(acc, x) for x in valNames]
+            try:
+                shift = getattr(ResTable_config, 'SHIFT_' + prefix)
+                valNames = [x << shift for x in valNames]
+            except:
+                pass
+
+            list(itertools.imap(lambda attrname, tag, attrval: setattr(
+                ResTable_config,
+                attrname,
+                clase(tag, attrval)),
+                           attrNames, tags, valNames
+                           ))
+
+        ResTable_config.DensityEnum._strTag = '{1}dpi'
+        ResTable_config.NavHiddenEnum._strTag = 'inputFlagsNavHidden={1}'
+        del ResTable_config._getAttrGroup
+
+ResTable_config._getAttrGroup()
 
 
 class ResTable_typeSpec(Structure):
@@ -426,7 +1299,7 @@ class ResTable_typeSpec(Structure):
      * There should be one of these chunks for each resource type.
      *
      * This structure is followed by an array of integers providing the set of
-     * configuration change flags (ResTable_config::CONFIG_*) that have multiple
+     * configuration change flags (ResTable_config.CONFIG_*) that have multiple
      * resources for that configuration.  In addition, the high bit is set if that
      * resource has been made public.
     '''
@@ -459,7 +1332,7 @@ class ResTable_type(Structure):
      * If the flag FLAG_SPARSE is not set in `flags`, then this struct is
      * followed by an array of uint32_t defining the resource
      * values, corresponding to the array of type strings in the
-     * ResTable_package::typeStrings string block. Each of these hold an
+     * ResTable_package.typeStrings string block. Each of these hold an
      * index from entriesStart; a value of NO_ENTRY means that entry is
      * not defined.
      *
@@ -515,7 +1388,7 @@ class ResTable_sparseTypeEntry(Union):
     _fields_ = [
         #  Holds the raw uint32_t encoded value. Do not read this.
         ('entry', c_uint32),
-        #  The offset from ResTable_type::entriesStart, divided by 4.
+        #  The offset from ResTable_type.entriesStart, divided by 4.
         ('field2', type('ScreenConfig2', (Structure,), {'_fields_': [
                 ('idx', c_uint16),     #  The index of the entry.
                 ('offset', c_uint16),  #  The offset from ResTable_type.entriesStart, divided by 4.
@@ -614,7 +1487,7 @@ class Res_value(Structure):
     #  The 'data' holds an index into the containing resource table's
     #  global value string pool.
     TYPE_STRING = 0x03
-    #  The 'data' holds a single-precision floating point number.
+    #  The 'data' holds a single-precision floating ponumber.
     TYPE_FLOAT = 0x04
     #  The 'data' holds a complex number encoding a dimension value,
     #  such as "100in".
@@ -630,7 +1503,7 @@ class Res_value(Structure):
     TYPE_DYNAMIC_ATTRIBUTE = 0x08
 
     #  Beginning of integer flavors...
-    TYPE_FIRST_INT = 0x10
+    TYPE_FIRST_= 0x10
 
     #  The 'data' is a raw integer value of the form n..n.
     TYPE_INT_DEC = 0x10
@@ -640,7 +1513,7 @@ class Res_value(Structure):
     TYPE_INT_BOOLEAN = 0x12
 
     #  Beginning of color integer flavors...
-    TYPE_FIRST_COLOR_INT = 0x1c
+    TYPE_FIRST_COLOR_= 0x1c
 
     #  The 'data' is a raw integer value of the form #aarrggbb.
     TYPE_INT_COLOR_ARGB8 = 0x1c
@@ -652,10 +1525,10 @@ class Res_value(Structure):
     TYPE_INT_COLOR_RGB4 = 0x1f
 
     #  ...end of integer flavors.
-    TYPE_LAST_COLOR_INT = 0x1f
+    TYPE_LAST_COLOR_= 0x1f
 
     #  ...end of integer flavors.
-    TYPE_LAST_INT = 0x1f
+    TYPE_LAST_= 0x1f
 
     #  Structure of complex data values (TYPE_UNIT and TYPE_FRACTION)
     #  Where the unit type information is.  This gives us 16 possible
@@ -770,7 +1643,7 @@ class ResTable_map(Structure):
     #  Attribute holds a color value.
     TYPE_COLOR = 1<<4
 
-    #  Attribute holds a floating point value.
+    #  Attribute holds a floating povalue.
     TYPE_FLOAT = 1<<5
 
     #  Attribute holds a dimension value, such as "20px".
@@ -966,8 +1839,8 @@ class ResStringPool(object):
                 spans = []
                 while True:
                     x = readResHeader(data, ResStringPool_span)
-                    spans.append(x)
                     if x.name.index == ResStringPool_span.END: break
+                    spans.append(x)
                 self.styleSpans.append(spans)
             assert x.firstChar == ResStringPool_span.END and x.lastChar == ResStringPool_span.END
 

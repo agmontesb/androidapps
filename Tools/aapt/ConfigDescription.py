@@ -33,6 +33,18 @@ SDK_LOLLIPOP_MR1 = 22
 
 wildcardName = "any"
 
+# def anyDecorator(func):
+#     @wraps(func)
+#     def wrapper(strIn, config):
+#         try:
+#             parseStr, outStr = strIn.split('-', 1)
+#         except:
+#             parseStr, outStr = strIn, ''
+#         if func(parseStr, config):
+#             return outStr
+#         return strIn
+#     return wrapper
+
 def anyDecorator(func):
     @wraps(func)
     def wrapper(strIn, config):
@@ -40,6 +52,13 @@ def anyDecorator(func):
             parseStr, outStr = strIn.split('-', 1)
         except:
             parseStr, outStr = strIn, ''
+        className = func.__name__[len('parse'):]
+        if ResTable_config.BaseEnum.hasEnum(className):
+            field = className[0].lower() + className[1:]
+            try:
+                parseStr = ResTable_config.BaseEnum.getInstance(parseStr, field=field)
+            except:
+                if field != 'density': return strIn
         if func(parseStr, config):
             return outStr
         return strIn
@@ -125,249 +144,12 @@ def parseLocale(parseStr, config):
                 config.country = locStr[1:].upper()
                 return outStr
             else:
-                return locStr
+                return locStr + '-' + outStr
     return parseStr
 
-
 @anyDecorator
-def parseLayoutDirection(parseStr, config):
-    if parseStr == wildcardName:
-        layoutattr = ResTable_config.LAYOUTDIR_ANY
-    elif parseStr == "ldltr":
-        layoutattr = ResTable_config.LAYOUTDIR_LTR
-    elif parseStr == "ldrtl":
-        layoutattr = ResTable_config.LAYOUTDIR_RTL
-    else:
-        return False
-    config.screenLayout = (config.screenLayout & ResTable_config.MASK_LAYOUTDIR) \
-                          | layoutattr
-    return True
-
-@anyDecorator
-def parseScreenLayoutSize(parseStr, config):
-    if parseStr == wildcardName:
-        layoutattr = ResTable_config.SCREENSIZE_ANY
-    elif parseStr == "small":
-        layoutattr = ResTable_config.SCREENSIZE_SMALL
-    elif parseStr == "normal":
-        layoutattr = ResTable_config.SCREENSIZE_NORMAL
-    elif parseStr == "large":
-        layoutattr = ResTable_config.SCREENSIZE_LARGE
-    elif parseStr == "xlarge":
-        layoutattr = ResTable_config.SCREENSIZE_XLARGE
-    else:
-        return False
-    config.screenLayout = (config.screenLayout & ResTable_config.MASK_SCREENSIZE) \
-                          | layoutattr
-    return True
-
-@anyDecorator
-def parseScreenLayoutLong(parseStr, config):
-    if parseStr == wildcardName:
-        layoutattr = ResTable_config.SCREENLONG_ANY
-    elif parseStr == "long":
-        layoutattr = ResTable_config.SCREENLONG_YES
-    elif parseStr == "notlong":
-        layoutattr = ResTable_config.SCREENLONG_NO
-    else:
-        return False
-    config.screenLayout = (config.screenLayout & ResTable_config.MASK_SCREENLONG) \
-                          | layoutattr
-    return True
-
-@anyDecorator
-def parseOrientation(parseStr, config):
-    if parseStr == wildcardName:
-        layoutattr = ResTable_config.ORIENTATION_ANY
-    elif parseStr == "port":
-        layoutattr = ResTable_config.ORIENTATION_PORT
-    elif parseStr == "land":
-        layoutattr = ResTable_config.ORIENTATION_LAND
-    elif parseStr == "square":
-        layoutattr = ResTable_config.ORIENTATION_SQUARE
-    else:
-        return False
-    config.orientation = layoutattr
-    return True
-
-@anyDecorator
-def parseScreenLayoutRound(parseStr, config):
-    if parseStr == wildcardName:
-        layoutattr = ResTable_config.SCREENROUND_ANY
-    elif parseStr == "round":
-        layoutattr = ResTable_config.SCREENROUND_YES
-    elif parseStr == "notround":
-        layoutattr = ResTable_config.SCREENROUND_NO
-    else:
-        return False
-    config.screenLayout = (config.screenLayout & ResTable_config.MASK_SCREENROUND) \
-                          | layoutattr
-    return True
-
-
-@anyDecorator
-def parseUiModeType(parseStr, config):
-    if parseStr == wildcardName:
-        layoutattr = ResTable_config.UI_MODE_TYPE_ANY
-    elif parseStr == "desk":
-        layoutattr = ResTable_config.UI_MODE_TYPE_DESK
-    elif parseStr == "car":
-        layoutattr = ResTable_config.UI_MODE_TYPE_CAR
-    elif parseStr == "television":
-        layoutattr = ResTable_config.UI_MODE_TYPE_TELEVISION
-    elif parseStr == "appliance":
-        layoutattr = ResTable_config.UI_MODE_TYPE_APPLIANCE
-    elif parseStr == "watch":
-        layoutattr = ResTable_config.UI_MODE_TYPE_WATCH
-    else:
-        return False
-    config.uiMode = (config.uiMode & ResTable_config.MASK_UI_MODE_TYPE) \
-                    | layoutattr
-    return True
-
-@anyDecorator
-def parseUiModeNight(parseStr, config):
-    if parseStr == wildcardName:
-        layoutattr = ResTable_config.UI_MODE_NIGHT_ANY
-    elif parseStr == "nigth":
-        layoutattr = ResTable_config.UI_MODE_NIGHT_YES
-    elif parseStr == "nonigth":
-        layoutattr = ResTable_config.UI_MODE_NIGHT_NO
-    else:
-        return False
-    config.uiMode = (config.uiMode & ResTable_config.MASK_UI_MODE_TYPE) \
-                    | layoutattr
-    return True
-
-@anyDecorator
-def parseDensity(parseStr, config):
-    if parseStr == wildcardName:
-        layoutattr = ResTable_config.DENSITY_DEFAULT
-    elif parseStr == "anydpi":
-        layoutattr = ResTable_config.DENSITY_ANY
-    elif parseStr == "nodpi":
-        layoutattr = ResTable_config.DENSITY_NONE
-    elif parseStr == "ldpi":
-        layoutattr = ResTable_config.DENSITY_LOW
-    elif parseStr == "mdpi":
-        layoutattr = ResTable_config.DENSITY_MEDIUM
-    elif parseStr == "tvdpi":
-        layoutattr = ResTable_config.DENSITY_TV
-    elif parseStr == "hdpi":
-        layoutattr = ResTable_config.DENSITY_HIGH
-    elif parseStr == "xhdpi":
-        layoutattr = ResTable_config.DENSITY_XHIGH
-    elif parseStr == "xxhdpi":
-        layoutattr = ResTable_config.DENSITY_XXHIGH
-    elif parseStr == "xxxhdpi":
-        layoutattr = ResTable_config.DENSITY_XXXHIGH
-    else:
-        if not parseStr.upper().endswith('DPI'):
-            return False
-        try:
-            layoutattr = int(parseStr[:-3])
-        except:
-            return False
-    config.density = layoutattr
-    return True
-
-@anyDecorator
-def parseTouchscreen(parseStr, config):
-    if parseStr == wildcardName:
-        layoutattr = ResTable_config.TOUCHSCREEN_ANY
-    elif parseStr == "notouch":
-        layoutattr = ResTable_config.TOUCHSCREEN_NOTOUCH
-    elif parseStr == "stylus":
-        layoutattr = ResTable_config.TOUCHSCREEN_STYLUS
-    elif parseStr == "finger":
-        layoutattr = ResTable_config.TOUCHSCREEN_FINGER
-    else:
-        return False
-    config.touchscreen = layoutattr
-    return True
-
-@anyDecorator
-def parseKeysHidden(parseStr, config):
-    if parseStr == wildcardName:
-        layoutattr = ResTable_config.KEYSHIDDEN_ANY
-    elif parseStr == "keysexposed":
-        layoutattr = ResTable_config.KEYSHIDDEN_NO
-    elif parseStr == "keyhidden":
-        layoutattr = ResTable_config.KEYSHIDDEN_YES
-    elif parseStr == "keysoft":
-        layoutattr = ResTable_config.KEYSHIDDEN_SOFT
-    else:
-        return False
-    config.inputFlags = (config.inputFlags & ResTable_config.MASK_KEYSHIDDEN) \
-                    | layoutattr
-    return True
-
-@anyDecorator
-def parseKeyboard(parseStr, config):
-    if parseStr == wildcardName:
-        layoutattr = ResTable_config.KEYBOARD_ANY
-    elif parseStr == "nokeys":
-        layoutattr = ResTable_config.KEYBOARD_NOKEYS
-    elif parseStr == "qwerty":
-        layoutattr = ResTable_config.KEYBOARD_QWERTY
-    elif parseStr == "12key":
-        layoutattr = ResTable_config.KEYBOARD_12KEY
-    else:
-        return False
-    config.keyboard = layoutattr
-    return True
-
-@anyDecorator
-def parseNavHidden(parseStr, config):
-    if parseStr == wildcardName:
-        layoutattr = ResTable_config.NAVHIDDEN_ANY
-    elif parseStr == "navexposed":
-        layoutattr = ResTable_config.NAVHIDDEN_NO
-    elif parseStr == "navhidden":
-        layoutattr = ResTable_config.NAVHIDDEN_YES
-    else:
-        return False
-    config.inputFlags = (config.inputFlags & ResTable_config.MASK_NAVHIDDEN) \
-                    | layoutattr
-    return True
-
-@anyDecorator
-def parseNavigation(parseStr, config):
-    if parseStr == wildcardName:
-        layoutattr = ResTable_config.NAVIGATION_ANY
-    elif parseStr == "nonav":
-        layoutattr = ResTable_config.NAVIGATION_NONAV
-    elif parseStr == "dpad":
-        layoutattr = ResTable_config.NAVIGATION_DPAD
-    elif parseStr == "trackball":
-        layoutattr = ResTable_config.NAVIGATION_TRACKBALL
-    elif parseStr == "wheel":
-        layoutattr = ResTable_config.NAVIGATION_WHEEL
-    else:
-        return False
-    config.navigation = layoutattr
-    return True
-
-@anyDecorator
-def parseScreenSize(parseStr, config):
-    if parseStr == wildcardName:
-        w = ResTable_config.SCREENWIDTH_ANY
-        h = ResTable_config.SCREENHEIGHT_ANY
-    else:
-        try:
-            x, y = parseStr.split('x')
-        except:
-            return False
-
-        try:
-            w = int(x)
-            h = int(y)
-            if w < h:
-                return False
-        except:
-            return False
-    config.screenwidth = w
-    config.screenHeight = h
+def parseLayoutDir(layoutattr, config):
+    config.layoutDir = layoutattr
     return True
 
 @anyDecorator
@@ -410,6 +192,105 @@ def parseScreenHeightDp(parseStr, config):
     return True
 
 @anyDecorator
+def parseScreenLayoutSize(layoutattr, config):
+    config.screenLayoutSize = layoutattr
+    return True
+
+@anyDecorator
+def parseScreenLayoutLong(layoutattr, config):
+    config.screenLayoutLong = layoutattr
+    return True
+
+@anyDecorator
+def parseScreenLayoutRound(layoutattr, config):
+    config.screenLayoutRound = layoutattr
+    return True
+
+@anyDecorator
+def parseHdr(layoutattr, config):
+    config.hdr = layoutattr
+    return True
+
+@anyDecorator
+def parseWideColorGamut(layoutattr, config):
+    config.wideColorGamut = layoutattr
+    return True
+
+@anyDecorator
+def parseOrientation(layoutattr, config):
+    config.orientation = layoutattr
+    return True
+
+@anyDecorator
+def parseUiModeType(layoutattr, config):
+    config.uiModeType = layoutattr
+    return True
+
+@anyDecorator
+def parseUiModeNight(layoutattr, config):
+    config.uiModeNight = layoutattr
+    return True
+
+@anyDecorator
+def parseDensity(layoutattr, config):
+    if isinstance(layoutattr, basestring):
+        if not layoutattr.upper().endswith('DPI'):
+            return False
+        try:
+            layoutattr = int(layoutattr[:-3])
+        except:
+            return False
+    config.density = layoutattr
+    return True
+
+@anyDecorator
+def parseTouchscreen(layoutattr, config):
+    config.touchscreen = layoutattr
+    return True
+
+@anyDecorator
+def parseKeysHidden(layoutattr, config):
+    config.keysHidden = layoutattr
+    return True
+
+@anyDecorator
+def parseKeyboard(layoutattr, config):
+    config.keyboard = layoutattr
+    return True
+
+@anyDecorator
+def parseNavHidden(layoutattr, config):
+    config.navHidden = layoutattr
+    return True
+
+@anyDecorator
+def parseNavigation(layoutattr, config):
+    config.navigation = layoutattr
+    return True
+
+@anyDecorator
+def parseScreenSize(parseStr, config):
+    if parseStr == wildcardName:
+        w = ResTable_config.SCREENWIDTH_ANY
+        h = ResTable_config.SCREENHEIGHT_ANY
+    else:
+        try:
+            x, y = parseStr.split('x')
+        except:
+            return False
+
+        try:
+            w = int(x)
+            h = int(y)
+            if w < h:
+                return False
+        except:
+            return False
+    config.screenwidth = w
+    config.screenHeight = h
+    return True
+
+@anyDecorator
 def parseVersion(parseStr, config):
     if parseStr == wildcardName:
         config.sdkVersion = ResTable_config.SDKVERSION_ANY
@@ -418,7 +299,7 @@ def parseVersion(parseStr, config):
     if not parseStr.startswith('v'):
         return False
     try:
-        config.screenHeightDp = int(parseStr[1:])
+        config.sdkVersion = int(parseStr[1:])
         config.minorVersion = 0
     except:
         return False
@@ -437,10 +318,11 @@ class ConfigDescription(ResTable_config):
         :param configDescription: ConfigDescription: Parse result.
         :return: boolean: True if no error occur while parsing, else False.
         '''
-        pArray = (parseMcc, parseMnc, parseLocale, parseLayoutDirection,
+        if strIn.endswith('-'): return False
+        pArray = (parseMcc, parseMnc, parseLocale, parseLayoutDir,
                   parseSmallestScreenWidthDp, parseScreenWidthDp, parseScreenHeightDp,
                   parseScreenLayoutSize, parseScreenLayoutLong, parseScreenLayoutRound,
-                  parseOrientation,
+                  parseHdr, parseWideColorGamut, parseOrientation,
                   parseUiModeType, parseUiModeNight, parseDensity, parseTouchscreen,
                   parseKeysHidden, parseKeyboard, parseNavHidden, parseNavigation,
                   parseScreenSize, parseVersion, )

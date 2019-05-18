@@ -6,6 +6,7 @@
 import os
 import collections
 
+from Tools.aapt.Compile.ResourceTable import ResourceTable
 from Tools.aapt.ConfigDescription import ConfigDescription
 
 ResourcePathData = collections.namedtuple('ResourcePathData', 'source resourceDir name extension configStr config')
@@ -52,4 +53,10 @@ def buildIntermediateFilename(outDir, data):
     return os.path.join(outDir, name)
 
 def compileTable(context, options, pathData, outputPath):
-    pass
+    table = ResourceTable()
+    table.createPackage('', 0x7f)
+
+    if not os.path.exists():
+        raise Exception('"%s" not such path exits' % pathData)
+
+

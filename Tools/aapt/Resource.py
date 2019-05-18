@@ -1,5 +1,4 @@
-    # -*- coding: utf-8 -*-
-from pip._vendor.distlib.resources import Resource
+# -*- coding: utf-8 -*-
 
 
 class ResourceType(object):
@@ -36,7 +35,7 @@ class ResourceType(object):
 
     @classmethod
     def toString(cls, resourceType):
-        if resourceType.value < len(cls.types):
+        if 0 <= resourceType.value < len(cls.types):
             return cls.types[resourceType.value]
 
     @classmethod

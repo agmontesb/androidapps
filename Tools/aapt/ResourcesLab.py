@@ -134,7 +134,7 @@ def aapt(**kwargs):
             targetFunc = ResTableCrawler
             Args.assets = Args.assets or ['resources.arsc']
         elif Args.action in ['d', 'dump']:
-            if Args.what in ['strings', 'resources']:
+            if Args.what in ['strings', 'resources', 'configurations']:
                 targetFunc = dumpResources
                 Args.assets = ('resources.arsc',)
                 args = (Args.what,)
@@ -816,8 +816,8 @@ if __name__ == '__main__':
     elif filename == commandline:
         kwargs = dict(
             # logFile='/media/amontesb/HITACHI/BASURA/ResourceTypesData/test.txt',
-            filename=apk1,      # file.{zip, jar, apk}
-            action='crawl',         # l[ist], d[ump]
+            filename=apk3,      # file.{zip, jar, apk}
+            action='dump',         # l[ist], d[ump]
             # parametros
             # list ->           -a -v
             # dump ->           --values, --include-meta-data WHAT [asset [asset ...]
