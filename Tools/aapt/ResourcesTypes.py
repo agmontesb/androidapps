@@ -1405,8 +1405,10 @@ class ResTable_sparseTypeEntry(Union):
             raise AttributeError(errMsg)
         return getattr(obj, name)
 
+
 assert sizeof(ResTable_sparseTypeEntry) == sizeof(c_uint32), \
        "ResTable_sparseTypeEntry must be 4 bytes in size"
+
 
 class ResStringPool_ref(Structure):
     # Reference to a string in a string pool.
@@ -1926,7 +1928,8 @@ class ResXMLTree_cdataExt(Structure):
         #  The typed value of the character data if this is a CDATA node.
         ('typedData', Res_value),
     ]
-    
+
+
 class ResXMLTree_namespaceExt(Structure):
     '''
      * Extended XML tree node for namespace start/end nodes.
@@ -1952,6 +1955,7 @@ class ResXMLTree_endElementExt(Structure):
         #  character data if this is a CDATA node.
         ('name', ResStringPool_ref),  
     ]
+
 
 class ResXMLTree_attrExt(Structure):
     '''
@@ -1993,4 +1997,30 @@ class ResXMLTree_attribute(Structure):
         #  Processesd typed value of this attribute.
         ('typedValue', Res_value),
     ]
+
+
+def u16stringToInt(aStr, resValue):
+    aStr = aStr.strip()
+    if not aStr:
+        return False
+    isNeg = aStr[0] == '-'
+    if isNeg: aStr = aStr[1:]
+    if not aStr.isdigit(): return False
+    isHex = aStr.starstswith('0x')
+    if isHex:
+        aStr = aStr[2:]
+        if not aStr or isNeg: return False
+        try:
+            val = int(aStr, 16)
+        except:
+            return False
+    else:
+        try:
+            val = int(aStr)
+            if isNeg: val = -val
+        except:
+            return False
+    if resValue:
+        resValue.dataType = resValue.TYPE_INT_HEX if isHex else resValue.TYPE_INT_DEC
+    return True
 

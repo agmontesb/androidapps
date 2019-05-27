@@ -6,8 +6,12 @@
 import os
 import collections
 
+from Tools.aapt import BigBuffer
+from Tools.aapt.Compile.ResourceParser import ResourceParser
 from Tools.aapt.Compile.ResourceTable import ResourceTable
 from Tools.aapt.ConfigDescription import ConfigDescription
+from Android.reference.xmlpull.XmlPullParser import XmlPullParser
+from Android.reference.xmlpull.XmlPullParserFactory import XmlPullParserFactory
 
 ResourcePathData = collections.namedtuple('ResourcePathData', 'source resourceDir name extension configStr config')
 
@@ -56,7 +60,43 @@ def compileTable(context, options, pathData, outputPath):
     table = ResourceTable()
     table.createPackage('', 0x7f)
 
-    if not os.path.exists():
-        raise Exception('"%s" not such path exits' % pathData)
+    if not os.path.exists(pathData):
+        errMessage = '"%s" not such path exits' % pathData.source
+        print errMessage
+        return False
+
+    factory = XmlPullParserFactory.newInstance()
+    factory.setNamespaceAware(True)
+    assert factory.getFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES)
+    assert not factory.getFeature(XmlPullParser.FEATURE_VALIDATION)
+
+    xmlParser = factory.newPullParser()
+    try:
+        xmlParser.setInput(pathData, None)
+    except:
+        return False
+
+    resParser = ResourceParser(table, pathData.source, pathData.config)
+    if not resParser.parse(xmlParser):
+        return False
+
+    idAssifner = IdAssigner()
+    if not idAssigner(context, table):
+        return False
+
+    buffer = BigBuffer.BigBuffer(1024)
+    tableFlattenerOptions = TableFlattenerOptions()
+    tableFlattenerOptions.useExtendedChunks = True
+    flattener = TableFlattener(buffer, tableFlattenerOptions)
+    if not flattener.consume(context, table):
+        return False
+    try:
+        with open(outputPath, 'wb') as fout:
+            fout.write(buffer)
+    except Exception as e:
+        print e.message
+        return False
+    return True
+
 
 

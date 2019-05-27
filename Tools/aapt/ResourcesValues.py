@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+#
+# Ported from:
+# https://android.googlesource.com/platform/frameworks/base/+/1ab598f/tools/aapt2/ResourceValues.h
+# https://android.googlesource.com/platform/frameworks/base/+/1ab598f/tools/aapt2/ResourceValues.cpp
+#
 import operator as op
 
 from Tools.aapt import ResourcesTypes
@@ -335,7 +340,7 @@ class Array(BaseValue):
     def toString(self):
         return '(array) [' + ', '.join(self.items) + ']'
 
-class Plurals(BaseValue):
+class Plural(BaseValue):
 
     Zero = 1
     One = 1
@@ -346,12 +351,12 @@ class Plurals(BaseValue):
     Count = 6
 
     def __init__(self):
-        super(Plurals, self).__init__()
+        super(Plural, self).__init__()
         self.count = 0
         self.values = None
 
     def clone(self, newStringPool):
-        p = Plurals()
+        p = Plural()
         p.count = len(self.values)
         p.values = map(lambda x: x.clone(newStringPool), self.values)
         return p
