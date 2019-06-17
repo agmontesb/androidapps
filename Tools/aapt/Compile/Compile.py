@@ -7,6 +7,7 @@ import os
 import collections
 
 from Tools.aapt import BigBuffer
+from Tools.aapt.Compile.IdAssigner import IdAssigner
 from Tools.aapt.Compile.ResourceParser import ResourceParser
 from Tools.aapt.Compile.ResourceTable import ResourceTable
 from Tools.aapt.ConfigDescription import ConfigDescription
@@ -80,7 +81,7 @@ def compileTable(context, options, pathData, outputPath):
     if not resParser.parse(xmlParser):
         return False
 
-    idAssifner = IdAssigner()
+    idAssigner = IdAssigner()
     if not idAssigner(context, table):
         return False
 

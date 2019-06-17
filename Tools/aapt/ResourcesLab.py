@@ -330,13 +330,14 @@ class ResourceCrawler(GenCrawler):
         elif case == resvalue.TYPE_FLOAT:
             return '(float) **************'
         elif case == resvalue.TYPE_DIMENSION or case == resvalue.TYPE_FRACTION:
-            MANTISSA_MULT = 1.0 / (1 << resvalue.COMPLEX_MANTISSA_SHIFT)
-            RADIX_MULTS = [
-                1.0 * MANTISSA_MULT, 1.0 / (1 << 7) * MANTISSA_MULT,
-                1.0 / (1 << 15) * MANTISSA_MULT, 1.0 / (1 << 23) * MANTISSA_MULT]
             complex = resvalue.data
-            fvalue = (complex & (resvalue.COMPLEX_MANTISSA_MASK << resvalue.COMPLEX_MANTISSA_SHIFT)) \
-            * RADIX_MULTS[(complex >> resvalue.COMPLEX_RADIX_SHIFT) & resvalue.COMPLEX_RADIX_MASK]
+            mantissa = (complex >> resvalue.COMPLEX_MANTISSA_SHIFT) & resvalue.COMPLEX_MANTISSA_MASK
+            neg = mantissa > (1 << 23)
+            if neg: mantissa ^= resvalue.COMPLEX_MANTISSA_MASK
+            radix = (complex >> resvalue.COMPLEX_RADIX_SHIFT) & resvalue.COMPLEX_RADIX_MASK
+            shift = 1 << max(8, 8 * (radix + 1) - 1)
+            fvalue = (mantissa << resvalue.COMPLEX_MANTISSA_SHIFT) * (1.0 / shift)
+            if neg: fvalue = -fvalue
             if case == resvalue.TYPE_DIMENSION:
                 fkey = 'dimension'
                 COMPLEX_UNITS = ["px", "dp", "sp", "pt", "in", "mm"]

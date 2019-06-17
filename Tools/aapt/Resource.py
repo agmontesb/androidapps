@@ -43,6 +43,12 @@ class ResourceType(object):
         if aStr in cls.types:
             return getattr(cls, 'k' + aStr.title())
 
+    def __ne__(self, other):
+        return self.value != other.value
+
+    def __eq__(self, other):
+        return self.value == other.value
+
 
 map(lambda x: setattr(ResourceType, 'k' + x[1].title(), ResourceType(x[0])), enumerate(ResourceType.types))
 
@@ -75,18 +81,18 @@ class ResourceName(object):
 
 class ResourceNameRef(object):
     def __init__(self, frstArg=None, resType=None, strEntry=None):
-        super(ResourceName, self).__init__()
+        super(ResourceNameRef, self).__init__()
         self.type = resType
         self.entry = strEntry
         if frstArg is None or isinstance(frstArg, basestring):
             self.package = frstArg
-        if isinstance(frstArg, ResourceName):
+        elif isinstance(frstArg, ResourceName):
             self.package = frstArg.package
             self.type = frstArg.type
             self.entry = frstArg.entry
 
     def toResourceName(self):
-        return ResourceName(self.package, self.type, self.entry)
+        return ResourceName(self.package or '', self.type, self.entry)
 
     def isValid(self):
         return not (self.package or self.entry)
@@ -107,15 +113,17 @@ class ResourceNameRef(object):
         return result + ResourceType.toString(self.type) + '/' + self.entry
 
 class ResourceId(object):
+
     def __init__(self, p=None, t=None, e=None):
         super(ResourceId, self).__init__()
-        self.id = None
+        self.id = 0
         if p and isinstance(p, ResourceId):
             self.id = p.id
+        elif p is not None and t is not None and e is not None:
+            self.id = ((p<<24) | ((t&0xFF)<<16) | (e&0xFFFF))
         elif p and isinstance(p, int) and (0xff000000 & p):
             self.id = p
-        else:
-            self.id = ((p<<24) | ((t&0xFF)<<16) | (e&0xFFFF))
+
     def isValid(self):
         return (0xff000000 & self.id != 0) and (0x00ff0000 & self.id != 0)
 

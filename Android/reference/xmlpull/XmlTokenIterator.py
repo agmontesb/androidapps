@@ -156,12 +156,13 @@ class XmlTokenIterator(object):
                             tag_in, attrib_in = answ
                             tag_in = tfcn(tag_in, tag)
                             if attrib_in:
-                                reducefcn = lambda t, x: t.extend(x.rsplit(x[0] + ' ', 1)) or t
-                                prefixtag = reduce(reducefcn, context.strip().split('='), [])
+                                contextStr = '"' + context.strip()
+                                reducefcn = lambda t, x: t.extend(x.rpartition(x[0])[0:3:2]) or t
+                                prefixtag = reduce(reducefcn, contextStr.split('='), [])[1:-1]
                                 it = []
                                 m = 0
                                 for k in range(0, len(prefixtag), 2):
-                                    key, value = prefixtag[k].strip(' '), prefixtag[k + 1].strip('"\'')
+                                    key, value = prefixtag[k].strip(' \n\r\t'), prefixtag[k + 1].strip(' \n\r\t"\'')
                                     if not key.startswith('xmlns'):
                                         key = tfcn(attrib_in[m][0], key)
                                         value = attrib_in[m][1]
@@ -273,7 +274,8 @@ class XmlTokenIterator(object):
     def _appendEvent(self, event_type, event_data):
         if event_type in [XmlPullParser.IGNORABLE_WHITESPACE, XmlPullParser.TEXT] and \
                 self._events and \
-                self._events[-1].event_type == event_type:
+                self._events[-1].event_type == event_type and \
+                self._events[-1].depth == self._depth:
             event_data = self._events[-1].event_data + event_data
             self._events[-1] = self._events[-1]._replace(event_data=event_data)
         else:
@@ -492,7 +494,8 @@ class XmlTokenIterator(object):
                             nextEvent = self._peekEvents()
                             bFlag = nextEvent in [XmlPullParser.START_TAG,
                                                   XmlPullParser.END_TAG,
-                                                  XmlPullParser.END_DOCUMENT]
+                                                  XmlPullParser.END_DOCUMENT,
+                                                  'start-ns']
                             if not bFlag: continue
                             item, self._text = self._text, None
                             texto = item.event_data

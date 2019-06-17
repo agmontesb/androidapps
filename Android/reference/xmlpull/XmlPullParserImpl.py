@@ -234,14 +234,14 @@ class XmlPullParserImpl(XmlPullParser):
             return not bool(text)
         raise Exception('XmlPullParserException')
 
-    def next(self):
-        self._state = self._tokenizer.next(True)
+    def next(self, isCoarse=False):
+        self._state = self._tokenizer.next(isCoarse)
         return self.getEventType()
 
     def nextTag(self):
-        etype = self.next()
+        etype = self.next(True)
         if etype == self.TEXT and self.isWhitespace():
-            etype = self.next()
+            etype = self.next(True)
         if etype not in [self.START_TAG, self.END_TAG]:
             raise Exception('XmlPullParserException:"expected start or end tag"')
         return etype

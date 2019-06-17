@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # Ported from:
 # https://github.com/aosp-mirror/platform_frameworks_base/blob/master/libs/androidfw/include/androidfw/ResourceTypes.h
-
+# https://github.com/aosp-mirror/platform_frameworks_base/blob/master/libs/androidfw/ResourceTypes.cpp
+#
+import collections
 import io
 import itertools
 from ctypes import *
@@ -221,16 +223,24 @@ class ResTable_config(Structure):
             return field[0].lower() + field[1:]
 
         def __eq__(self, other):
-            return self.id == other.id
+            if isinstance(other, self.__class__):
+                return self.id == other.id
+            return self.id == other
 
         def __ne__(self, other):
-            return self.id != other.id
+            if isinstance(other, self.__class__):
+                return self.id != other.id
+            return self.id != other
 
         def __lt__(self, other):
-            return self.id < other.id
+            if isinstance(other, self.__class__):
+                return self.id < other.id
+            return self.id < other
 
         def __gt__(self, other):
-            return self.id > other.id
+            if isinstance(other, self.__class__):
+                return self.id > other.id
+            return self.id > other
 
     SCREENWIDTH_ANY = 0
     SCREENHEIGHT_ANY = 0
@@ -2006,7 +2016,7 @@ def u16stringToInt(aStr, resValue):
     isNeg = aStr[0] == '-'
     if isNeg: aStr = aStr[1:]
     if not aStr.isdigit(): return False
-    isHex = aStr.starstswith('0x')
+    isHex = aStr.startswith('0x')
     if isHex:
         aStr = aStr[2:]
         if not aStr or isNeg: return False
@@ -2022,5 +2032,79 @@ def u16stringToInt(aStr, resValue):
             return False
     if resValue:
         resValue.dataType = resValue.TYPE_INT_HEX if isHex else resValue.TYPE_INT_DEC
+        resValue.data = val
     return True
 
+unit_entry = collections.namedtuple('Unit_Entry', 'type unit scale')
+unitNames = dict([
+    #name, (type, unit, scale)
+    ("px", unit_entry(Res_value.TYPE_DIMENSION, Res_value.COMPLEX_UNIT_PX, 1.0)),
+    ("dip", unit_entry(Res_value.TYPE_DIMENSION, Res_value.COMPLEX_UNIT_DIP, 1.0)),
+    ("dp", unit_entry(Res_value.TYPE_DIMENSION, Res_value.COMPLEX_UNIT_DIP, 1.0)),
+    ("sp", unit_entry(Res_value.TYPE_DIMENSION, Res_value.COMPLEX_UNIT_SP, 1.0)),
+    ("pt", unit_entry(Res_value.TYPE_DIMENSION, Res_value.COMPLEX_UNIT_PT, 1.0)),
+    ("in", unit_entry(Res_value.TYPE_DIMENSION, Res_value.COMPLEX_UNIT_IN, 1.0)),
+    ("mm", unit_entry(Res_value.TYPE_DIMENSION, Res_value.COMPLEX_UNIT_MM, 1.0)),
+    ("%", unit_entry(Res_value.TYPE_FRACTION, Res_value.COMPLEX_UNIT_FRACTION, 1.0 / 100)),
+    ("%p", unit_entry(Res_value.TYPE_FRACTION, Res_value.COMPLEX_UNIT_FRACTION_PARENT, 1.0 / 100)),
+])
+
+
+def parse_unit(aStr, outValue, outScale):
+    try:
+        unit, spaces = aStr.split(' ', 1)
+        if spaces.strip(): return None
+    except:
+        pass
+    if not unitNames.has_key(unit): return None
+    outValue.dataType = unitNames[unit].type
+    outValue.data = unitNames[unit].unit << Res_value.COMPLEX_UNIT_SHIFT
+    return unitNames[unit].scale
+
+
+def stringToFloat(aStr, outValue):
+    aStr = aStr.lstrip()
+    if not aStr or len(aStr) >= 126: return False
+    it = itertools.dropwhile(lambda x: ord(x) < 256, aStr)
+    try:
+        it.next()
+    except:
+        return False
+    if aStr[0] not in '01234567890+-.': return False
+    try:
+        prefix, suffix = aStr.split(' ', 1)
+    except:
+        prefix, suffix = aStr, ''
+    suffix = suffix.lstrip()
+    f = float(prefix)
+    if suffix:
+        scale = parse_unit(suffix, outValue)
+        if scale:
+            f *= scale
+            neg = f < 0
+            if neg: f = -f
+            if not f % 1:                 # Always use 23p0 if there is no fraction
+                radix = Res_value.COMPLEX_RADIX_23p0
+                shift = 1 << 8
+            elif not int(f):              # Magnitude is zero -- can fit in 0 bits of precision.
+                radix = Res_value.COMPLEX_RADIX_0p23
+                shift = 1 << 31
+            elif int(f) < 2 ** 8 - 1:    # Magnitude can fit in 8 bits of precision.
+                radix = Res_value.COMPLEX_RADIX_8p15
+                shift = 1 << 23
+            elif int(f) < 2 ** 16 - 1:  # Magnitude can fit in 16 bits of precision.
+                radix = Res_value.COMPLEX_RADIX_16p7
+                shift = 1 << 15
+            else:                       # Magnitude needs entire range, so no fractional part.
+                radix = Res_value.COMPLEX_RADIX_23p0
+                shift = 1 << 8
+            mantissa = (int(f * shift + 0.5) >> Res_value.COMPLEX_MANTISSA_SHIFT) & Res_value.COMPLEX_MANTISSA_MASK
+            if neg: mantissa  ^= Res_value.COMPLEX_MANTISSA_MASK
+            outValue.data |= (radix << Res_value.COMPLEX_RADIX_SHIFT) | (mantissa << Res_value.COMPLEX_MANTISSA_SHIFT)
+        return False
+    if outValue:
+        outValue.dataType = outValue.TYPE_FLOAT
+        outValue.data = f
+    return True
+
+    

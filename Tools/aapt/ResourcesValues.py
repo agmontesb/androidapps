@@ -53,7 +53,6 @@ class BaseItem(Item):
         rawValueVisitor.visit(self)
         pass
 
-
 def createEnum(name, *args, **kwargs):
     def __init__(self, value):
         object.__init__()
@@ -98,13 +97,12 @@ class Reference(BaseItem):
         return ref
 
     def toString(self):
-        super(Reference, self).toString()
         tostring = '(reference) '
-        tostring += '@?'[self.referenceType.value]
+        tostring += '@?'[self.referenceType]
         if self.name:
-            tostring += self.name.value()
-        if self.id and not Res_INTERNALID(self.id.value().id):
-            tostring += ' %s' % self.id.value()
+            tostring += self.name.toString()
+        if self.id and not Res_INTERNALID(self.id.id):
+            tostring += ' %s' % self.id.toString()
         return tostring
 
 class Id(BaseItem):
@@ -152,6 +150,9 @@ class String(BaseItem):
         super(String, self).__init__()
         self.value = stringPool_ref
 
+    def __pointee__(self):
+        return self.value.__pointee__()
+
     def flatten(self, res_Value):
         if self.value.getIndex() > 0xFFFFFFFF:
             return False
@@ -170,6 +171,9 @@ class StyledString(BaseItem):
     def __init__(self, stringPool_styleref):
         super(StyledString, self).__init__()
         self.value = stringPool_styleref
+
+    def __pointee__(self):
+        return self.value.__pointee__()
 
     def flatten(self, res_Value):
         if self.value.getIndex() > 0xFFFFFFFF:
@@ -236,18 +240,21 @@ class BinaryPrimitive(BaseItem):
         elif ResourcesTypes.Res_value.TYPE_FIRST_COLOR_INT <= case <= ResourcesTypes.Res_value.TYPE_LAST_COLOR_INT:
             return '(color) #{:0>8x}'.format(self.value.data)
         else:
-            return '(unknown 0x{:0>8x}) 0x{:0>8x}'.format(self.value.dataType, self.value.data)
+            return '(unknown 0x{:0>8x}) 10x{:0>8x}'.format(self.value.dataType, self.value.data)
+
+    def __getattr__(self, item):
+        return getattr(self.value, item)
 
 class Attribute(BaseValue):
 
     class Symbol(object):
-        def __init__(self):
+        def __init__(self, symbol=None, value=None):
             super(Attribute.Symbol, self).__init__()
-            self.symbol = None
-            self.value = None
+            self.symbol = symbol
+            self.value = value
 
         def toString(self):
-            tostring = self.symbol.name.value().entry if self.symbol.name else '???'
+            tostring = self.symbol.name.entry if self.symbol.name else '???'
             tostring += ' = %s' % self.value
             return tostring
 
@@ -293,10 +300,10 @@ class Attribute(BaseValue):
 
 class Style(BaseValue):
     class Entry(object):
-        def __init__(self):
+        def __init__(self, key=None, value=None):
             super(Style.Entry, self).__init__()
-            self.key = None
-            self.value = None
+            self.key = key
+            self.value = value
 
         def __str__(self):
             tostring = self.key.name if self.key.name else '???'
@@ -353,7 +360,7 @@ class Plural(BaseValue):
     def __init__(self):
         super(Plural, self).__init__()
         self.count = 0
-        self.values = None
+        self.values = {}
 
     def clone(self, newStringPool):
         p = Plural()

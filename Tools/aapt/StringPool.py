@@ -3,7 +3,6 @@ import ctypes
 from collections import namedtuple
 
 from Tools.aapt import ResourcesTypes as rt
-from Tools.aapt.BigBuffer import BigBuffer
 
 pointee = lambda x: x.__pointee__()
 redirect = lambda x, y: x.__redirect__(y)
@@ -82,7 +81,7 @@ class StringPool(object):
             return self.__pointee__()
 
         def __pointee__(self):
-            return self._mEntry
+            return self._mEntry.__pointee__()
 
         def getIndex(self):
             return self._mEntry.str.getIndex()
@@ -106,6 +105,9 @@ class StringPool(object):
             self.str = None
             self.spans = []
             self.ref = 0
+
+        def __pointee__(self):
+            return self.str.__pointee__()
 
     def __init__(self):
         super(StringPool, self).__init__()
