@@ -143,8 +143,9 @@ def parseLocale(parseStr, config):
             if locStr and locStr[0] == 'r' and len(locStr) == 3:
                 config.country = locStr[1:].upper()
                 return outStr
-            else:
+            elif locStr:
                 return locStr + '-' + outStr
+            return outStr
     return parseStr
 
 @anyDecorator
@@ -375,6 +376,9 @@ class ConfigDescription(ResTable_config):
 
     def __gt__(self, other):
         return self.compare(other) > 0
+
+    def __hash__(self):
+        return hash(self.toString())
 
 
 

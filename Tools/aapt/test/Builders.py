@@ -27,18 +27,40 @@ class ResourceTableBuilder(object):
         id = id or ResourceId()
         return self.addValue(name, id, Id())
     
-    def addReference(self, name, ref, id=None):
+    def addReference(self, *args):
+        id = None
+        if len(args) == 2:
+            name, ref = args
+        else:
+            name, id, ref = args
         return self.addValue(name, id, Reference(parseNameOrDie(ref)))
     
-    def addString(self, name, astr, id=None):
-        return self.addValue(name, id, String(self.mTable.stringPool.makeRef(str)))
+    def addString(self, *args):
+        id = None
+        if len(args) == 2:
+            name, astr = args
+        else:
+            name, id, astr = args
+        return self.addValue(name, id, String(self.mTable.stringPool.makeRef(astr)))
     
-    def addFileReference(self, name, path, id=None):
+    def addFileReference(self, *args):
+        id = None
+        if len(args) == 2:
+            name, path = args
+        else:
+            name, id, path = args
         return self.addValue(name, id, FileReference(self.mTable.stringPool.makeRef(path)))
     
-    def addValue(self, name, value, id=None, config=None):
+    def addValue(self, *args):
+        id = config = None
+        if len(args) == 2:
+            name, value = args
+        elif len(args) == 3:
+            name, id, value = args
+        elif len(args) == 4:
+            name, id, config, value = args
         result = self.mTable.addResource(
-            parseNameOrDie(name), id, config, None, value, self.mDiagnostics
+            parseNameOrDie(name), config, '', value, id, self.mDiagnostics
         )
         assert result
         return self
@@ -91,7 +113,7 @@ class StyleBuilder(object):
     
     def addItem(self, astr, value, id=None):
         self.mStyle.entries.append(
-            Style.Entry(Reference(parseNameOrDie(str)), value)
+            Style.Entry(Reference(parseNameOrDie(astr)), value)
         )
         self.mStyle.entries[-1].key.id = id
         return self

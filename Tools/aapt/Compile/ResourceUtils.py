@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import operator
 import re
 import collections
 
@@ -86,9 +87,13 @@ class Diagnostics(object):
 
     def __init__(self):
         super(Diagnostics, self).__init__()
-        self.error = ''
-        self.warn = ''
-        self.note = ''
+        self._error = ''
+        self._warn = ''
+        self._note = ''
+
+    error = property(lambda x: x._error, lambda x, value: setattr(x, '_error', value))
+    warn = property(lambda x: x._warn, lambda x, value: setattr(x, '_warn', value))
+    note = property(lambda x: x._note, lambda x, value: setattr(x, '_note', value))
 
 
 class ObjRef(object):
@@ -102,6 +107,9 @@ class ObjRef(object):
 
     def setTo(self, value):
         self._value = value
+
+    def get(self):
+        return self._value
 
 
 def extractResourceName(resStr):
@@ -125,7 +133,7 @@ def tryParseReferenceB(aStr, outResNameRef, outCreate=None, outPriv=None):
     parsedType = ResourceType.parseResourceType(nType)
     if not parsedType: return False
     if create and parsedType != ResourceType.kId: return False
-    outResNameRef.package = nPckg
+    outResNameRef.package = nPckg or ''
     outResNameRef.type = parsedType
     outResNameRef.entry = nEntry
     if outCreate: outCreate.setTo(create)
@@ -206,7 +214,7 @@ def tryParseColor(aStr):
     aStr = aStr.strip('\n\r\t ')
     if not aStr or aStr[0] != '#': return None
     try:
-        aValue = int(aStr, 16)
+        aValue = int(aStr[1:], 16)
     except:
         return BinaryPrimitive()
     value = ResourcesTypes.Res_value()
@@ -221,7 +229,7 @@ def tryParseColor(aStr):
     elif case == 9:
         value.dataType = ResourcesTypes.Res_value.TYPE_INT_COLOR_ARGB8
     else:
-        return None
+        return BinaryPrimitive()
     return BinaryPrimitive(value)
 
 

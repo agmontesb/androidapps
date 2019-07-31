@@ -126,7 +126,7 @@ class ResTable_package(Structure):
         #  resource identifier).  0 means this is not a base package.
         ('id', c_uint32),
         # Actual name of this package, \0-terminated.
-        ('name', 128*c_uint16),
+        ('name', (128*c_char)),
         #  Offset to a ResStringPool_header defining the resource
         #  type symbol table.  If zero, this package is inheriting from
         #  another base package (overriding specific values in it).
@@ -608,7 +608,7 @@ class ResTable_config(Structure):
         if (self.screenLayout & (0xFFFF ^ self.MASK_LAYOUTDIR)) != (o.screenLayout & (0xFFFF ^ self.MASK_LAYOUTDIR)):
             diffs |= self.CONFIG_SCREEN_LAYOUT
         # if (self.screenLayout2 & self.MASK_SCREENROUND) != (o.screenLayout2 & self.MASK_SCREENROUND):
-        if self.screenLayoutRoud != o.screenLayoutRoud:
+        if self.screenLayoutRound != o.screenLayoutRound:
             diffs |= self.CONFIG_SCREEN_ROUND
         # if (self.colorMode & self.MASK_WIDE_COLOR_GAMUT) != (o.colorMode & self.MASK_WIDE_COLOR_GAMUT):
         if self.wideColorGamut != o.wideColorGamut:
@@ -1710,7 +1710,7 @@ class ResTable_lib_entry(Structure):
         #  We use a uint32 to keep the structure aligned on a uint32 boundary.
         ('packageId', c_uint32),
         #  The package name of the shared library. \0 terminated.
-        ('packageName', (128*c_uint16)),
+        ('packageName', (128*c_char)),
     ]
 
 
@@ -1826,7 +1826,8 @@ class ResStringPool(object):
                     strlen = readResHeader(data, c_uint16).value
                     if strlen & 0x8000:
                         strlen = ((strlen & 0x7fff) << 16) | readResHeader(data, c_uint16).value
-                    strlen = 2*(strlen + 1)
+                    # strlen = 2*(strlen + 1)
+                    strlen += 2
                 char_array = readResHeader(data, (strlen * c_char))
                 try:
                     strData.append(char_array.raw.decode(encoding)[:-1])
@@ -1851,8 +1852,8 @@ class ResStringPool(object):
                 spans = []
                 while True:
                     x = readResHeader(data, ResStringPool_span)
-                    if x.name.index == ResStringPool_span.END: break
                     spans.append(x)
+                    if x.name.index == ResStringPool_span.END: break
                 self.styleSpans.append(spans)
             assert x.firstChar == ResStringPool_span.END and x.lastChar == ResStringPool_span.END
 

@@ -40,6 +40,8 @@ class ResourceParser(object):
             return False
         error |= not self.parseResources(parser)
         parser.next()
+        if parser.isWhitespace():
+            parser.next()
         if parser.getEventType() != parser.END_DOCUMENT:
             errMessage = 'ERROR %s:%s ' % (self.mSource, parser.getLineNumber())
             errMessage += "xml parser error"

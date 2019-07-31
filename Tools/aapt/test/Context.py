@@ -33,7 +33,7 @@ class Context(object):
         return self.mCompilationPackage
     
     def getPackageId(self):
-        assert self.PackageId, "package ID not set"
+        assert self.mPackageId, "package ID not set"
         return self.mPackageId
     
     def getNameMangler(self):

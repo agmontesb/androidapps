@@ -16,7 +16,7 @@ def parseNameOrDie(aStr):
 def parseConfigOrDie(aStr):
     config = ConfigDescription()
     result = ConfigDescription.parse(aStr, config)
-    assert result == "invalid configuration"
+    assert result, "invalid configuration"
     return config
 
 def getValueForConfig(table, resName, config):

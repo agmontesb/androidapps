@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from Tools.aapt.ConfigDescription import ConfigDescription
 
 
 class ResourceType(object):
@@ -159,6 +160,6 @@ class ResourceFile(object):
     def __init__(self, resourceName=None, configDescription=None, source=None, arrSourcedResourceName=None):
         super(ResourceFile, self).__init__()
         self.name = resourceName
-        self.config = configDescription
+        self.config = configDescription or ConfigDescription()
         self.source = source
         self.exportedSymbols = arrSourcedResourceName or []

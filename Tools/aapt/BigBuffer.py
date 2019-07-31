@@ -22,7 +22,6 @@ class BigBuffer(object):
             if isinstance(other, bytearray):
                 return other + self.buffer[:self.size]
 
-
     def __init__(self, blockSize):
         super(BigBuffer, self).__init__()
         self.mBlockSize = blockSize
@@ -32,7 +31,7 @@ class BigBuffer(object):
     def size(self):
         return self.mSize
 
-    def nextBlock(self, ctypeClass, count=1):
+    def nextBlock(self, ctypeClass, count=0):
         return self._nextBlockImpl(ctypeClass, count)
 
     def appendBuffer(self, bigBuffer):
@@ -61,8 +60,8 @@ class BigBuffer(object):
             raise StopIteration()
 
     def _nextBlockImpl(self, ctypeClass, isize):
-        size = isize * ctypes.sizeof(ctypeClass)
-        ctypeClass = (ctypeClass if isize == 1 else isize * ctypeClass)
+        size = max(1, isize) * ctypes.sizeof(ctypeClass)
+        ctypeClass = (ctypeClass if isize == 0 else isize * ctypeClass)
         if self.mBlocks:
             block = self.mBlocks[-1]
             if block.mBlockSize - block.size >= size:

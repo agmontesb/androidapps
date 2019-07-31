@@ -7,7 +7,7 @@
 import operator as op
 
 from Tools.aapt import ResourcesTypes
-from Tools.aapt.Resource import ResourceNameRef, ResourceId
+from Tools.aapt.Resource import ResourceName, ResourceNameRef, ResourceId
 from Tools.aapt.ResourcesTypes import Res_INTERNALID
 
 TYPE_RAW_STRING = 0xfe      # ubicado en flatten/ResourceTypeExtensions
@@ -76,12 +76,14 @@ class Reference(BaseItem):
         self.referenceType = aType or Reference.Type.kResource
         self.privateReference = False
         if isinstance(arg1, ResourceNameRef):
-            self.name = arg1.toResourceName()
-        if isinstance(arg1, ResourceId):
+            arg1 = arg1.toResourceName()
+        if isinstance(arg1, ResourceName):
+            self.name = arg1
+        elif isinstance(arg1, ResourceId):
            self.id = arg1
 
     def flatten(self, res_Value):
-        super(Reference, self).flatten(res_Value)
+        # super(Reference, self).flatten(res_Value)
         res_Value.dataType = ResourcesTypes.Res_value.TYPE_REFERENCE \
             if self.referenceType == Reference.Type.kResource else \
             ResourcesTypes.Res_value.TYPE_ATTRIBUTE
@@ -111,7 +113,7 @@ class Id(BaseItem):
         return True
 
     def flatten(self, res_Value):
-        super(Id, self).flatten(res_Value)
+        # super(Id, self).flatten(res_Value)
         res_Value.dataType = ResourcesTypes.Res_value.TYPE_INT_BOOLEAN
         res_Value.data = 0
         return True
@@ -265,7 +267,7 @@ class Attribute(BaseValue):
         key=lambda x: x[1]
     )
 
-    def __init__(self, weak, typeMask=0):
+    def __init__(self, weak=False, typeMask=0):
         super(Attribute, self).__init__()
         self.weak = weak
         self.typeMask = typeMask
@@ -306,9 +308,9 @@ class Style(BaseValue):
             self.value = value
 
         def __str__(self):
-            tostring = self.key.name if self.key.name else '???'
+            tostring = self.key.name.toString() if self.key.name else '???'
             tostring += ' = '
-            tostring += self.value.toString()
+            tostring += self.value.toString() if self.value else 'None'
             return tostring
 
     def __init__(self):
@@ -326,8 +328,8 @@ class Style(BaseValue):
 
     def toString(self):
         tostring = '(style) '
-        if self.parent and self.parent.value().name:
-            tostring += self.parent.value().name
+        if self.parent and self.parent.name:
+            tostring += self.parent.name.toString()
         if self.entries:
             tostring += ' [' + ', '.join([str(entry) for entry in self.entries]) + ']'
         return tostring

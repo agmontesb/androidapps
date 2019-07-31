@@ -143,7 +143,6 @@ def test_FlattenUtf8(pool):
     assert ref3.getIndex() == 2
     assert ref4.getIndex() == 3
 
-    # buffer = io.BytesIO()
     buffer = BigBuffer(1024)
     StringPool.flattenUtf8(pool, buffer)
     buffer = io.BytesIO(reduce(lambda t, x: t + x, buffer, bytearray()))

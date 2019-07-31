@@ -285,22 +285,37 @@ class ResTableType(ru.ResTable_type):
 class GenCrawler(object):
     _allowed_cases_ = None
 
-    def crawl(self, file):
+    @staticmethod
+    def readResHeader(stream, headerClass, offset=None):
+        if offset is not None:
+            stream.seek(offset)
+        x = headerClass()
+        stream.readinto(x)
+        return None if stream.tell() < offset + sizeof(headerClass) else x
+
+    def crawl(self, file, headerClass=None):
+        headerClass = headerClass or ResChunkHeader
         offset = 0
         stack = []
         while True:
-            rch = ru.readResHeader(file, ResChunkHeader, offset=offset)
+            rch = self.readResHeader(file, headerClass, offset=offset)
+            if not rch: break
             if not rch.isValid():
                 raise ArgumentError('Error at 0x{:0>8x}, 0x{:0>4x} not a valid type'.format(offset, rch.type))
             elif self._allowed_cases_ and rch.type not in self.allowedCases:
                 raise ArgumentError('Element at 0x{:0>8x} not an alloed RES_CHUNK_TYPE'.format(offset))
-            stack.append((offset, rch.type, rch.typeName, rch.headerSize, rch.size))
-            yield (len(stack) - 1, offset, rch)
+            depth = len(stack)
+            yield (depth, offset, rch)
+            if not stack or not rch.hasData():
+                stack.append((offset, rch.type, rch.typeName, rch.headerSize, rch.size))
             offset += rch.headerSize
             if rch.hasData():
-                offset += stack[-1][4] - stack[-1][3]
+                offset += rch.size - rch.headerSize
+            while stack and offset >= (stack[-1][0] + stack[-1][4]):
                 stack.pop()
-            if offset >= stack[0][4]: break
+                # stack.pop()
+            # if offset >= stack[0][4]: break
+        assert not stack
 
 class ResourceCrawler(GenCrawler):
     _allowedCases_ = [
@@ -381,26 +396,26 @@ class ResourceCrawler(GenCrawler):
             case = rch.type
             if case == ru.ResChunk_header.RES_TABLE_TYPE_TYPE:
                 nConfig += 1
-                rtt = ru.readResHeader(file, ru.ResTable_type, offset=offset)
+                rtt = self.readResHeader(file, ru.ResTable_type, offset=offset)
                 if self.startResTableTypeHandler(nPackage, nConfig, rtt):
                     break
                 notSparse = not rtt.flags & ru.ResTable_type.FLAG_SPARSE
                 resClass = c_uint32 if notSparse else ru.ResTable_sparseTypeEntry
-                indx = ru.readResHeader(file, (rtt.entryCount * resClass), offset=offset + rtt.header.headerSize)
+                indx = self.readResHeader(file, (rtt.entryCount * resClass), offset=offset + rtt.header.headerSize)
                 for k in range(rtt.entryCount):
                     if notSparse:
                         if indx[k] == ru.ResTable_type.NO_ENTRY:continue
                         eOff = offset + rtt.entriesStart + indx[k]
                     else:
                         eOff = offset + rtt.entriesStart + indx[k].offset # OJO dice que debe dividirse por 4
-                    entry = ru.readResHeader(file, ru.ResTable_entry, offset=eOff)
+                    entry = self.readResHeader(file, ru.ResTable_entry, offset=eOff)
                     if not entry.flags & ru.ResTable_entry.FLAG_COMPLEX:
-                        value = ru.readResHeader(file, ru.Res_value, offset=eOff + sizeof(entry))
+                        value = self.readResHeader(file, ru.Res_value, offset=eOff + sizeof(entry))
                         s, r, t, d = value.size, value.res0, value.dataType, value.data
                         strValue = 't=0x{:0>2x} d=0x{:0>8x} (s=0x{:0>4x} r=0x{:0>2x})'.format(t, d, s, r)
                     else:
-                        rtme = ru.readResHeader(file, ru.ResTable_map_entry, offset=eOff + sizeof(entry))
-                        rtm = ru.readResHeader(file, (rtme.count*ru.ResTable_map), offset=eOff + sizeof(entry) + sizeof(rtme))
+                        rtme = self.readResHeader(file, ru.ResTable_map_entry, offset=eOff + sizeof(entry))
+                        rtm = self.readResHeader(file, (rtme.count*ru.ResTable_map), offset=eOff + sizeof(entry) + sizeof(rtme))
                         value = (rtme.parent, rtm)
                         strValue = '<bag>'
                     entryid, entryname, entryvalue = k, entry.key, value
@@ -408,7 +423,7 @@ class ResourceCrawler(GenCrawler):
                         break
                 if self.endResTableTypeHandler(nPackage, nConfig):
                     break
-                header = ru.readResHeader(file, ru.ResChunk_header)
+                header = self.readResHeader(file, ru.ResChunk_header)
                 if header.type == case: continue
                 if self.endResTableTypeSpecHandler(nPackage):
                     break
@@ -416,19 +431,19 @@ class ResourceCrawler(GenCrawler):
                     if self.endResTablePackageHandler(nPackage):
                         break
             elif case == ru.ResChunk_header.RES_TABLE_TYPE_SPEC_TYPE:
-                rtts = ru.readResHeader(file, ru.ResTable_typeSpec, offset=offset)
+                rtts = self.readResHeader(file, ru.ResTable_typeSpec, offset=offset)
                 offset += rtts.header.headerSize
                 if not rtts.entryCount:
                     continue
                 nConfig = -1
-                flags = ru.readResHeader(file, (rtts.entryCount * c_uint32), offset=offset)
+                flags = self.readResHeader(file, (rtts.entryCount * c_uint32), offset=offset)
                 if self.startResTableTypeSpecHandler(nPackage, rtts, flags):
                     break
                 self.entryName = (rtts.entryCount * ru.ResStringPool_ref)()
                 self.configData = []
             elif case == ru.ResChunk_header.RES_TABLE_PACKAGE_TYPE:
                 nPackage += 1
-                rtp = ru.readResHeader(file, ru.ResTable_package, offset=offset)
+                rtp = self.readResHeader(file, ru.ResTable_package, offset=offset)
                 if self.startResTablePackageHandler(nPackage, rtp):
                     break
             elif case == ru.ResChunk_header.RES_STRING_POOL_TYPE:
@@ -439,7 +454,7 @@ class ResourceCrawler(GenCrawler):
             elif case == ru.ResChunk_header.RES_TABLE_TYPE:
                 dmySpArr = 0
                 nPackage = -1
-                rth = ru.readResHeader(file, ru.ResTable_header, offset=offset)
+                rth = self.readResHeader(file, ru.ResTable_header, offset=offset)
                 if self.startResTableHandler(rth.packageCount):
                     break
             elif case == ru.ResChunk_header.RES_TABLE_LIBRARY_TYPE:
@@ -589,7 +604,7 @@ def dumpResources(file, what, incValues=False, include_meta_data=False, outFile=
 
         rc.crawl(file)
 
-def ResTableCrawler(file, logFile=None):
+def ResTableCrawler(file, headerClass=None, logFile=None):
     def reportData(indent, data):
         fmtStr = indent * INDENT + '0x{1:0>4x} {2} 0x{0:0>8x} {3} {4}'
         print fmtStr.format(*data).upper()
@@ -597,7 +612,7 @@ def ResTableCrawler(file, logFile=None):
     INDENT = '    '
     # print 'Crawling: %s' % filename
     with ioData(file, 0, output=logFile) as file:
-        for depth, offset, rch in rc.crawl(file):
+        for depth, offset, rch in rc.crawl(file, headerClass):
             reportData(depth, (offset, rch.type, rch.typeName, rch.headerSize, rch.size))
             if rch.hasData():
                 data = (offset + rch.headerSize, 0xFFFF, 'ARRAY_TYPE', 0, rch.size - rch.headerSize)
@@ -634,7 +649,7 @@ class NameSpace(object):
             k -= 1
         return k
 
-def dumpXmlTree(filename, dcase='xmltree', outFile=None):
+def dumpXmlTree(filename, dcase='xmltree', headerClass=None, outFile=None):
     if dcase not in ['xmlstrings', 'xmltree', 'permissions']:
         raise ArgumentError('dcase="%s" is not a valid case' % dcase)
     namespace = NameSpace()
@@ -642,9 +657,10 @@ def dumpXmlTree(filename, dcase='xmltree', outFile=None):
     dmyAttrsIds = None
     INDENT = '  '
     depth = -1
+    bXmlInfo = False
     rc = GenCrawler()
     with ioData(filename, 0, output=outFile) as file:
-        for dummy, offset, rch in rc.crawl(file):
+        for dummy, offset, rch in rc.crawl(file, headerClass):
             case = rch.type
             try:
                 cData = XmlFactory(file, dmySp, namespace, attrIds=dmyAttrsIds, offset=offset)
@@ -663,7 +679,6 @@ def dumpXmlTree(filename, dcase='xmltree', outFile=None):
                             print (depth + 1) * INDENT + prtStr
                     elif dcase == 'permissions' and cData[2] == 'uses-permission':
                         print "%s: name='%s'" % (cData[2], cData[3][0][1])
-
                 elif cType == ru.ResChunk_header.RES_XML_END_ELEMENT_TYPE:
                     depth -= 1
                 elif cType == ru.ResChunk_header.RES_XML_START_NAMESPACE_TYPE:
@@ -672,8 +687,10 @@ def dumpXmlTree(filename, dcase='xmltree', outFile=None):
                         print depth * INDENT + 'N: {2}={3}'.format(*cData)
                 elif cType == ru.ResChunk_header.RES_XML_END_NAMESPACE_TYPE:
                     depth -= 1
+                elif cType == ru.ResChunk_header.RES_XML_CDATA_TYPE:
+                    print (depth + 1) * INDENT + 'D: {2} (line={1})'.format(*cData)
             except Exception as e:
-                if case == ru.ResChunk_header.RES_STRING_POOL_TYPE:
+                if case == ru.ResChunk_header.RES_STRING_POOL_TYPE and bXmlInfo:
                     dmySp = ru.ResStringPool(file, offset=offset)
                     if dcase == 'xmlstrings':
                         nStrings = dmySp.stringCount()
@@ -692,11 +709,12 @@ def dumpXmlTree(filename, dcase='xmltree', outFile=None):
                 elif case == ru.ResChunk_header.RES_XML_RESOURCE_MAP_TYPE:
                     nids = (rch.size - rch.headerSize) / sizeof(c_uint32)
                     offset += rch.headerSize
-                    dmyAttrsIds = ru.readResHeader(file, (nids*c_uint32), offset)
+                    dmyAttrsIds = rc.readResHeader(file, (nids*c_uint32), offset)
                 elif case == ru.ResChunk_header.RES_XML_TYPE:
-                    pass
+                    bXmlInfo = True
                 else:
-                    raise e
+                    pass   # raise e
+
 
 def XmlFactory(data, resStringPool, namespace, attrIds=None, offset=None):
     _StateClass = namedtuple(
@@ -710,19 +728,19 @@ def XmlFactory(data, resStringPool, namespace, attrIds=None, offset=None):
         name = stringAt(name)
         return ns + name
     headerOffset = offset or data.tell()
-    resXMLTree_node = ru.readResHeader(data, ru.ResXMLTree_node, headerOffset)
+    resXMLTree_node = GenCrawler.readResHeader(data, ru.ResXMLTree_node, headerOffset)
     offset = headerOffset + resXMLTree_node.header.headerSize
 
     case = resXMLTree_node.header.type
     if not ru.ResChunk_header.RES_XML_FIRST_CHUNK_TYPE <= case <= ru.ResChunk_header.RES_XML_LAST_CHUNK_TYPE:
         raise ArgumentError('Element at 0x{:0>8x} not a RES_XML_CHUNK_TYPE'.format(headerOffset))
     elif case == ru.ResChunk_header.RES_XML_START_ELEMENT_TYPE:
-        resXMLTree_attrExt = ru.readResHeader(data, ru.ResXMLTree_attrExt, offset)
+        resXMLTree_attrExt = GenCrawler.readResHeader(data, ru.ResXMLTree_attrExt, offset)
         tag = fullTagName(resXMLTree_attrExt.ns, resXMLTree_attrExt.name)
         offset = headerOffset + resXMLTree_node.header.headerSize + resXMLTree_attrExt.attributeStart
         attributeSize = resXMLTree_attrExt.attributeSize
         attributeCount = resXMLTree_attrExt.attributeCount
-        attr = ru.readResHeader(data, (attributeCount * ru.ResXMLTree_attribute), offset)
+        attr = GenCrawler.readResHeader(data, (attributeCount * ru.ResXMLTree_attribute), offset)
         assert attributeSize * attributeCount == sizeof(attr)
         attribs = []
         for k in range(attributeCount):
@@ -732,12 +750,12 @@ def XmlFactory(data, resStringPool, namespace, attrIds=None, offset=None):
             attribs.append((key, value, attrIds[name.index] if attrIds and '}' in key else None))
         return (case, resXMLTree_node.lineNumber, tag, attribs)
     elif case == ru.ResChunk_header.RES_XML_END_ELEMENT_TYPE:
-        resXMLTree_endElementExt = ru.readResHeader(data, ru.ResXMLTree_endElementExt, offset)
+        resXMLTree_endElementExt = GenCrawler.readResHeader(data, ru.ResXMLTree_endElementExt, offset)
         tag = fullTagName(resXMLTree_endElementExt.ns, resXMLTree_endElementExt.name)
         return (case, resXMLTree_node.lineNumber, tag,)
     elif case == ru.ResChunk_header.RES_XML_START_NAMESPACE_TYPE or \
             case == ru.ResChunk_header.RES_XML_END_NAMESPACE_TYPE:
-        dataHeader = ru.readResHeader(data, ru.ResXMLTree_namespaceExt, offset)
+        dataHeader = GenCrawler.readResHeader(data, ru.ResXMLTree_namespaceExt, offset)
         prefix = stringAt(dataHeader.prefix)
         uri = stringAt(dataHeader.uri)
         if case == ru.ResChunk_header.RES_XML_START_NAMESPACE_TYPE:
@@ -746,7 +764,7 @@ def XmlFactory(data, resStringPool, namespace, attrIds=None, offset=None):
             namespace.remove(prefix, uri)
         return (case, resXMLTree_node.lineNumber, prefix, uri)
     elif case == ru.ResChunk_header.RES_XML_CDATA_TYPE:
-        dataHeader = ru.readResHeader(data, ru.ResXMLTree_cdataExt, offset)
+        dataHeader = GenCrawler.readResHeader(data, ru.ResXMLTree_cdataExt, offset)
         data = stringAt(dataHeader.data)
         typedData = str(dataHeader.typedData)
         return (case, resXMLTree_node.lineNumber, data, typedData)

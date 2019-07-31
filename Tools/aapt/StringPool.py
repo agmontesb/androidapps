@@ -3,6 +3,7 @@ import ctypes
 from collections import namedtuple
 
 from Tools.aapt import ResourcesTypes as rt
+from Tools.aapt.ConfigDescription import ConfigDescription
 
 pointee = lambda x: x.__pointee__()
 redirect = lambda x, y: x.__redirect__(y)
@@ -13,7 +14,7 @@ StyleString = namedtuple('StyleString', 'str spans')
 
 class StringPool(object):
     Context = namedtuple('Context', 'priority config')
-
+    Context.__new__.func_defaults = (0, ConfigDescription())
     class Ref(object):
 
         def __init__(self, arg1=None):
@@ -121,7 +122,7 @@ class StringPool(object):
             ndx = self.mIndexedStrings.index(ehash)
             return StringPool.Ref(self.mStrings[ndx])
         entry = StringPool.Entry()
-        entry.value = strPiece16
+        entry.value = strPiece16 or ''
         entry.context = context
         entry.index = len(self.mStrings)
         entry.ref = 0
@@ -168,8 +169,8 @@ class StringPool(object):
         stringPool.mStyles = []
         map(lambda x: setattr(self.mStrings[x], 'index', x), range(self.mStrings))
 
-    def makeRef(self, arg1, context=None):
-        if isinstance(arg1, basestring):
+    def makeRef(self, arg1, context=Context()):
+        if isinstance(arg1 or '', basestring):
             strPiece16,context, unique, spans = arg1, context, True, None
 
         if isinstance(arg1, StyleString):
@@ -183,114 +184,86 @@ class StringPool(object):
         return self._makeRefImpl(strPiece16, context, unique, spans)
 
     def _flatten(stringPool, bigBufferOut, utf8):
-        # def writeCType(ctype, offset=-1):
-        #     actual = bigBufferOut.tell()
-        #     if offset != -1:
-        #         bigBufferOut.seek(offset)
-        #     bigBufferOut.write(ctype)
-        #     if offset != -1:
-        #         bigBufferOut.seek(actual)
 
         def encodeLength(data, cType, length):
             kMask = 1 << ((ctypes.sizeof(cType) * 8) - 1)
             kMaxSize = kMask - 1
             if length > kMaxSize:
                 lenc = kMask | (kMaxSize & (length >> (ctypes.sizeof(cType) * 8)))
-                # data.write(cType(lenc))
                 dmy = data.nextBlock(cType)
                 dmy.value = lenc
             dmy = data.nextBlock(cType)
             dmy.value = length
 
-        # startIndex = bigBufferOut.tell()
         startIndex = bigBufferOut.size()
-        # header = rt.ResStringPool_header()
-        # bigBufferOut.write(header)
         header = bigBufferOut.nextBlock(rt.ResStringPool_header)
         header.header.type = rt.ResChunk_header.RES_STRING_POOL_TYPE
         header.header.headerSize = ctypes.sizeof(header)
         header.stringCount = stringPool.size()
         if utf8:
             header.flags |= rt.ResStringPool_header.UTF8_FLAG
-        if header.stringCount:
-            # indices = (header.stringCount * ctypes.c_uint32)()
-            # bigBufferOut.write(indices)
-            indices = bigBufferOut.nextBlock(ctypes.c_uint32, header.stringCount)
+
+        indices = bigBufferOut.nextBlock(ctypes.c_uint32, stringPool.size()) \
+            if stringPool.size() else None
+        styleIndices = None
         if stringPool.mStyles:
             header.styleCount = stringPool.mStyles[-1].str.getIndex() + 1
-            # styleIndices = (header.styleCount * ctypes.c_uint32)()
-            # bigBufferOut.write(styleIndices)
             styleIndices = bigBufferOut.nextBlock(ctypes.c_uint32, header.styleCount)
 
-        # beforeStringsIndex = bigBufferOut.tell()
         beforeStringsIndex = bigBufferOut.size()
         header.stringsStart = beforeStringsIndex - startIndex
-        if header.stringCount:
-            for k, entry in enumerate(stringPool):
-                # indices[k] = bigBufferOut.tell() - beforeStringsIndex
-                indices[k] = bigBufferOut.size() - beforeStringsIndex
-                enc = entry.value
-                lenc = len(enc)
-                if utf8:
-                    enc8 = enc.encode('utf-8')
-                    lenc8 = len(enc8)
-                    encodeLength(bigBufferOut, ctypes.c_uint8, lenc)
-                    encodeLength(bigBufferOut, ctypes.c_uint8, lenc8)
-                    enc = enc8 + u'\0'.encode('utf-8')
-                else:
-                    enc16 = entry.value.encode('utf-16')
-                    lenc16 = len(enc16)
-                    enc = enc16 + u'\0'.encode('utf-16')
-                    encodeLength(bigBufferOut, ctypes.c_uint16, lenc16)
-                # bigBufferOut.write(enc)
-                dmy = bigBufferOut.nextBlock(ctypes.c_char, len(enc))
-                dmy[:] = enc
+        for k, entry in enumerate(stringPool):
+            indices[k] = bigBufferOut.size() - beforeStringsIndex
+            enc = entry.value
+            lenc = len(enc)
+            if utf8:
+                enc8 = enc.encode('utf-8')
+                lenc8 = len(enc8)
+                encodeLength(bigBufferOut, ctypes.c_uint8, lenc)
+                encodeLength(bigBufferOut, ctypes.c_uint8, lenc8)
+                enc = (enc + '\0').encode('utf-8')
+            else:
+                enc16 = entry.value.encode('utf-16')
+                lenc16 = len(enc16)
+                enc = (entry.value + '\0').encode('utf-16')
+                encodeLength(bigBufferOut, ctypes.c_uint16, lenc16)
+            dmy = bigBufferOut.nextBlock(ctypes.c_char, len(enc))
+            dmy[:] = enc
         bigBufferOut.align4()
-            # writeCType(indices, offset=startIndex + header.header.headerSize)
         if header.styleCount:
-            # beforeStylesIndex = bigBufferOut.tell()
             beforeStylesIndex = bigBufferOut.size()
             header.stylesStart = beforeStylesIndex - startIndex
-            # END = ctypes.c_uint32(rt.ResStringPool_span.END)
             currentIndex = 0
             for entry in stringPool.mStyles:
                 while entry.str.getIndex() > currentIndex:
-                    # styleIndices[currentIndex] = bigBufferOut.tell() - beforeStylesIndex
                     styleIndices[currentIndex] = bigBufferOut.size() - beforeStylesIndex
                     currentIndex += 1
-                    # bigBufferOut.write(END)
                     spanOffset = bigBufferOut.nextBlock(ctypes.c_uint32)
-                    # spanOffset.value = END
                     spanOffset.value = rt.ResStringPool_span.END
                 styleIndices[currentIndex] = bigBufferOut.size() - beforeStylesIndex
-                # styleIndices[currentIndex] = bigBufferOut.tell() - beforeStylesIndex
                 currentIndex += 1
-                # span = (len(entry.spans)*rt.ResStringPool_span)()
                 span = bigBufferOut.nextBlock(rt.ResStringPool_span, len(entry.spans))
                 for k, s in enumerate(entry.spans):
                     span[k].name.index = s.name.getIndex()
                     span[k].firstChar = s.firstChar
                     span[k].lastChar = s.lastChar
-                # bigBufferOut.write(span)
-                # bigBufferOut.write(END)
                 spanEnd = bigBufferOut.nextBlock(ctypes.c_uint32)
                 spanEnd.value = rt.ResStringPool_span.END
-            # writeCType(styleIndices, offset=startIndex + header.header.headerSize + 4*header.stringCount)
             paddingLength = ctypes.sizeof(rt.ResStringPool_span)
             paddingLength -= rt.ResStringPool_span.name.size
-            # bigBufferOut.write((paddingLength*ctypes.c_uint8)(*(paddingLength*(0xff,))))
             padding = bigBufferOut.nextBlock(ctypes.c_uint8, paddingLength)
             padding[:] = paddingLength * [0xff]
             bigBufferOut.align4()
         header.header.size = bigBufferOut.size() - startIndex
-        # writeCType(header, offset=startIndex)
         return True
 
+    @staticmethod
     def flattenUtf8(stringPool, bigBufferOut):
         return stringPool._flatten(bigBufferOut, True)
 
+    @staticmethod
     def flattenUtf16(stringPool, bigBufferOut):
-        return stringPool._flatten(bigBufferOut, stringPool, False)
+        return stringPool._flatten(bigBufferOut, False)
 
     def __iter__(self):
         self._indx = -1
